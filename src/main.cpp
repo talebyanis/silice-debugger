@@ -1,14 +1,24 @@
 #include <iostream>
+#include <filesystem>
 #include <LibSL.h>
 #include <LibSL_gl.h>
 #include "imgui.h"
 #include "TextEditor/TextEditor.h"
-#include "tinyfiledialogs/tinyfiledialogs.h"
+#include "FileDialog.h"
+
+#ifdef WIN32
+namespace fs = std::experimental::filesystem;
+#else
+namespace fs = std::filesystem;
+#endif
 
 uint width = 800, height = 600;
 
 TextEditor editor;
-static const char *fileToEdit = "test_editing.ice";
+static const char * fileToEdit = "test_editing.ice";
+static fs::path fileFullPath = "";
+
+//TODO : nom du fichier dans new / open / save as ne s'affiche pas
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -18,52 +28,92 @@ void render() {
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open")) {
-                /// save text....
-            }
-            if (ImGui::MenuItem("Save")) {
-                auto textToSave = editor.GetText();
 
-                /// save text....
+            if (ImGui::MenuItem("New", "Ctrl + N")) {
+                auto fullpath = newFileDialog(OFD_EXTENSIONS);
+                if (!fullpath.empty()) {
+                    const fs::path path = fs::path(fullpath);
+                    std::fstream newfile;
+                    editor.SetText("");
+                    fileFullPath = fullpath;
+                    fileToEdit = fullpath.c_str();
+                }
             }
+
+            if (ImGui::MenuItem("Open", "Ctrl + O")) {
+                auto fullpath = openFileDialog(OFD_EXTENSIONS);
+                if (!fullpath.empty()) {
+                    fs::path path = fs::path(fullpath);
+                    std::fstream newfile;
+                    newfile.open(path,std::ios::in);
+                    if (newfile.is_open()){
+                        std::string tp;
+                        editor.SetText("");
+                        while(getline(newfile, tp)){
+                            editor.InsertText(tp + "\n");
+                        }
+                        std::string fileName = extractFileName(path);
+                        fileToEdit = fileName.c_str();
+                        newfile.close();
+                    }
+                }
+            }
+
+            if (ImGui::MenuItem("Save","Ctrl + S", nullptr, !fileFullPath.string().empty())) {
+                auto textToSave = editor.GetText();
+                std::string path = fileFullPath.string();
+                if(!path.empty()) {
+                    std::fstream file(fileFullPath);
+                    file << textToSave;
+                }
+            }
+
+            if (ImGui::MenuItem("Save as", "Ctrl + Maj + S")) {
+                auto textToSave = editor.GetText();
+                std::string fullpath = saveFileDialog(fileToEdit, OFD_FILTER_ALL);
+                if(!fullpath.empty()) {
+                    std::string fileName = extractFileName(fullpath);
+                    fileToEdit = fileName.c_str();
+                    std::fstream file(fullpath);
+                    file.open(fullpath, std::ios::out);
+                    file << textToSave;
+                }
+            }
+
             if (ImGui::MenuItem("Quit", "Alt-F4")) {
                 std::cout << "quit";
             }
-            //break;
             ImGui::EndMenu();
         }
+
         if (ImGui::BeginMenu("Edit"))
         {
             bool ro = editor.IsReadOnly();
-            if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
+            if (ImGui::MenuItem("Read-only mode", nullptr, &ro)){
                 editor.SetReadOnly(ro);
+            }
+
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
-            {
+            if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo())) {
                 editor.Undo();
             }
-            if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo()))
-            {
+            if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo())) {
                 editor.Redo();
             }
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, editor.HasSelection()))
-            {
+            if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, editor.HasSelection())) {
                 editor.Copy();
             }
-            if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection()))
-            {
+            if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection())) {
                 editor.Cut();
             }
-            if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor.HasSelection()))
-            {
+            if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor.HasSelection())) {
                 editor.Delete();
             }
-            if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
-            {
+            if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr)) {
                 editor.Paste();
             }
 
@@ -76,12 +126,15 @@ void render() {
         }
 
         if (ImGui::BeginMenu("View")) {
-            if (ImGui::MenuItem("Dark palette"))
+            if (ImGui::MenuItem("Dark palette")) {
                 editor.SetPalette(TextEditor::GetDarkPalette());
-            if (ImGui::MenuItem("Light palette"))
+            }
+            if (ImGui::MenuItem("Light palette")) {
                 editor.SetPalette(TextEditor::GetLightPalette());
-            if (ImGui::MenuItem("Retro blue palette"))
+            }
+            if (ImGui::MenuItem("Retro blue palette")) {
                 editor.SetPalette(TextEditor::GetRetroBluePalette());
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -131,10 +184,10 @@ void mainMouseMoved(uint _x, uint _y) {
     //fflush(stdout);
 }
 
-void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) { std::cout << "click" << std::endl; }
+void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
 int main() {
-    SimpleUI::init(800, 600, "Hello, ImGui!");
+    SimpleUI::init(800, 600, "");
 
     SimpleUI::onRender = render;
     SimpleUI::onReshape = onResize;
