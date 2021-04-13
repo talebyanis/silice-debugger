@@ -3,6 +3,7 @@
 #include <LibSL_gl.h>
 #include "imgui.h"
 #include "TextEditor/TextEditor.h"
+#include "tinyfiledialogs/tinyfiledialogs.h"
 
 uint width = 800, height = 600;
 
@@ -22,10 +23,12 @@ void render() {
             }
             if (ImGui::MenuItem("Save")) {
                 auto textToSave = editor.GetText();
+
                 /// save text....
             }
-            if (ImGui::MenuItem("Quit", "Alt-F4"))
+            if (ImGui::MenuItem("Quit", "Alt-F4")) {
                 std::cout << "quit";
+            }
             //break;
             ImGui::EndMenu();
         }
