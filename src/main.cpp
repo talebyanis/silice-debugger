@@ -2,41 +2,108 @@
 #include <LibSL.h>
 #include <LibSL_gl.h>
 #include "imgui.h"
+#include "TextEditor/TextEditor.h"
 
 uint width = 800, height = 600;
-float my_color[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+bool initWindow = false;
+std::string content[] = {};
 
 void render() {
-    char *buf;
+    char buf[256] = {0};
     float f;
     bool my_tool1_active;
-    bool my_tool2_active;
 
-    glClearColor(0.5, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //Color
+    //glClearColor(0.5, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //ImGui::SetNextWindowSize(ImVec2(width+2, height+2), ImGuiCond_Always);
-    //ImGui::SetNextWindowPos(ImVec2(.0f, .0f), ImGuiCond_Always);
-    ImGui::SetNextWindowPos(ImVec2(400, 0));
-    ImGui::SetNextWindowSize(ImVec2(400, 100));
+    if(!initWindow) {
+        ImGui::SetNextWindowSize(ImVec2(400, 400));
+        initWindow = true;
+    }
+    ImGui::Begin("Code Editor", &my_tool1_active, ImGuiWindowFlags_MenuBar);
 
-    ImGui::Begin("My First Tool", &my_tool1_active, ImGuiWindowFlags_MenuBar);
 
+    //---
+
+    ImGui::NewFrame();
+
+    ImGui::ShowTestWindow();
+
+    auto cpos = editor.GetCursorPosition();
+    ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::SetWindowSize(ImVec2(800, 600), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar())
     {
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
-            if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
-            if (ImGui::MenuItem("Close", "Ctrl+W"))  { my_tool1_active = false; }
+            if (ImGui::MenuItem("Save"))
+            {
+                auto textToSave = editor.GetText();
+                /// save text....
+            }
+            if (ImGui::MenuItem("Quit", "Alt-F4"))
+                break;
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit"))
+        {
+            bool ro = editor.IsReadOnly();
+            if (ImGui::MenuItem("Read-only mode", nullptr, &ro))
+                editor.SetReadOnly(ro);
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Undo", "ALT-Backspace", nullptr, !ro && editor.CanUndo()))
+                editor.Undo();
+            if (ImGui::MenuItem("Redo", "Ctrl-Y", nullptr, !ro && editor.CanRedo()))
+                editor.Redo();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Copy", "Ctrl-C", nullptr, editor.HasSelection()))
+                editor.Copy();
+            if (ImGui::MenuItem("Cut", "Ctrl-X", nullptr, !ro && editor.HasSelection()))
+                editor.Cut();
+            if (ImGui::MenuItem("Delete", "Del", nullptr, !ro && editor.HasSelection()))
+                editor.Delete();
+            if (ImGui::MenuItem("Paste", "Ctrl-V", nullptr, !ro && ImGui::GetClipboardText() != nullptr))
+                editor.Paste();
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Select all", nullptr, nullptr))
+                editor.SetSelection(TextEditor::Coordinates(), TextEditor::Coordinates(editor.GetTotalLines(), 0));
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("View"))
+        {
+            if (ImGui::MenuItem("Dark palette"))
+                editor.SetPalette(TextEditor::GetDarkPalette());
+            if (ImGui::MenuItem("Light palette"))
+                editor.SetPalette(TextEditor::GetLightPalette());
+            if (ImGui::MenuItem("Retro blue palette"))
+                editor.SetPalette(TextEditor::GetRetroBluePalette());
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
     }
 
-    //Edit a color (stored as ~4 floats)
-    ImGui::ColorEdit4("Color", my_color);
+    ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+                editor.IsOverwrite() ? "Ovr" : "Ins",
+                editor.CanUndo() ? "*" : " ",
+                editor.GetLanguageDefinition().mName.c_str(), fileToEdit);
 
+    editor.Render("TextEditor");
+
+    //---
+
+
+    ImGui::End();
+
+    //Edit a color (stored as ~4 floats)
+//    ImGui::ColorEdit4("Color", my_color);
 
 // Plot some values
     //const float my_values[] = { 0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f };
@@ -49,21 +116,15 @@ void render() {
     //    ImGui::Text("%04d: Some text", n);
 
 
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    ImGui::SetNextWindowSize(ImVec2(100, 100));
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(my_color[0], my_color[1],my_color[2], my_color[3]));
-    ImGui::Begin("My Second Tool", &my_tool2_active);
-    ImGui::PopStyleColor();
     ImGui::EndChild();
     ImGui::End();
     ImGui::Render();
-
-
 }
 
 void onResize(uint _width, uint _height) {
     width = _width;
     height = _height;
+
 }
 
 void mainKeyPressed(uchar _k) { std::cout << "okok"; }
@@ -88,6 +149,8 @@ int main() {
     SimpleUI::initImGui();
 
     SimpleUI::loop();
+
+
 
     return 0;
 }
