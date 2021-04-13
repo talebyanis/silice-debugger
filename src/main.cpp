@@ -8,6 +8,9 @@ uint width = 800, height = 600;
 bool initWindow = false;
 std::string content[] = {};
 
+TextEditor editor;
+static const char* fileToEdit = "test_editing.ice";
+
 void render() {
     char buf[256] = {0};
     float f;
@@ -17,14 +20,8 @@ void render() {
     //glClearColor(0.5, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //---
+//    static const char* fileToEdit = "test.cpp";
 
-    TextEditor editor;
-    static const char* fileToEdit = "TextEditor/TextEditor.cpp";
-
-    //ImGui::NewFrame();
-
-    //ImGui::ShowTestWindow();
 
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
