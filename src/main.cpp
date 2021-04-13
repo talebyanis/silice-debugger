@@ -17,6 +17,9 @@ void render() {
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open")) {
+                /// save text....
+            }
             if (ImGui::MenuItem("Save")) {
                 auto textToSave = editor.GetText();
                 /// save text....

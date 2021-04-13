@@ -4,3 +4,6 @@
 [submodule "src/TextEditor"]
 	path = src/TextEditor
 	url = https://github.com/BalazsJako/ImGuiColorTextEdit
+[submodule "src/tinyfiledialogs"]
+	path = src/tinyfiledialogs
+	url = https://github.com/native-toolkit/tinyfiledialogs
