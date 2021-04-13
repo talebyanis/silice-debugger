@@ -17,18 +17,14 @@ void render() {
     //glClearColor(0.5, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if(!initWindow) {
-        ImGui::SetNextWindowSize(ImVec2(400, 400));
-        initWindow = true;
-    }
-    ImGui::Begin("Code Editor", &my_tool1_active, ImGuiWindowFlags_MenuBar);
-
-
     //---
 
-    ImGui::NewFrame();
+    TextEditor editor;
+    static const char* fileToEdit = "TextEditor/TextEditor.cpp";
 
-    ImGui::ShowTestWindow();
+    //ImGui::NewFrame();
+
+    //ImGui::ShowTestWindow();
 
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
@@ -43,7 +39,8 @@ void render() {
                 /// save text....
             }
             if (ImGui::MenuItem("Quit", "Alt-F4"))
-                break;
+                std::cout<<"quit";
+                //break;
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -77,6 +74,7 @@ void render() {
             ImGui::EndMenu();
         }
 
+
         if (ImGui::BeginMenu("View"))
         {
             if (ImGui::MenuItem("Dark palette"))
@@ -100,7 +98,7 @@ void render() {
     //---
 
 
-    ImGui::End();
+    //ImGui::End();
 
     //Edit a color (stored as ~4 floats)
 //    ImGui::ColorEdit4("Color", my_color);
@@ -114,9 +112,8 @@ void render() {
     //ImGui::BeginChild("Scrolling");
     //for (int n = 0; n < 50; n++)
     //    ImGui::Text("%04d: Some text", n);
+    //ImGui::EndChild();
 
-
-    ImGui::EndChild();
     ImGui::End();
     ImGui::Render();
 }
@@ -134,7 +131,7 @@ void mainMouseMoved(uint _x, uint _y) {
     //std::cout << "okok";
     //fflush(stdout);
 }
-void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {}
+void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) { std::cout << "click" << std::endl; }
 
 int main() {
     SimpleUI::init(800,600,"Hello, ImGui!");
@@ -144,13 +141,12 @@ int main() {
     SimpleUI::onKeyPressed = mainKeyPressed;
     SimpleUI::onScanCodePressed = mainScanCodePressed;
     SimpleUI::onMouseMotion = mainMouseMoved;
+    SimpleUI::onMouseButtonPressed = mainMousePressed;
 
     SimpleUI::bindImGui();
     SimpleUI::initImGui();
 
     SimpleUI::loop();
-
-
 
     return 0;
 }
