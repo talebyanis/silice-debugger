@@ -23,6 +23,9 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto cpos = editor.GetCursorPosition();
+
+
+
     ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
@@ -183,7 +186,7 @@ void mainMouseMoved(uint _x, uint _y) {
 void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
 int main() {
-    printing();
+    //printing();
 
     SimpleUI::init(800, 600, "");
 

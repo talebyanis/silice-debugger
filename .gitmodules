@@ -4,3 +4,6 @@
 [submodule "src/tinyfiledialogs"]
 	path = src/tinyfiledialogs
 	url = https://github.com/native-toolkit/tinyfiledialogs
+[submodule "libs/LibSL"]
+	path = libs/LibSL
+	url = https://github.com/shin0bi-y/LibSL
