@@ -3,7 +3,7 @@
 #include "../libs/fstapi/fstapi.h"
 
 int mainFST() {
-    void *g_Wave = fstReaderOpen("/home/antoine/IdeaProjects/FSTApiTest/icarus.fst");
+    void *g_Wave = fstReaderOpen("icarus.fst");
     struct fstHier *hier = fstReaderIterateHier(g_Wave);
     do {
         switch (hier->htyp) {

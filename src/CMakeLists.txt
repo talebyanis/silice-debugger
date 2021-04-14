@@ -12,4 +12,5 @@ target_link_libraries(silice-text-editor
         LibSL_gl
         texteditor
         tinyfiledialogs
+        fstapi
         )
