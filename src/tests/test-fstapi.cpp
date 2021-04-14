@@ -1,9 +1,9 @@
 #include <iostream>
-#include <LibSL.h>
-#include "../libs/fstapi/fstapi.h"
+#include "../../libs/fstapi/fstapi.h"
+#include "../sourcePath.h"
 
-int mainFST() {
-    void *g_Wave = fstReaderOpen("icarus.fst");
+void printing() {
+    void *g_Wave = fstReaderOpen(SRC_PATH "/src/icarus.fst");
     struct fstHier *hier = fstReaderIterateHier(g_Wave);
     do {
         switch (hier->htyp) {
@@ -25,7 +25,4 @@ int mainFST() {
     } while (hier != NULL);
 
     fstReaderSetFacProcessMaskAll(g_Wave);
-
-
-    return 0;
 }

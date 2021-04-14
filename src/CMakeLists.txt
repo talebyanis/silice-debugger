@@ -2,10 +2,12 @@ add_subdirectory(TextEditor)
 add_subdirectory(tinyfiledialogs)
 
 add_executable(silice-text-editor
-        main.cpp
+        tests/test-fstapi.h
+        tests/test-fstapi.cpp
         FileDialog.h
         FileDialog.cpp
-        mainFST.cpp)
+        main.cpp
+        )
 
 target_link_libraries(silice-text-editor
         LibSL

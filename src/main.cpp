@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "TextEditor/TextEditor.h"
 #include "FileDialog.h"
+#include "tests/test-fstapi.h"
 
 #ifdef WIN32
 namespace fs = std::experimental::filesystem;
@@ -182,6 +183,8 @@ void mainMouseMoved(uint _x, uint _y) {
 void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
 int main() {
+    printing();
+
     SimpleUI::init(800, 600, "");
 
     SimpleUI::onRender = render;
