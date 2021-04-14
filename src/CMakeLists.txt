@@ -5,7 +5,7 @@ add_executable(silice-text-editor
         main.cpp
         FileDialog.h
         FileDialog.cpp
-        )
+        mainFST.cpp)
 
 target_link_libraries(silice-text-editor
         LibSL
