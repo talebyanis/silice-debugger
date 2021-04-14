@@ -15,10 +15,8 @@ namespace fs = std::filesystem;
 uint width = 800, height = 600;
 
 TextEditor editor;
-static const char * fileToEdit = "test_editing.ice";
-static fs::path fileFullPath = "";
 
-//TODO : nom du fichier dans new / open / save as ne s'affiche pas
+static fs::path fileFullPath = "";
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -36,7 +34,6 @@ void render() {
                     std::fstream newfile;
                     editor.SetText("");
                     fileFullPath = fullpath;
-                    fileToEdit = fullpath.c_str();
                 }
             }
 
@@ -52,8 +49,7 @@ void render() {
                         while(getline(newfile, tp)){
                             editor.InsertText(tp + "\n");
                         }
-                        std::string fileName = extractFileName(path);
-                        fileToEdit = fileName.c_str();
+                        fileFullPath = path;
                         newfile.close();
                     }
                 }
@@ -70,10 +66,9 @@ void render() {
 
             if (ImGui::MenuItem("Save as", "Ctrl + Maj + S")) {
                 auto textToSave = editor.GetText();
-                std::string fullpath = saveFileDialog(fileToEdit, OFD_FILTER_ALL);
+                std::string fullpath = saveFileDialog("file", OFD_FILTER_ALL);
+                fileFullPath = fs::path(fullpath);
                 if(!fullpath.empty()) {
-                    std::string fileName = extractFileName(fullpath);
-                    fileToEdit = fileName.c_str();
                     std::fstream file(fullpath);
                     file.open(fullpath, std::ios::out);
                     file << textToSave;
@@ -143,7 +138,7 @@ void render() {
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                 editor.IsOverwrite() ? "Ovr" : "Ins",
                 editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), fileToEdit);
+                editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath).c_str());
 
     editor.Render("TextEditor");
 
