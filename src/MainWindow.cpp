@@ -5,6 +5,7 @@
 #include "TextEditor/TextEditor.h"
 #include "FileDialog.h"
 #include "MainWindow.h"
+#include "../libs/implot/implot.h"
 
 // Defining fs depending on the user's OS
 #ifdef WIN32
@@ -53,25 +54,31 @@ void MainWindow::ShowDockSpace()
 
     // DockSpace
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
     if (ImGui::BeginMenuBar())
     {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Quit", "Alt-F4"))
+            {
+                ImGui::End();
+            }
+            ImGui::EndMenu();
+        }
         if (ImGui::BeginMenu("Docking"))
         {
             // Disabling fullscreen would allow the window to be moved to the front of other windows,
             // which we can't undo at the moment without finer window depth/z control.
             //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-            if (ImGui::MenuItem("Flag: NoSplit",                "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-            if (ImGui::MenuItem("Flag: NoResize",               "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-            if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-            if (ImGui::MenuItem("Flag: PassthruCentralNode",    "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0))     dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
-            if (ImGui::MenuItem("Flag: AutoHideTabBar",         "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
-            ImGui::Separator();
-            if (ImGui::MenuItem("Close DockSpace", nullptr, false, p_open_dockspace != NULL))
-                p_open_dockspace = false;
+            if (ImGui::MenuItem("NoSplit",                "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+            if (ImGui::MenuItem("NoResize",               "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+            if (ImGui::MenuItem("NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+            if (ImGui::MenuItem("PassthruCentralNode",    "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0))     dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
+            if (ImGui::MenuItem("AutoHideTabBar",         "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+
             ImGui::EndMenu();
         }
 
@@ -86,7 +93,7 @@ void MainWindow::ShowDockSpace()
 void MainWindow::ShowCodeEditor()
 {
     auto cpos = editor.GetCursorPosition();
-    ImGui::Begin("Text Editor Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -139,9 +146,6 @@ void MainWindow::ShowCodeEditor()
                 }
             }
 
-            if (ImGui::MenuItem("Quit", "Alt-F4")) {
-                std::cout << "quit";
-            }
             ImGui::EndMenu();
         }
 
@@ -206,5 +210,23 @@ void MainWindow::ShowCodeEditor()
 
     editor.Render("TextEditor");
 
+    ImGui::End();
+}
+
+//-------------------------------------------------------
+
+void MainWindow::ShowPlotExample() {
+
+    int   bar_data[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    int x_data[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    int y_data[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    ImGui::Begin("Plot Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    if (ImPlot::BeginPlot("My Plot")) {
+        //ImPlot::PlotBars("My Bar Plot", bar_data, 11);
+        ImPlot::PlotStairs("Test Stairs", x_data, y_data, 11);
+        //ImPlot::PlotLine("My Line Plot", x_data, y_data, 11);
+        ImPlot::EndPlot();
+    }
     ImGui::End();
 }

@@ -5,7 +5,6 @@
 #include "MainWindow.h"
 #include "../libs/implot/implot.h"
 
-
 bool p_open = true;
 MainWindow mainWindow;
 
@@ -13,6 +12,7 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     mainWindow.ShowDockSpace();
     mainWindow.ShowCodeEditor();
+    mainWindow.ShowPlotExample();
     ImGui::Render();
 }
 
@@ -36,16 +36,13 @@ static void SetClipboard(void *, const char *text) {
 void onResize(uint _width, uint _height) {
 }
 
-void mainKeyPressed(uchar _k) { std::cout << "okok"; }
+void mainKeyPressed(uchar _k) { }
 
-void mainScanCodePressed(uint _sc) { std::cout << "okok"; }
+void mainScanCodePressed(uint _sc) { }
 
-void mainScanCodeUnpressed(uint _sc) {}
+void mainScanCodeUnpressed(uint _sc) { }
 
-void mainMouseMoved(uint _x, uint _y) {
-    //std::cout << "okok";
-    //fflush(stdout);
-}
+void mainMouseMoved(uint _x, uint _y) { }
 
 void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
@@ -67,11 +64,18 @@ int main() {
 
     SimpleUI::bindImGui();
     SimpleUI::initImGui();
+
+    ImGui::CreateContext();
+    ImPlot::CreateContext();
+
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     /*ImGui::GetIO().GetClipboardTextFn = GetClipboard;
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/
 
     SimpleUI::loop();
+
+    ImPlot::DestroyContext();
+    ImGui::DestroyContext();
 
     return 0;
 }

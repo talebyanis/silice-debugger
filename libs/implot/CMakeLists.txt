@@ -7,6 +7,8 @@ INCLUDE_DIRECTORIES(
 )
 
 add_library(implot
+        implot_internal.h
         implot.h
         implot.cpp
+        implot_items.cpp
         )
