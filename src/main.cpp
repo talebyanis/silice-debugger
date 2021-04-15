@@ -1,15 +1,10 @@
 #include <iostream>
-#include <LibSL.h>
 #include <LibSL_gl.h>
 #include "imgui.h"
 #include "tests/test-fstapi.h"
 #include "MainWindow.h"
+#include "../libs/implot/implot.h"
 
-#ifdef WIN32
-namespace fs = std::experimental::filesystem;
-#else
-namespace fs = std::filesystem;
-#endif
 
 bool p_open = true;
 MainWindow mainWindow;

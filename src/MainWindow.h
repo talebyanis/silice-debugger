@@ -1,5 +1,3 @@
-#include <filesystem>
-#include <TextEditor.h>
 
 class MainWindow {
 public:

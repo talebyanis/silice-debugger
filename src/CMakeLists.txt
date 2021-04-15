@@ -17,4 +17,7 @@ target_link_libraries(silice-text-editor
         texteditor
         tinyfiledialogs
         fstapi
+        implot
         )
+
+
