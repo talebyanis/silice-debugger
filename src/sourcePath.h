@@ -1,3 +1,3 @@
 #pragma once
 
-#define SRC_PATH "/home/shinobi/work/stage/silice-text-editor"
+#define SRC_PATH "/home/antoine/CLion/silice-text-editor"

@@ -9,7 +9,9 @@ add_executable(silice-text-editor
         MainWindow.h
         MainWindow.cpp
         main.cpp
-        )
+        FSTReader.cpp FSTReader.h)
+
+FIND_PACKAGE(Threads REQUIRED)
 
 target_link_libraries(silice-text-editor
         LibSL
@@ -17,4 +19,5 @@ target_link_libraries(silice-text-editor
         texteditor
         tinyfiledialogs
         fstapi
+        Threads::Threads
         )

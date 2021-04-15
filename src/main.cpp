@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "tests/test-fstapi.h"
 #include "MainWindow.h"
+#include "FSTReader.h"
 
 #ifdef WIN32
 namespace fs = std::experimental::filesystem;
