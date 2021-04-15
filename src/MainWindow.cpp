@@ -4,15 +4,28 @@
 #include "imgui.h"
 #include "TextEditor/TextEditor.h"
 #include "FileDialog.h"
-#include "tests/test-fstapi.h"
 #include "MainWindow.h"
 
+// Defining fs depending on the user's OS
+#ifdef WIN32
+namespace fs = std::experimental::filesystem;
+#else
+namespace fs = std::filesystem;
+#endif
+
 static fs::path fileFullPath;
+
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
                                 | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
                                 | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 bool p_open_dockspace = true;
+
+uint width = 1280, height = 720;
+
+TextEditor editor;
+
+//-------------------------------------------------------
 
 void MainWindow::ShowDockSpace()
 {
@@ -67,6 +80,8 @@ void MainWindow::ShowDockSpace()
 
     ImGui::End();
 }
+
+//-------------------------------------------------------
 
 void MainWindow::ShowCodeEditor()
 {
