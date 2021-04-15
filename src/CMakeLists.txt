@@ -20,4 +20,7 @@ target_link_libraries(silice-text-editor
         tinyfiledialogs
         fstapi
         Threads::Threads
+        implot
         )
+
+
