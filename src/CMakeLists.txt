@@ -6,6 +6,8 @@ add_executable(silice-text-editor
         tests/test-fstapi.cpp
         FileDialog.h
         FileDialog.cpp
+        MainWindow.h
+        MainWindow.cpp
         main.cpp
         )
 
