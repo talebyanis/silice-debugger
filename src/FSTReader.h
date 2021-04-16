@@ -1,3 +1,6 @@
+#ifndef FSTReaderGuard
+#define FSTReaderGuard
+
 #include "../../libs/fstapi/fstapi.h"
 
 typedef std::list<std::pair<uint64_t, uint64_t>> valuesList;
@@ -8,3 +11,5 @@ public:
     valuesList getValues(fstHandle signal);
     std::string getSignalName(fstHandle signal);
 };
+
+#endif

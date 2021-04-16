@@ -1,7 +1,8 @@
+#include "FSTReader.h"
 
 class MainWindow {
 public:
     void ShowDockSpace();
     void ShowCodeEditor();
-    void ShowPlotExample();
+    void AddPlot(fstHandle signal);
 };

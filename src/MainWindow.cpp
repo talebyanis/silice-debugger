@@ -217,12 +217,12 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-void MainWindow::ShowPlotExample() {
+void MainWindow::AddPlot(fstHandle signal) {
     std::list<uint64_t> x_dataList = {};
     std::list<uint64_t> y_dataList = {};
 
     FSTReader reader = FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
-    valuesList values = reader.getValues(6);
+    valuesList values = reader.getValues(signal);
     for (const auto &item : values) {
         x_dataList.push_back(item.first);
         y_dataList.push_back(item.second);
@@ -237,12 +237,12 @@ void MainWindow::ShowPlotExample() {
         y_dataList.pop_front();
     }
 
-    int bar_data[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+    std::string signalName = reader.getSignalName(signal);
 
-    ImGui::Begin("Plot Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    if (ImPlot::BeginPlot(reader.getSignalName(6).c_str())) {
+    ImGui::Begin(signalName.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    if (ImPlot::BeginPlot(signalName.c_str())) {
         //ImPlot::PlotBars("My Bar Plot", bar_data, 11);
-        ImPlot::PlotStairs(reader.getSignalName(6).c_str(), x_data, y_data, 11);
+        ImPlot::PlotStairs(signalName.c_str(), x_data, y_data, 11);
         //ImPlot::PlotLine("My Line Plot", x_dataList, y_dataList, 11);
         ImPlot::EndPlot();
     }
