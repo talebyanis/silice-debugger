@@ -9,7 +9,7 @@ add_executable(silice-text-editor
         MainWindow.h
         MainWindow.cpp
         main.cpp
-        FSTReader.cpp FSTReader.h)
+        FSTReader.cpp FSTReader.h FSTWindow.cpp FSTWindow.h)
 
 FIND_PACKAGE(Threads REQUIRED)
 

@@ -5,8 +5,7 @@
 #include "TextEditor/TextEditor.h"
 #include "FileDialog.h"
 #include "MainWindow.h"
-#include "../libs/implot/implot.h"
-#include "FSTReader.h"
+#include "FSTWindow.h"
 
 // Defining fs depending on the user's OS
 #ifdef WIN32
@@ -16,8 +15,6 @@ namespace fs = std::filesystem;
 #endif
 
 static fs::path fileFullPath;
-
-FSTReader *g_reader = nullptr;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
@@ -29,7 +26,7 @@ uint width = 1280, height = 720;
 
 TextEditor editor;
 
-std::list<Plot> g_Plots = {};
+FSTWindow *fstWindow = nullptr;
 
 //-------------------------------------------------------
 
@@ -52,9 +49,7 @@ void MainWindow::ShowDockSpace() {
     // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::Begin("DockSpace Demo", &p_open_dockspace, window_flags);
-    ImGui::PopStyleVar();
-
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar(3);
 
     // DockSpace
     ImGuiIO &io = ImGui::GetIO();
@@ -63,6 +58,19 @@ void MainWindow::ShowDockSpace() {
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open fst")) {
+                auto fullpath = openFileDialog(OFD_FILTER_ALL);
+                if (!fullpath.empty()) {
+                    if (fstWindow) {
+                        delete fstWindow;
+                    }
+                    fstWindow = new FSTWindow(fullpath);
+                    std::cout << "file " << fullpath << " opened" << std::endl;
+                }
+            }
+
+            ImGui::Separator();
+
             if (ImGui::MenuItem("Quit", "Alt-F4")) {
                 ImGui::End();
             }
@@ -89,21 +97,6 @@ void MainWindow::ShowDockSpace() {
 
             ImGui::EndMenu();
         }
-
-        if (ImGui::BeginMenu("Graph")) {
-            for (const auto &item : g_reader->getScopes()) {
-                if (ImGui::BeginMenu(item.c_str())) {
-                    for (const auto &item : g_reader->getSignals(item)) {
-                        if(ImGui::MenuItem(g_reader->getSignalName(item).c_str())) {
-                            this->AddPlot("/home/antoine/CLion/silice-text-editor/src/icarus.fst", item);
-                        }
-                    }
-                    ImGui::EndMenu();
-                }
-            }
-            ImGui::EndMenu();
-        }
-
         ImGui::EndMenuBar();
     }
 
@@ -113,10 +106,6 @@ void MainWindow::ShowDockSpace() {
 //-------------------------------------------------------
 
 void MainWindow::ShowCodeEditor() {
-    if (!g_reader) {
-        g_reader = new FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
-    }
-
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
@@ -239,28 +228,8 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-void MainWindow::AddPlot(std::string file, fstHandle signal) {
-    Plot plot;
-    std::string signalName = g_reader->getSignalName(signal);
-    plot.name = signalName;
-    valuesList values = g_reader->getValues(signal);
-    std::cout << signalName << ": " << values.size() << std::endl;
-    for (const auto &item : values) {
-        plot.x_data.push_back(item.first);
-        plot.y_data.push_back(item.second);
-    }
-
-    g_Plots.push_back(plot);
-}
-
-void MainWindow::showPlots() {
-    for (const auto &item : g_Plots) {
-        ImGui::SetNextWindowSize(ImVec2(380, 360), ImGuiCond_FirstUseEver);
-        ImGui::Begin(item.name.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-        if (ImPlot::BeginPlot(item.name.c_str())) {
-            ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
-            ImPlot::EndPlot();
-        }
-        ImGui::End();
-    }
+void MainWindow::Render() {
+    this->ShowDockSpace();
+    this->ShowCodeEditor();
+    if(fstWindow != nullptr) fstWindow->render();
 }

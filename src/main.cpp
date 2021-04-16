@@ -8,9 +8,7 @@ MainWindow mainWindow;
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mainWindow.ShowDockSpace();
-    mainWindow.ShowCodeEditor();
-    mainWindow.showPlots();
+    mainWindow.Render();
     ImGui::Render();
 }
 

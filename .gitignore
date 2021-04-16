@@ -5,3 +5,4 @@ Makefile
 *.cmake
 CMakeFiles
 CMakeCache.txt
+sourcePath.h
