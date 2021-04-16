@@ -3,6 +3,7 @@
 #include <thread>
 #include <LibSL.h>
 #include <LibSL_gl.h>
+#include <imgui.h>
 
 #include "FSTReader.h"
 
@@ -16,8 +17,8 @@ std::mutex g_Mutex;
 
 // ---------------------------------------------------------------------
 
-uint64_t decodeValue(const char *str) {
-    uint64_t val = 0;
+int decodeValue(const char *str) {
+    int val = 0;
     while (*str != '\0') {
         val = (val << 1) | (*str == '1' ? 1 : 0);
         str++;
@@ -27,9 +28,10 @@ uint64_t decodeValue(const char *str) {
 
 // ---------------------------------------------------------------------
 
-void value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
+void
+value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
     std::unique_lock<std::mutex> lock(g_Mutex);
-    g_Values[facidx].push_back(std::make_pair(time, decodeValue(reinterpret_cast<const char *>(value))));
+    g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));
     std::this_thread::yield();
 }
 
@@ -43,9 +45,9 @@ void initMaps() {
     do {
         switch (hier->htyp) {
             case FST_HT_SCOPE:
-                if(currentScope.compare(hier->u.var.name) != 0) {
+                if (currentScope.compare(hier->u.var.name) != 0) {
                     currentSignals.sort();
-                    if(!currentScope.empty()) g_ScopeToSignals.insert(std::make_pair(currentScope,currentSignals));
+                    if (!currentScope.empty()) g_ScopeToSignals.insert(std::make_pair(currentScope, currentSignals));
                     currentSignals = {};
                     currentScope = hier->u.var.name;
                 }
@@ -81,6 +83,22 @@ valuesList FSTReader::getValues(fstHandle signal) {
 
 std::string FSTReader::getSignalName(fstHandle signal) {
     return g_HandleToName[signal];
+}
+
+// ---------------------------------------------------------------------
+
+std::list<std::string> FSTReader::getScopes() {
+    std::list<std::string> scopes = {};
+    for (const auto &item : g_ScopeToSignals) {
+        scopes.push_back(item.first);
+    }
+    return scopes;
+}
+
+// ---------------------------------------------------------------------
+
+std::list<fstHandle> FSTReader::getSignals(std::string scope) {
+    return g_ScopeToSignals[scope];
 }
 
 // ---------------------------------------------------------------------

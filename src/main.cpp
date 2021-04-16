@@ -10,7 +10,7 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     mainWindow.ShowDockSpace();
     mainWindow.ShowCodeEditor();
-    mainWindow.AddPlot("/home/antoine/CLion/silice-text-editor/src/icarus.fst",6);
+    mainWindow.showPlots();
     ImGui::Render();
 }
 

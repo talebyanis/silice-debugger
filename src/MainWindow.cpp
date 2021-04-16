@@ -17,6 +17,8 @@ namespace fs = std::filesystem;
 
 static fs::path fileFullPath;
 
+FSTReader *g_reader = nullptr;
+
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
                                 | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
@@ -26,6 +28,8 @@ bool p_open_dockspace = true;
 uint width = 1280, height = 720;
 
 TextEditor editor;
+
+std::list<Plot> g_Plots = {};
 
 //-------------------------------------------------------
 
@@ -86,6 +90,20 @@ void MainWindow::ShowDockSpace() {
             ImGui::EndMenu();
         }
 
+        if (ImGui::BeginMenu("Graph")) {
+            for (const auto &item : g_reader->getScopes()) {
+                if (ImGui::BeginMenu(item.c_str())) {
+                    for (const auto &item : g_reader->getSignals(item)) {
+                        if(ImGui::MenuItem(g_reader->getSignalName(item).c_str())) {
+                            this->AddPlot("/home/antoine/CLion/silice-text-editor/src/icarus.fst", item);
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+            }
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMenuBar();
     }
 
@@ -95,6 +113,10 @@ void MainWindow::ShowDockSpace() {
 //-------------------------------------------------------
 
 void MainWindow::ShowCodeEditor() {
+    if (!g_reader) {
+        g_reader = new FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
+    }
+
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
@@ -218,34 +240,27 @@ void MainWindow::ShowCodeEditor() {
 //-------------------------------------------------------
 
 void MainWindow::AddPlot(std::string file, fstHandle signal) {
-    std::list<uint64_t> x_dataList = {};
-    std::list<uint64_t> y_dataList = {};
-
-    FSTReader reader = FSTReader(file.c_str());
-    valuesList values = reader.getValues(signal);
+    Plot plot;
+    std::string signalName = g_reader->getSignalName(signal);
+    plot.name = signalName;
+    valuesList values = g_reader->getValues(signal);
+    std::cout << signalName << ": " << values.size() << std::endl;
     for (const auto &item : values) {
-        x_dataList.push_back(item.first);
-        y_dataList.push_back(item.second);
+        plot.x_data.push_back(item.first);
+        plot.y_data.push_back(item.second);
     }
 
-    int x_data[x_dataList.size()];
-    int y_data[y_dataList.size()];
-    for (int k = 0; k < x_dataList.size(); k++) {
-        x_data[k] = x_dataList.front();
-        x_dataList.pop_front();
-        y_data[k] = y_dataList.front();
-        y_dataList.pop_front();
-    }
+    g_Plots.push_back(plot);
+}
 
-    std::string signalName = reader.getSignalName(signal);
-
-    ImGui::SetNextWindowSize(ImVec2(380,360),ImGuiCond_FirstUseEver);
-    ImGui::Begin(signalName.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    if (ImPlot::BeginPlot(signalName.c_str())) {
-        //ImPlot::PlotBars("My Bar Plot", bar_data, 11);
-        ImPlot::PlotStairs(signalName.c_str(), x_data, y_data, 11);
-        //ImPlot::PlotLine("My Line Plot", x_dataList, y_dataList, 11);
-        ImPlot::EndPlot();
+void MainWindow::showPlots() {
+    for (const auto &item : g_Plots) {
+        ImGui::SetNextWindowSize(ImVec2(380, 360), ImGuiCond_FirstUseEver);
+        ImGui::Begin(item.name.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+        if (ImPlot::BeginPlot(item.name.c_str())) {
+            ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
+            ImPlot::EndPlot();
+        }
+        ImGui::End();
     }
-    ImGui::End();
 }
