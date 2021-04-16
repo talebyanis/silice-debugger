@@ -1,12 +1,9 @@
-#include <iostream>
 #include <LibSL_gl.h>
 #include "imgui.h"
 #include "tests/test-fstapi.h"
 #include "MainWindow.h"
-#include "FSTReader.h"
 #include "../libs/implot/implot.h"
 
-bool p_open = true;
 MainWindow mainWindow;
 
 void render() {
@@ -16,8 +13,6 @@ void render() {
     mainWindow.AddPlot("/home/antoine/CLion/silice-text-editor/src/icarus.fst",6);
     ImGui::Render();
 }
-
-
 
 /*
 static ImVector<char> clipboard;
@@ -48,9 +43,7 @@ void mainMouseMoved(uint _x, uint _y) { }
 void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
 int main() {
-    //printing();
-
-    SimpleUI::init(800, 600, "");
+    SimpleUI::init(1280, 720, "");
 
     SimpleUI::onRender = render;
     SimpleUI::onReshape = onResize;
