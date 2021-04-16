@@ -7,6 +7,7 @@
 #include "MainWindow.h"
 #include "../libs/implot/implot.h"
 #include "FSTReader.h"
+#include "sourcePath.h"
 
 // Defining fs depending on the user's OS
 #ifdef WIN32
@@ -114,7 +115,7 @@ void MainWindow::ShowDockSpace() {
 
 void MainWindow::ShowCodeEditor() {
     if (!g_reader) {
-        g_reader = new FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
+        g_reader = new FSTReader(SRC_PATH "/src/icarus.fst");
     }
 
     auto cpos = editor.GetCursorPosition();
