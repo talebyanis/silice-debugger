@@ -4,5 +4,5 @@ class MainWindow {
 public:
     void ShowDockSpace();
     void ShowCodeEditor();
-    void AddPlot(fstHandle signal);
+    void AddPlot(std::string file, fstHandle signal);
 };

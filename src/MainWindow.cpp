@@ -217,11 +217,11 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-void MainWindow::AddPlot(fstHandle signal) {
+void MainWindow::AddPlot(std::string file, fstHandle signal) {
     std::list<uint64_t> x_dataList = {};
     std::list<uint64_t> y_dataList = {};
 
-    FSTReader reader = FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
+    FSTReader reader = FSTReader(file.c_str());
     valuesList values = reader.getValues(signal);
     for (const auto &item : values) {
         x_dataList.push_back(item.first);
@@ -239,6 +239,7 @@ void MainWindow::AddPlot(fstHandle signal) {
 
     std::string signalName = reader.getSignalName(signal);
 
+    ImGui::SetNextWindowSize(ImVec2(380,360),ImGuiCond_FirstUseEver);
     ImGui::Begin(signalName.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImPlot::BeginPlot(signalName.c_str())) {
         //ImPlot::PlotBars("My Bar Plot", bar_data, 11);
