@@ -1,23 +1,18 @@
-#include <iostream>
 #include <LibSL_gl.h>
 #include "imgui.h"
 #include "tests/test-fstapi.h"
 #include "MainWindow.h"
-#include "FSTReader.h"
 #include "../libs/implot/implot.h"
 
-bool p_open = true;
 MainWindow mainWindow;
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     mainWindow.ShowDockSpace();
     mainWindow.ShowCodeEditor();
-    mainWindow.ShowPlotExample();
+    mainWindow.showPlots();
     ImGui::Render();
 }
-
-
 
 /*
 static ImVector<char> clipboard;
@@ -48,10 +43,7 @@ void mainMouseMoved(uint _x, uint _y) { }
 void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
 
 int main() {
-    //printing();
-
-    SimpleUI::init(800, 600, "");
-
+    SimpleUI::init(1280, 720, "");
 
     SimpleUI::onRender = render;
     SimpleUI::onReshape = onResize;

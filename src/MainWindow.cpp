@@ -6,6 +6,7 @@
 #include "FileDialog.h"
 #include "MainWindow.h"
 #include "../libs/implot/implot.h"
+#include "FSTReader.h"
 
 // Defining fs depending on the user's OS
 #ifdef WIN32
@@ -15,6 +16,8 @@ namespace fs = std::filesystem;
 #endif
 
 static fs::path fileFullPath;
+
+FSTReader *g_reader = nullptr;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
@@ -26,11 +29,12 @@ uint width = 1280, height = 720;
 
 TextEditor editor;
 
+std::list<Plot> g_Plots = {};
+
 //-------------------------------------------------------
 
-void MainWindow::ShowDockSpace()
-{
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
+void MainWindow::ShowDockSpace() {
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
@@ -53,32 +57,50 @@ void MainWindow::ShowDockSpace()
     ImGui::PopStyleVar(2);
 
     // DockSpace
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     ImGuiID dockspace_id = ImGui::GetID("DockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("Quit", "Alt-F4"))
-            {
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Quit", "Alt-F4")) {
                 ImGui::End();
             }
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu("Docking"))
-        {
+        if (ImGui::BeginMenu("Docking")) {
             // Disabling fullscreen would allow the window to be moved to the front of other windows,
             // which we can't undo at the moment without finer window depth/z control.
             //ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
 
-            if (ImGui::MenuItem("NoSplit",                "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-            if (ImGui::MenuItem("NoResize",               "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-            if (ImGui::MenuItem("NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-            if (ImGui::MenuItem("PassthruCentralNode",    "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0))     dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
-            if (ImGui::MenuItem("AutoHideTabBar",         "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+            if (ImGui::MenuItem("NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
+                dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+            if (ImGui::MenuItem("NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
+                dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+            if (ImGui::MenuItem("NoDockingInCentralNode", "",
+                                (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))
+                dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+            if (ImGui::MenuItem("PassthruCentralNode", "",
+                                (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0))
+                dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
+            if (ImGui::MenuItem("AutoHideTabBar", "",
+                                (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))
+                dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
 
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Graph")) {
+            for (const auto &item : g_reader->getScopes()) {
+                if (ImGui::BeginMenu(item.c_str())) {
+                    for (const auto &item : g_reader->getSignals(item)) {
+                        if(ImGui::MenuItem(g_reader->getSignalName(item).c_str())) {
+                            this->AddPlot("/home/antoine/CLion/silice-text-editor/src/icarus.fst", item);
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+            }
             ImGui::EndMenu();
         }
 
@@ -90,8 +112,11 @@ void MainWindow::ShowDockSpace()
 
 //-------------------------------------------------------
 
-void MainWindow::ShowCodeEditor()
-{
+void MainWindow::ShowCodeEditor() {
+    if (!g_reader) {
+        g_reader = new FSTReader("/home/antoine/CLion/silice-text-editor/src/icarus.fst");
+    }
+
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
@@ -113,11 +138,11 @@ void MainWindow::ShowCodeEditor()
                 if (!fullpath.empty()) {
                     fs::path path = fs::path(fullpath);
                     std::fstream newfile;
-                    newfile.open(path,std::ios::in);
-                    if (newfile.is_open()){
+                    newfile.open(path, std::ios::in);
+                    if (newfile.is_open()) {
                         std::string tp;
                         editor.SetText("");
-                        while(getline(newfile, tp)){
+                        while (getline(newfile, tp)) {
                             editor.InsertText(tp + "\n");
                         }
                         fileFullPath = path;
@@ -126,10 +151,10 @@ void MainWindow::ShowCodeEditor()
                 }
             }
 
-            if (ImGui::MenuItem("Save","Ctrl + S", nullptr, !fileFullPath.string().empty())) {
+            if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, !fileFullPath.string().empty())) {
                 auto textToSave = editor.GetText();
                 std::string path = fileFullPath.string();
-                if(!path.empty()) {
+                if (!path.empty()) {
                     std::fstream file(fileFullPath);
                     file << textToSave;
                 }
@@ -139,7 +164,7 @@ void MainWindow::ShowCodeEditor()
                 auto textToSave = editor.GetText();
                 std::string fullpath = saveFileDialog("file", OFD_FILTER_ALL);
                 fileFullPath = fs::path(fullpath);
-                if(!fullpath.empty()) {
+                if (!fullpath.empty()) {
                     std::fstream file(fullpath);
                     file.open(fullpath, std::ios::out);
                     file << textToSave;
@@ -149,10 +174,9 @@ void MainWindow::ShowCodeEditor()
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Edit"))
-        {
+        if (ImGui::BeginMenu("Edit")) {
             bool ro = editor.IsReadOnly();
-            if (ImGui::MenuItem("Read-only mode", nullptr, &ro)){
+            if (ImGui::MenuItem("Read-only mode", nullptr, &ro)) {
                 editor.SetReadOnly(ro);
             }
 
@@ -215,18 +239,28 @@ void MainWindow::ShowCodeEditor()
 
 //-------------------------------------------------------
 
-void MainWindow::ShowPlotExample() {
-
-    int   bar_data[11] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-    int x_data[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    int y_data[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-    ImGui::Begin("Plot Demo", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    if (ImPlot::BeginPlot("My Plot")) {
-        //ImPlot::PlotBars("My Bar Plot", bar_data, 11);
-        ImPlot::PlotStairs("Test Stairs", x_data, y_data, 11);
-        //ImPlot::PlotLine("My Line Plot", x_data, y_data, 11);
-        ImPlot::EndPlot();
+void MainWindow::AddPlot(std::string file, fstHandle signal) {
+    Plot plot;
+    std::string signalName = g_reader->getSignalName(signal);
+    plot.name = signalName;
+    valuesList values = g_reader->getValues(signal);
+    std::cout << signalName << ": " << values.size() << std::endl;
+    for (const auto &item : values) {
+        plot.x_data.push_back(item.first);
+        plot.y_data.push_back(item.second);
     }
-    ImGui::End();
+
+    g_Plots.push_back(plot);
+}
+
+void MainWindow::showPlots() {
+    for (const auto &item : g_Plots) {
+        ImGui::SetNextWindowSize(ImVec2(380, 360), ImGuiCond_FirstUseEver);
+        ImGui::Begin(item.name.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+        if (ImPlot::BeginPlot(item.name.c_str())) {
+            ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
+            ImPlot::EndPlot();
+        }
+        ImGui::End();
+    }
 }
