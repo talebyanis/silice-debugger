@@ -52,7 +52,6 @@ int main() {
 
     SimpleUI::init(800, 600, "");
 
-
     SimpleUI::onRender = render;
     SimpleUI::onReshape = onResize;
     SimpleUI::onKeyPressed = mainKeyPressed;

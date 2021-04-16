@@ -69,8 +69,6 @@ void initMaps() {
     });
 
     th.join();
-
-    std::cout << "test";
 }
 
 // ---------------------------------------------------------------------
@@ -81,11 +79,16 @@ valuesList FSTReader::getValues(fstHandle signal) {
 
 // ---------------------------------------------------------------------
 
+std::string FSTReader::getSignalName(fstHandle signal) {
+    return g_HandleToName[signal];
+}
+
+// ---------------------------------------------------------------------
+
 FSTReader::FSTReader(const char *file) {
     if (!LibSL::System::File::exists(file)) {
         std::cerr << "Could not open fst wave file " << file << std::endl;
     }
     g_Wave = fstReaderOpen(file);
     initMaps();
-    fstReaderClose((void *) file);
 }

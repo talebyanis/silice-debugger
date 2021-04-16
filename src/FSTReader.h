@@ -6,4 +6,5 @@ class FSTReader {
 public:
     FSTReader(const char *file);
     valuesList getValues(fstHandle signal);
+    std::string getSignalName(fstHandle signal);
 };
