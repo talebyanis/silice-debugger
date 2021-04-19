@@ -7,7 +7,6 @@ typedef std::list<std::pair<ImU64 , ImU64>> valuesList;
 
 class FSTReader {
 private :
-    int decodeValue(const char *str);
     ImU64 getMaxTime();
     void initMaps();
     void value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value);

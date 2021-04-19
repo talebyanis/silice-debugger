@@ -17,7 +17,7 @@ std::mutex g_Mutex;
 
 // ---------------------------------------------------------------------
 
-int FSTReader::decodeValue(const char *str) {
+int decodeValue(const char *str) {
     int val = 0;
     while (*str != '\0') {
         val = (val << 1) | (*str == '1' ? 1 : 0);
@@ -69,7 +69,12 @@ void FSTReader::initMaps() {
     fstReaderSetFacProcessMaskAll(g_Wave);
 
     std::thread th([]() {
-        fstReaderIterBlocks(g_Wave, value_change_callback, NULL, NULL);
+        auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
+            std::unique_lock<std::mutex> lock(g_Mutex);
+            g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));
+            std::this_thread::yield();
+        };
+        fstReaderIterBlocks(g_Wave, l, NULL, NULL);
     });
 
     th.join();
@@ -88,15 +93,6 @@ void FSTReader::initMaps() {
                 lastValue = value.second;
             }
             values->push_back(std::make_pair(maxTime, lastValue));
-        }
-    }
-    for (const auto &item : g_Values) {
-        valuesList values = item.second;
-        ImU64 lastValue = 0;
-        ImU64 lastTime = 0;
-        for (const auto &value : values) {
-            lastTime = value.first;
-            lastValue = value.second;
         }
     }
 }
