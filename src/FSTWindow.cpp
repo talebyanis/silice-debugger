@@ -71,9 +71,10 @@ void FSTWindow::showPlots() {
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
     for (const auto &item : g_Plots) {
-        ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20 , 300));
-        ImPlot::SetNextPlotLimitsY(-0.1, 1.1);
-        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0,0));
+        ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 300));
+        double max = *std::max_element(item.y_data.begin(), item.y_data.end());
+        ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
+        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
         if (ImPlot::BeginPlot(item.name.c_str())) {
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
             ImPlot::EndPlot();
@@ -88,19 +89,22 @@ void FSTWindow::showPlots() {
 void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("PlotWindow");
+    ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500),ImGuiCond_FirstUseEver);
+    ImGui::Begin("PlotWindow", NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
         ImVec2 wPos = ImGui::GetCursorScreenPos();
         ImVec2 wSize = ImGui::GetWindowSize();
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y));
-        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y), true, ImGuiWindowFlags_NoDocking);
+        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y), true,
+                          ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlotMenu();
         }
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(ImVec2(wPos.x + treeWidth, wPos.y));
-        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y), true, ImGuiWindowFlags_NoDocking);
+        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y), true,
+                          ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlots();
         }
