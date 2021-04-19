@@ -28,8 +28,10 @@ int FSTReader::decodeValue(const char *str) {
 
 // ---------------------------------------------------------------------
 
-void
-value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
+void FSTReader::value_change_callback(void *user_callback_data_pointer,
+                                      uint64_t time,
+                                      fstHandle facidx,
+                                      const unsigned char *value) {
     std::unique_lock<std::mutex> lock(g_Mutex);
     g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));
     std::this_thread::yield();
@@ -74,7 +76,7 @@ void FSTReader::initMaps() {
 
     ImU64 maxTime = getMaxTime();
     for (auto &item : g_Values) {
-        valuesList* values = &item.second;
+        valuesList *values = &item.second;
         auto res = std::find_if(values->begin(), values->end(), [maxTime](std::pair<ImU64, ImU64> pair) {
             return pair.first == maxTime;
         });
