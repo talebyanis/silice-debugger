@@ -2,10 +2,14 @@
 #include <filesystem>
 #include <LibSL.h>
 #include "imgui.h"
-#include "TextEditor/TextEditor.h"
+#include "ImGuiColorTextEdit/TextEditor.h"
 #include "FileDialog.h"
 #include "MainWindow.h"
+#include "../libs/implot/implot.h"
+#include "FSTReader.h"
+#include "sourcePath.h"
 #include "FSTWindow.h"
+
 
 // Defining fs depending on the user's OS
 #ifdef WIN32

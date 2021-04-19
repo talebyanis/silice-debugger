@@ -1,4 +1,4 @@
-add_subdirectory(TextEditor)
+add_subdirectory(ImGuiColorTextEdit)
 add_subdirectory(tinyfiledialogs)
 
 add_executable(silice-text-editor
