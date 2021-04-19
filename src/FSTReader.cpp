@@ -17,7 +17,7 @@ std::mutex g_Mutex;
 
 // ---------------------------------------------------------------------
 
-int decodeValue(const char *str) {
+int FSTReader::decodeValue(const char *str) {
     int val = 0;
     while (*str != '\0') {
         val = (val << 1) | (*str == '1' ? 1 : 0);
@@ -37,7 +37,7 @@ value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle
 
 // ---------------------------------------------------------------------
 
-void initMaps() {
+void FSTReader::initMaps() {
     std::string currentScope;
     std::list<fstHandle> currentSignals = {};
 
@@ -71,6 +71,32 @@ void initMaps() {
     });
 
     th.join();
+
+    ImU64 maxTime = getMaxTime();
+    for (auto &item : g_Values) {
+        valuesList* values = &item.second;
+        auto res = std::find_if(values->begin(), values->end(), [maxTime](std::pair<ImU64, ImU64> pair) {
+            return pair.first == maxTime;
+        });
+        if (res == values->end()) {
+            ImU64 lastValue = 0;
+            ImU64 lastTime = 0;
+            for (const auto &value : *values) {
+                lastTime = value.first;
+                lastValue = value.second;
+            }
+            values->push_back(std::make_pair(maxTime, lastValue));
+        }
+    }
+    for (const auto &item : g_Values) {
+        valuesList values = item.second;
+        ImU64 lastValue = 0;
+        ImU64 lastTime = 0;
+        for (const auto &value : values) {
+            lastTime = value.first;
+            lastValue = value.second;
+        }
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -99,6 +125,21 @@ std::list<std::string> FSTReader::getScopes() {
 
 std::list<fstHandle> FSTReader::getSignals(std::string scope) {
     return g_ScopeToSignals[scope];
+}
+
+// ---------------------------------------------------------------------
+
+ImU64 FSTReader::getMaxTime() {
+    ImU64 max = 0;
+    for (const auto &item : g_Values) {
+        valuesList values = item.second;
+        for (const auto &value : values) {
+            if (value.first > max) {
+                max = value.first;
+            }
+        }
+    }
+    return max;
 }
 
 // ---------------------------------------------------------------------
