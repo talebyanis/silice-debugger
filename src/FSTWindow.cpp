@@ -71,11 +71,11 @@ void FSTWindow::showPlots() {
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
     for (const auto &item : g_Plots) {
-        ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 300));
+        ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 100));
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
         ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
-        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
-        if (ImPlot::BeginPlot(item.name.c_str())) {
+        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
+        if (ImPlot::BeginPlot(item.name.c_str(),NULL,NULL,ImVec2(-1,100),ImPlotFlags_NoLegend)) {
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
             ImPlot::EndPlot();
         }
