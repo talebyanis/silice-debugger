@@ -4,3 +4,6 @@
 [submodule "libs/LibSL"]
 	path = libs/LibSL
 	url = https://github.com/shin0bi-y/LibSL
+[submodule "src/ImGuiColorTextEdit"]
+	path = src/ImGuiColorTextEdit
+	url = git@github.com:shin0bi-y/ImGuiColorTextEdit.git

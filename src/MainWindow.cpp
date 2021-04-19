@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <LibSL.h>
 #include "imgui.h"
-#include "TextEditor/TextEditor.h"
+#include "ImGuiColorTextEdit/TextEditor.h"
 #include "FileDialog.h"
 #include "MainWindow.h"
 #include "../libs/implot/implot.h"
