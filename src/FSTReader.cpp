@@ -28,17 +28,6 @@ int decodeValue(const char *str) {
 
 // ---------------------------------------------------------------------
 
-void FSTReader::value_change_callback(void *user_callback_data_pointer,
-                                      uint64_t time,
-                                      fstHandle facidx,
-                                      const unsigned char *value) {
-    std::unique_lock<std::mutex> lock(g_Mutex);
-    g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));
-    std::this_thread::yield();
-}
-
-// ---------------------------------------------------------------------
-
 void FSTReader::initMaps() {
     std::string currentScope;
     std::list<fstHandle> currentSignals = {};
@@ -68,7 +57,7 @@ void FSTReader::initMaps() {
 
     fstReaderSetFacProcessMaskAll(g_Wave);
 
-    std::thread th([]() {
+    std::thread th([this]() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
             std::unique_lock<std::mutex> lock(g_Mutex);
             g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));

@@ -9,7 +9,6 @@ class FSTReader {
 private :
     ImU64 getMaxTime();
     void initMaps();
-    void value_change_callback(void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value);
 public:
     FSTReader(const char *file);
     std::list<std::string> getScopes();
