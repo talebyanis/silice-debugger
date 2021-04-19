@@ -66,6 +66,8 @@ bool FSTWindow::isDisplayed(fstHandle signal) {
     return res != g_Plots.end();
 }
 
+ImPlotRange plotXLimits = ImPlotRange(-1,-1);
+
 void FSTWindow::showPlots() {
     ImVec2 wPos = ImGui::GetCursorScreenPos();
     ImVec2 wSize = ImGui::GetWindowSize();
@@ -74,9 +76,20 @@ void FSTWindow::showPlots() {
         ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 100));
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
         ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
+        if(plotXLimits.Min == -1 && plotXLimits.Max == -1) {
+            plotXLimits.Min = 0;
+            plotXLimits.Max = g_Reader->getMaxTime();
+        }
+        //ImPlot::SetNextPlotLimitsX(plotXLimits.Min,plotXLimits.Max);
         ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
-        if (ImPlot::BeginPlot(item.name.c_str(),NULL,NULL,ImVec2(-1,100),ImPlotFlags_NoLegend)) {
+        ImPlot::LinkNextPlotLimits(&plotXLimits.Min,&plotXLimits.Max, nullptr, nullptr);
+        if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100), ImPlotFlags_NoLegend,NULL,ImPlotAxisFlags_Lock)) {
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
+            ImPlotLimits limits = ImPlot::GetPlotLimits();
+            if (ImPlot::IsPlotHovered()) {
+                plotXLimits.Min = limits.X.Min;
+                plotXLimits.Max = limits.X.Max;
+            }
             ImPlot::EndPlot();
         }
         ImPlot::PopStyleVar();
@@ -89,7 +102,7 @@ void FSTWindow::showPlots() {
 void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500),ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500), ImGuiCond_FirstUseEver);
     ImGui::Begin("PlotWindow", NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
         ImVec2 wPos = ImGui::GetCursorScreenPos();
