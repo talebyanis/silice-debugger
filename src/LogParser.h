@@ -13,10 +13,7 @@ struct report_line {
 
 class LogParser
 {
-	std::string filepath;
-	std::map<std::string, report_line> report_lines;
 public:
-	LogParser(std::string report_filename);
-	void parse();
+	std::map<std::string, report_line> parse(std::string report_filename);
 };
 
