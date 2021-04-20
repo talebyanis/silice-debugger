@@ -4,12 +4,18 @@ add_subdirectory(tinyfiledialogs)
 add_executable(silice-text-editor
         tests/test-fstapi.h
         tests/test-fstapi.cpp
+        LogParser.h
+        LogParser.cpp
         FileDialog.h
         FileDialog.cpp
+        FSTReader.h
+        FSTReader.cpp
+        FSTWindow.h
+        FSTWindow.cpp 
         MainWindow.h
         MainWindow.cpp
         main.cpp
-        FSTReader.cpp FSTReader.h FSTWindow.cpp FSTWindow.h)
+        )
 
 FIND_PACKAGE(Threads REQUIRED)
 
