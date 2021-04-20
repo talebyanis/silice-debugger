@@ -13,18 +13,24 @@
 
 std::vector<Plot> g_Plots = {};
 FSTReader *g_Reader = nullptr;
+fstHandle hover = 0;
 
 void FSTWindow::showPlotMenu() {
     for (const auto &item : g_Reader->getScopes()) {
         if (ImGui::TreeNode(item.c_str())) {
-            for (const auto &item : g_Reader->getSignals(item)) {
-                if (ImGui::MenuItem(g_Reader->getSignalName(item).c_str(), "", FSTWindow::isDisplayed(item))) {
-                    if (!FSTWindow::isDisplayed(item)) {
-                        this->addPlot(item);
+            for (const auto &signal : g_Reader->getSignals(item)) {
+                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1.00, 0.10, 0.10, 1));
+                //if (hover == signal)
+                //TODO: changer le bg on hover
+                if (ImGui::MenuItem(g_Reader->getSignalName(signal).c_str(), "", FSTWindow::isDisplayed(signal))) {
+                    if (!FSTWindow::isDisplayed(signal)) {
+                        this->addPlot(signal);
                     } else {
-                        this->removePlot(item);
+                        this->removePlot(signal);
                     }
                 }
+                //if (hover == signal)
+                ImGui::PopStyleColor();
             }
             ImGui::TreePop();
         }
@@ -88,12 +94,13 @@ void FSTWindow::showPlots() {
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
             ImPlotLimits limits = ImPlot::GetPlotLimits();
             if (ImPlot::IsPlotHovered()) {
+                hover = item.signalId;
                 plotXLimits.Min = limits.X.Min;
                 plotXLimits.Max = limits.X.Max;
             }
             ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(125, 125, 125, 1));
             for (int i = 0; i < item.x_data.size(); i++) {
-                const char* value = std::to_string(item.y_data[i]).c_str();
+                const char *value = std::to_string(item.y_data[i]).c_str();
                 ImPlot::PlotText(value, item.x_data[i], item.y_data[i]);
             }
             ImPlot::PopStyleColor();
