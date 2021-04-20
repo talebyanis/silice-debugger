@@ -59,6 +59,8 @@ int main() {
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
+    SimpleUI::onReshape(1280, 720);
+
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     /*ImGui::GetIO().GetClipboardTextFn = GetClipboard;
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/

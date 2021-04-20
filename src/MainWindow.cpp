@@ -1,22 +1,17 @@
+#include "MainWindow.h"
 #include <iostream>
 #include <filesystem>
+#include <string>
 #include <LibSL.h>
 #include "imgui.h"
 #include "ImGuiColorTextEdit/TextEditor.h"
 #include "FileDialog.h"
-#include "MainWindow.h"
 #include "../libs/implot/implot.h"
 #include "FSTReader.h"
 #include "sourcePath.h"
 #include "FSTWindow.h"
 
-
-// Defining fs depending on the user's OS
-#ifdef WIN32
-namespace fs = std::experimental::filesystem;
-#else
 namespace fs = std::filesystem;
-#endif
 
 static fs::path fileFullPath;
 
@@ -223,7 +218,7 @@ void MainWindow::ShowCodeEditor() {
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                 editor.IsOverwrite() ? "Ovr" : "Ins",
                 editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath).c_str());
+                editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath.string()).c_str());
 
     editor.Render("TextEditor");
 

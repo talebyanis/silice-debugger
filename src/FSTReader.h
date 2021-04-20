@@ -2,6 +2,9 @@
 #define FSTReaderGuard
 
 #include "../../libs/fstapi/fstapi.h"
+#include <list>
+#include "imgui.h"
+#include <string>
 
 typedef std::list<std::pair<ImU64 , ImU64>> valuesList;
 

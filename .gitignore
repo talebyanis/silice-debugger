@@ -6,4 +6,4 @@ Makefile
 CMakeFiles
 CMakeCache.txt
 src/sourcePath.h
-
+.vs
