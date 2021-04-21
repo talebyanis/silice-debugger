@@ -51,9 +51,9 @@ TextEditor::TextEditor()
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	SetPalette(GetDarkPalette());
-	SetLanguageDefinition(LanguageDefinition::Silice());
+	SetLanguageDefinition(LanguageDefinition::Silice(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log"));
 	mLines.push_back(Line());
-	
+
 	// Opening a file (raw path here) on startup,
 	// ToDo : change path w/ an argument
 	this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
@@ -2036,7 +2036,10 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0x40a0a0a0, // Current line edge
 
 			// Silice Specific Index :
-			0xffffffff, // Const
+			0xdff0a0a0, // Const
+			0xa9025fa0, // Wire
+			0x3a7d9ca0, // FF
+			0x91a7c5a0, // Temp
 		} };
 	return p;
 }
@@ -2067,7 +2070,10 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
 			0x40000000, // Current line edge
 
 			// Silice Specific Index :
-			0xffffffff, // Const
+			0xdff0a0a0, // Const
+			0xa9025fa0, // Wire
+			0x3a7d9ca0, // FF
+			0x91a7c5a0, // Temp
 		} };
 	return p;
 }
@@ -2098,7 +2104,10 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0x40000000, // Current line edge
 
 			// Silice Specific Index :
-			0xffffffff, // Const
+			0xdff0a0a0, // Const
+			0xa9025fa0, // Wire
+			0x3a7d9ca0, // FF
+			0x91a7c5a0, // Temp
 		} };
 	return p;
 }
@@ -3191,20 +3200,20 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
 	return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice(std::string logfilename)
 {
     static bool inited = false;
     static LanguageDefinition langDef;
     if (!inited)
     {
         static const char* const keywords[] = {
-                "algorithm", "output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "__display", "__write", "__signed", "__unsigned", "bitfield", "interface"
+                "algorithm", "output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
         };
 
         for (auto& k : keywords)
             langDef.mKeywords.insert(k);
 
-        /*
+        
         static const char* const identifiers[] = {
                 "assert", "collectgarbage", "dofile", "error", "getmetatable", "ipairs", "loadfile", "load", "loadstring",  "next",  "pairs",  "pcall",  "print",  "rawequal",  "rawlen",  "rawget",  "rawset",
                 "select",  "setmetatable",  "tonumber",  "tostring",  "type",  "xpcall",  "_G",  "_VERSION","arshift", "band", "bnot", "bor", "bxor", "btest", "extract", "lrotate", "lshift", "replace",
@@ -3215,7 +3224,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
                 "pow", "frexp", "ldexp", "log10", "pi", "huge", "maxinteger", "mininteger", "loadlib", "searchpath", "seeall", "preload", "cpath", "path", "searchers", "loaded", "module", "require", "clock",
                 "date", "difftime", "execute", "exit", "getenv", "remove", "rename", "setlocale", "time", "tmpname", "byte", "char", "dump", "find", "format", "gmatch", "gsub", "len", "lower", "match", "rep",
                 "reverse", "sub", "upper", "pack", "packsize", "unpack", "concat", "maxn", "insert", "pack", "unpack", "remove", "move", "sort", "offset", "codepoint", "char", "len", "codes", "charpattern",
-                "coroutine", "table", "io", "os", "string", "utf8", "bit32", "math", "debug", "package"
+                "coroutine", "table", "io", "os", "string", "utf8", "bit32", "math", "debug", "package", "__display", "__write", "__signed", "__unsigned"
         };
         for (auto& k : identifiers)
         {
@@ -3223,7 +3232,36 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
             id.mDeclaration = "Built-in function";
             langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
         }
-         */
+
+		LogParser lp = LogParser(logfilename);
+
+		// Const
+		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");
+		for (auto const& e : list) {
+			std::cout << e.second << std::endl;
+			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Const));
+		}
+
+		// Wire
+		list = lp.getMatch("wire");
+		for (auto const& e : list) {
+			std::cout << e.second << std::endl;
+			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Wire));
+		}
+
+		// Flip Flop
+		list = lp.getMatch("ff");
+		for (auto const& e : list) {
+			std::cout << e.second << std::endl;
+			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::FF));
+		}
+
+		// Temp
+		list = lp.getMatch("temp");
+		for (auto const& e : list) {
+			std::cout << e.second << std::endl;
+			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Temp));
+		}
 
 		// Preprocessor instructions
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));
@@ -3244,21 +3282,9 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 		// Punctuation
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
 
-		// ==== ToDo : ====
-		// Wire
-		// FlipFlop
-		// Temp
-		// $
-		// $$
-
-		// Const
-		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("^testconst.*", PaletteIndex::Const));
-
-
         langDef.mCommentStart = "/*";
         langDef.mCommentEnd = "*/";
         langDef.mSingleLineComment = "//";
-
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;
 

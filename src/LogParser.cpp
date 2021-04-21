@@ -1,5 +1,7 @@
 #include "LogParser.h"
 
+LogParser::LogParser() = default;
+
 // ---------------------------------------------------------------------
 
 LogParser::LogParser(std::string report_filename)
@@ -27,38 +29,52 @@ LogParser::LogParser(std::string report_filename)
 		file >> element;
 		rl.usage = element;
 
-		rls.insert(std::pair<std::string, report_line>(rl.varname, rl));
+		auto truc = std::pair(rl.filename, rl.varname);
+		this->report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
-
-	this->report_lines = rls;
 }
 
 // ---------------------------------------------------------------------
 
-std::string LogParser::getCol(std::string var_name, int col_nb)
+std::string LogParser::getCol(std::string file_name, std::string var_name, int col_nb)
 {
 	switch (col_nb)
 	{
 	case 0:
-		return this->report_lines[var_name].filename;
+		return this->report_lines[std::make_pair(file_name, var_name)].filename;
 		break;
 	case 1:
-		return this->report_lines[var_name].token;
+		return this->report_lines[std::make_pair(file_name, var_name)].token;
 		break;
 	case 2:
-		return this->report_lines[var_name].varname;
+		return this->report_lines[std::make_pair(file_name, var_name)].varname;
 		break;
 	case 3:
-		return this->report_lines[var_name].line;
+		return this->report_lines[std::make_pair(file_name, var_name)].line;
 		break;
 	case 4:
-		return this->report_lines[var_name].usage;
+		return this->report_lines[std::make_pair(file_name, var_name)].usage;
 		break;
 	default:
 		break;
 	}
 	std::cout << "LogParser::getCol, 0 <= col_nb <= 4" << std::endl;
 	exit(1);
+}
+
+// ---------------------------------------------------------------------
+
+std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string match)
+{
+	std::list<std::pair<std::string, std::string>> list;
+	for (auto const& [key, val] : this->report_lines)
+	{
+		if (val.usage == match)
+		{
+			list.push_back(key);
+		}
+	}
+	return list;
 }
 
 // ---------------------------------------------------------------------

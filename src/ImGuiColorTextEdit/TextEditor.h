@@ -40,11 +40,12 @@ public:
 		
 		// Silice specific Index :
 		Const,
+		Wire,
+		FF,
+		Temp,
 
 		Max,
-		
-
-		
+	
 	};
 
 	enum class SelectionMode
@@ -188,7 +189,7 @@ public:
 		static const LanguageDefinition& SQL();
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
-		static const LanguageDefinition& Silice();
+		static const LanguageDefinition& Silice(std::string logfilename);
 	};
 
 	TextEditor();
@@ -276,6 +277,7 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
+
 	bool writeFromFile(std::string filepath);
 
 private:
@@ -319,8 +321,6 @@ private:
 
 		EditorState mBefore;
 		EditorState mAfter;
-
-		//LogParser lparser;
 	};
 
 	typedef std::vector<UndoRecord> UndoBuffer;
