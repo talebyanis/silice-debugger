@@ -2548,12 +2548,14 @@ bool TextEditor::writeFromFile(std::string filepath)
 	std::fstream file;
 	file.open(filepath, std::ios::in);
 	if (file.is_open()) {
+		this->mReadOnly = false;
 		std::string tp;
 		this->SetText("");
 		while (getline(file, tp)) {
 			this->InsertText(tp + "\n");
 		}
 		file.close();
+		this->mReadOnly = true;
 		return 1;
 	}
 	return 0;
