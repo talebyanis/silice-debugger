@@ -1,11 +1,10 @@
+#include "TextEditor.h"
 #include <iostream>
 #include <algorithm>
 #include <chrono>
 #include <string>
 #include <regex>
 #include <cmath>
-
-#include "TextEditor.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
@@ -53,6 +52,10 @@ TextEditor::TextEditor()
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::Silice());
 	mLines.push_back(Line());
+	
+	// Opening a file (raw path here) on startup,
+	// ToDo : change path w/ an argument
+	this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
 }
 
 TextEditor::~TextEditor()
@@ -2028,6 +2031,9 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40a0a0a0, // Current line edge
+
+			// Silice Specific Index :
+			0xffffffff, // Const
 		} };
 	return p;
 }
@@ -2056,6 +2062,9 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
+
+			// Silice Specific Index :
+			0xffffffff, // Const
 		} };
 	return p;
 }
@@ -2084,6 +2093,9 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
+
+			// Silice Specific Index :
+			0xffffffff, // Const
 		} };
 	return p;
 }
@@ -2517,6 +2529,23 @@ void TextEditor::UndoRecord::Redo(TextEditor * aEditor)
 
 	aEditor->mState = mAfter;
 	aEditor->EnsureCursorVisible();
+}
+
+bool TextEditor::writeFromFile(std::string filepath) 
+{
+	std::fstream file;
+	file.open(filepath, std::ios::in);
+	if (file.is_open()) {
+		std::string tp;
+		this->SetText("");
+		while (getline(file, tp)) {
+			this->InsertText(tp + "\n");
+		}
+		file.close();
+		//this->SetReadOnly(true);
+		return 1;
+	}
+	return 0;
 }
 
 static bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end)
@@ -3194,7 +3223,15 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
         }
          */
 
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("(\\$\\$if|then|\\$\\$else|\\$\\$for|\\$\\$while|\\$\\$end)\b|\b(do)\b|\\$include|\\$\\$dofile", PaletteIndex::Preprocessor));
+		// ==== ToDo : ====
+		// Const
+		// Wire
+		// FlipFlop
+		// Temp
+		// $
+		// $$
+
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("L?\\\"(\\\\.|[^\\\"])*\\\"", PaletteIndex::String));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\\'[^\\\']*\\\'", PaletteIndex::String));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("0[xX][0-9a-fA-F]+[uU]?[lL]?[lL]?", PaletteIndex::Number));
@@ -3202,6 +3239,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[+-]?[0-9]+[Uu]?[lL]?[lL]?", PaletteIndex::Number));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[a-zA-Z_][a-zA-Z0-9_]*", PaletteIndex::Identifier));
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("[\\[\\]\\{\\}\\!\\%\\^\\&\\*\\(\\)\\-\\+\\=\\~\\|\\<\\>\\?\\/\\;\\,\\.]", PaletteIndex::Punctuation));
+
+		
 
         langDef.mCommentStart = "/*";
         langDef.mCommentEnd = "*/";

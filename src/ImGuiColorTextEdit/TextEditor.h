@@ -1,5 +1,3 @@
-#pragma once
-
 #include <string>
 #include <vector>
 #include <array>
@@ -9,6 +7,8 @@
 #include <map>
 #include <regex>
 #include "imgui.h"
+#include "../LogParser.h"
+#include "../sourcePath.h"
 
 class TextEditor
 {
@@ -36,7 +36,11 @@ public:
 		CurrentLineFill,
 		CurrentLineFillInactive,
 		CurrentLineEdge,
-		Max
+		Max,
+
+		// Silice specific Index :
+		Const,
+		Wire,
 	};
 
 	enum class SelectionMode
@@ -130,7 +134,7 @@ public:
 	typedef std::unordered_set<std::string> Keywords;
 	typedef std::map<int, std::string> ErrorMarkers;
 	typedef std::unordered_set<int> Breakpoints;
-	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
+	typedef std::array<ImU32, (unsigned)PaletteIndex::Wire> Palette;
 	typedef uint8_t Char;
 
 	struct Glyph
@@ -267,6 +271,9 @@ public:
 	static const Palette& GetLightPalette();
 	static const Palette& GetRetroBluePalette();
 
+	// Addition
+	bool writeFromFile(std::string filepath);
+
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
 
@@ -308,6 +315,8 @@ private:
 
 		EditorState mBefore;
 		EditorState mAfter;
+
+		LogParser lparser;
 	};
 
 	typedef std::vector<UndoRecord> UndoBuffer;
