@@ -19,9 +19,8 @@ void FSTWindow::showPlotMenu() {
     for (const auto &item : g_Reader->getScopes()) {
         if (ImGui::TreeNode(item.c_str())) {
             for (const auto &signal : g_Reader->getSignals(item)) {
-                ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(1.00, 0.10, 0.10, 1));
-                //if (hover == signal)
-                //TODO: changer le bg on hover
+                if (hover == signal)
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                 if (ImGui::MenuItem(g_Reader->getSignalName(signal).c_str(), "", FSTWindow::isDisplayed(signal))) {
                     if (!FSTWindow::isDisplayed(signal)) {
                         this->addPlot(signal);
@@ -29,8 +28,8 @@ void FSTWindow::showPlotMenu() {
                         this->removePlot(signal);
                     }
                 }
-                //if (hover == signal)
-                ImGui::PopStyleColor();
+                if (hover == signal)
+                    ImGui::PopStyleColor();
             }
             ImGui::TreePop();
         }
@@ -78,6 +77,7 @@ void FSTWindow::showPlots() {
     ImVec2 wPos = ImGui::GetCursorScreenPos();
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
+    hover = 0;
     for (const auto &item : g_Plots) {
         ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 100));
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
