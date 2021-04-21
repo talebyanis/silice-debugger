@@ -3,18 +3,21 @@
 //
 #define IMGUI_ENABLE_MATH_OPERATOR
 
+#include "FSTWindow.h"
+
 #include <algorithm>
 #include <list>
 #include <iostream>
 #include "imgui.h"
 #include "../libs/implot/implot.h"
-
-#include "FSTWindow.h"
+#include <bitset>
+#include <iomanip>
 
 FSTReader *g_Reader = nullptr;
 std::vector<Plot> g_Plots = {};
 ImPlotRange plotXLimits = ImPlotRange(-1, -1);
 fstHandle hover = 0;
+ConvertType convertType = DECIMAL;
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
@@ -107,8 +110,24 @@ void FSTWindow::showPlots() {
             }
             ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
             for (int i = 0; i < item.x_data.size(); i++) {
-                const char *value = std::to_string(item.y_data[i]).c_str();
-                ImPlot::PlotText(value, item.x_data[i], item.y_data[i]);
+                std::basic_string<char> value;
+                switch(convertType) {
+                    case BINARY:
+                        value = std::bitset<16>(item.y_data[i]).to_string();
+                        //remove all 0 in front
+                        value.erase(0,value.find_first_not_of('0'));
+                        std::cout << value << std::endl;
+                        break;
+                    case DECIMAL:
+                        value = std::to_string(item.y_data[i]);
+                        break;
+                    case HEXADECIMAL:
+                        std::stringstream stream;
+                        stream << std::hex << item.y_data[i];
+                        value = stream.str();
+                        break;
+                }
+                ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i]);
             }
             ImPlot::PopStyleColor();
 
@@ -125,8 +144,24 @@ void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500), ImGuiCond_FirstUseEver);
-    ImGui::Begin("PlotWindow", NULL, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::Begin("PlotWindow", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
     {
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("Format")) {
+                if (ImGui::MenuItem("Binary")) {
+                    convertType = BINARY;
+                }
+                if (ImGui::MenuItem("Decimal")) {
+                    convertType = DECIMAL;
+                }
+                if (ImGui::MenuItem("Hexadecimal")) {
+                    convertType = HEXADECIMAL;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+
         ImVec2 wPos = ImGui::GetCursorScreenPos();
         ImVec2 wSize = ImGui::GetWindowSize();
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y));

@@ -9,6 +9,12 @@
 #ifndef SILICE_TEXT_EDITOR_FSTWINDOW_H
 #define SILICE_TEXT_EDITOR_FSTWINDOW_H
 
+enum ConvertType {
+    BINARY = 0,
+    DECIMAL = 1,
+    HEXADECIMAL = 2
+};
+
 typedef struct {
     std::vector<int> x_data;
     std::vector<int> y_data;
