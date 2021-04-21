@@ -1,18 +1,10 @@
 #include "LogParser.h"
 
-
-LogParser::LogParser(std::string report_filepath)
-{
-	this->filepath = report_filepath;
-}
-
-// ---------------------------------------------------------------------
-
-void LogParser::parse()
+std::map<std::string, report_line> LogParser::parse(std::string report_filename)
 {
 	std::fstream file;
 
-	file.open(this->filepath, std::ios::in);
+	file.open(report_filename, std::ios::in);
 	if (!file)
 	{
 		std::cout << "Log file was not found";
@@ -20,6 +12,7 @@ void LogParser::parse()
 	}
 	
 	std::string element;
+	std::map<std::string, report_line> rls;
 	report_line rl;
 	while (file >> element) {
 		rl.filename = element;
@@ -32,7 +25,10 @@ void LogParser::parse()
 		file >> element;
 		rl.usage = element;
 
-		this->report_lines.insert(std::pair<std::string, report_line>(rl.varname, rl));
+		rls.insert(std::pair<std::string, report_line>(rl.varname, rl));
 	}
 	
+	return rls;
 }
+
+// ---------------------------------------------------------------------
