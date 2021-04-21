@@ -56,6 +56,8 @@ TextEditor::TextEditor()
 	// Opening a file (raw path here) on startup,
 	// ToDo : change path w/ an argument
 	this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
+
+	this->mReadOnly = true;
 }
 
 TextEditor::~TextEditor()
