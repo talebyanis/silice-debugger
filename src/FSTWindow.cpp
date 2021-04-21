@@ -11,11 +11,14 @@
 
 #include "FSTWindow.h"
 
-std::vector<Plot> g_Plots = {};
 FSTReader *g_Reader = nullptr;
+std::vector<Plot> g_Plots = {};
+ImPlotRange plotXLimits = ImPlotRange(-1, -1);
 fstHandle hover = 0;
 
+//Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
+    //For every scope we have one TreeNode
     for (const auto &item : g_Reader->getScopes()) {
         if (ImGui::TreeNode(item.c_str())) {
             for (const auto &signal : g_Reader->getSignals(item)) {
@@ -38,6 +41,7 @@ void FSTWindow::showPlotMenu() {
 
 //-------------------------------------------------------
 
+//Displays a plot
 void FSTWindow::addPlot(fstHandle signal) {
     if (!g_Reader) {
         return;
@@ -55,6 +59,7 @@ void FSTWindow::addPlot(fstHandle signal) {
     g_Plots.push_back(plot);
 }
 
+//Hides a plot
 void FSTWindow::removePlot(fstHandle signal) {
     g_Plots.erase(remove_if(
             g_Plots.begin(),
@@ -71,34 +76,36 @@ bool FSTWindow::isDisplayed(fstHandle signal) {
     return res != g_Plots.end();
 }
 
-ImPlotRange plotXLimits = ImPlotRange(-1, -1);
-
+//Shows plots on the right of the window
 void FSTWindow::showPlots() {
-    ImVec2 wPos = ImGui::GetCursorScreenPos();
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
+    //reset hover to not change the color of a name if no plot is hovered
     hover = 0;
     for (const auto &item : g_Plots) {
         ImGui::BeginChild(item.name.c_str(), ImVec2(wSize.x - 20, 100));
+        //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
         ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
+        //plot X limits to be synchronized with others plots
         if (plotXLimits.Min == -1 && plotXLimits.Max == -1) {
             plotXLimits.Min = 0;
             plotXLimits.Max = g_Reader->getMaxTime();
         }
-        //ImPlot::SetNextPlotLimitsX(plotXLimits.Min,plotXLimits.Max);
-        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
         ImPlot::LinkNextPlotLimits(&plotXLimits.Min, &plotXLimits.Max, nullptr, nullptr);
+        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100), ImPlotFlags_NoLegend, NULL,
                               ImPlotAxisFlags_Lock)) {
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
             ImPlotLimits limits = ImPlot::GetPlotLimits();
+            //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
+            //and we set global X limits to this plot's
             if (ImPlot::IsPlotHovered()) {
                 hover = item.signalId;
                 plotXLimits.Min = limits.X.Min;
                 plotXLimits.Max = limits.X.Max;
             }
-            ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(125, 125, 125, 1));
+            ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
             for (int i = 0; i < item.x_data.size(); i++) {
                 const char *value = std::to_string(item.y_data[i]).c_str();
                 ImPlot::PlotText(value, item.x_data[i], item.y_data[i]);
