@@ -111,7 +111,8 @@ void MainWindow::ShowCodeEditor() {
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
 
-            if (ImGui::MenuItem("New", "Ctrl + N")) {
+            // There is no need to create a new file from the debugger rn
+            /*if (ImGui::MenuItem("New", "Ctrl + N")) {
                 auto fullpath = newFileDialog(OFD_EXTENSIONS);
                 if (!fullpath.empty()) {
                     const fs::path path = fs::path(fullpath);
@@ -119,22 +120,15 @@ void MainWindow::ShowCodeEditor() {
                     editor.SetText("");
                     fileFullPath = fullpath;
                 }
-            }
+            }*/
 
             if (ImGui::MenuItem("Open", "Ctrl + O")) {
                 auto fullpath = openFileDialog(OFD_EXTENSIONS);
                 if (!fullpath.empty()) {
                     fs::path path = fs::path(fullpath);
-                    std::fstream newfile;
-                    newfile.open(path, std::ios::in);
-                    if (newfile.is_open()) {
-                        std::string tp;
-                        editor.SetText("");
-                        while (getline(newfile, tp)) {
-                            editor.InsertText(tp + "\n");
-                        }
+                    if (editor.writeFromFile(path.string()))
+                    {
                         fileFullPath = path;
-                        newfile.close();
                     }
                 }
             }

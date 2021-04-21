@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <list>
 #include <iostream>
+#include <sstream>
 #include "imgui.h"
 #include "../libs/implot/implot.h"
 #include <bitset>
@@ -17,7 +18,7 @@ FSTReader *g_Reader = nullptr;
 std::vector<Plot> g_Plots = {};
 ImPlotRange plotXLimits = ImPlotRange(-1, -1);
 fstHandle hover = 0;
-ConvertType convertType = DECIMAL;
+ConvertType convertType = DECIMALS;
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
@@ -119,7 +120,7 @@ void FSTWindow::showPlots() {
                         //remove all 0 in front
                         value.erase(0,value.find_first_not_of('0'));
                         break;
-                    case DECIMAL:
+                    case DECIMALS:
                         value = std::to_string(item.y_data[i]);
                         break;
                     case HEXADECIMAL:
@@ -234,7 +235,7 @@ void FSTWindow::render() {
                     convertType = BINARY;
                 }
                 if (ImGui::MenuItem("Decimal")) {
-                    convertType = DECIMAL;
+                    convertType = DECIMALS;
                 }
                 if (ImGui::MenuItem("Hexadecimal")) {
                     convertType = HEXADECIMAL;

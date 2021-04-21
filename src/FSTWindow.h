@@ -11,7 +11,7 @@
 
 enum ConvertType {
     BINARY = 0,
-    DECIMAL = 1,
+    DECIMALS = 1,
     HEXADECIMAL = 2
 };
 
