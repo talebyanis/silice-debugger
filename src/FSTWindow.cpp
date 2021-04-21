@@ -106,7 +106,7 @@ void FSTWindow::showPlots() {
 
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("PlotPayload", &i, sizeof(int));
-            ImGui::Text("Dragging");
+            ImGui::Text(g_Reader->getSignalName(item.signalId).c_str());
             ImGui::EndDragDropSource();
         }
 
@@ -150,18 +150,17 @@ void FSTWindow::showPlots() {
                 if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("PlotPayload")) {
                     int payload_i = *(const int *) payload->Data;
                     for (int k = payload_i; k > i; k--) {
-                        std::swap(g_Plots[k],g_Plots[k-1]);
+                        std::swap(g_Plots[k], g_Plots[k - 1]);
                     }
                 }
                 ImGui::EndDragDropTarget();
             }
-            ImGui::NewLine();
             ImGui::PopID();
         }
     }
     ImGui::EndGroup();
-    }
 }
+
 
 void FSTWindow::render() {
     int treeWidth = 250;
