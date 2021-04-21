@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <map>
 #include <regex>
+#include <fstream>
 #include "imgui.h"
 #include "../LogParser.h"
 #include "../sourcePath.h"
@@ -36,11 +37,14 @@ public:
 		CurrentLineFill,
 		CurrentLineFillInactive,
 		CurrentLineEdge,
-		Max,
-
+		
 		// Silice specific Index :
 		Const,
-		Wire,
+
+		Max,
+		
+
+		
 	};
 
 	enum class SelectionMode
@@ -134,7 +138,7 @@ public:
 	typedef std::unordered_set<std::string> Keywords;
 	typedef std::map<int, std::string> ErrorMarkers;
 	typedef std::unordered_set<int> Breakpoints;
-	typedef std::array<ImU32, (unsigned)PaletteIndex::Wire> Palette;
+	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
 	typedef uint8_t Char;
 
 	struct Glyph
@@ -316,7 +320,7 @@ private:
 		EditorState mBefore;
 		EditorState mAfter;
 
-		LogParser lparser;
+		//LogParser lparser;
 	};
 
 	typedef std::vector<UndoRecord> UndoBuffer;

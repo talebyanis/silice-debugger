@@ -1,6 +1,8 @@
 #include "LogParser.h"
 
-std::map<std::string, report_line> LogParser::parse(std::string report_filename)
+// ---------------------------------------------------------------------
+
+LogParser::LogParser(std::string report_filename)
 {
 	std::fstream file;
 
@@ -10,7 +12,7 @@ std::map<std::string, report_line> LogParser::parse(std::string report_filename)
 		std::cout << "Log file was not found";
 		exit(1);
 	}
-	
+
 	std::string element;
 	std::map<std::string, report_line> rls;
 	report_line rl;
@@ -27,8 +29,36 @@ std::map<std::string, report_line> LogParser::parse(std::string report_filename)
 
 		rls.insert(std::pair<std::string, report_line>(rl.varname, rl));
 	}
-	
-	return rls;
+
+	this->report_lines = rls;
+}
+
+// ---------------------------------------------------------------------
+
+std::string LogParser::getCol(std::string var_name, int col_nb)
+{
+	switch (col_nb)
+	{
+	case 0:
+		return this->report_lines[var_name].filename;
+		break;
+	case 1:
+		return this->report_lines[var_name].token;
+		break;
+	case 2:
+		return this->report_lines[var_name].varname;
+		break;
+	case 3:
+		return this->report_lines[var_name].line;
+		break;
+	case 4:
+		return this->report_lines[var_name].usage;
+		break;
+	default:
+		break;
+	}
+	std::cout << "LogParser::getCol, 0 <= col_nb <= 4" << std::endl;
+	exit(1);
 }
 
 // ---------------------------------------------------------------------
