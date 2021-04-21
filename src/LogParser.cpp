@@ -8,7 +8,7 @@ std::map<std::string, report_line> LogParser::parse(std::string report_filename)
 	if (!file)
 	{
 		std::cout << "Log file was not found";
-		return;
+		exit(1);
 	}
 	
 	std::string element;
