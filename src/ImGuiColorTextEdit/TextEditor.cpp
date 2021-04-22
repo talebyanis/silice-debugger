@@ -50,8 +50,12 @@ TextEditor::TextEditor()
 	, mShowWhitespaces(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
+	// Setting path to .v.vio.log file on startup,
+	// ToDo : change path w/ an argument
+	this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
+
 	SetPalette(GetDarkPalette());
-	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log"));
+	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->pathToLogFile));
 	mLines.push_back(Line());
 
 	// Opening a file (raw path here) on startup,
@@ -1395,7 +1399,7 @@ void TextEditor::SetReadOnly(bool aValue)
 {
 	mReadOnly = aValue;
 	aValue ?
-		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log")) :
+		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->pathToLogFile)) :
 		SetLanguageDefinition(LanguageDefinition::Silice());
 }
 
@@ -2562,6 +2566,13 @@ bool TextEditor::writeFromFile(std::string filepath)
 		return 1;
 	}
 	return 0;
+}
+
+void TextEditor::setPathToLogFile(std::string path)
+{
+	assert(path != "");
+	assert(path.find(".v.vio.log"));
+	this->pathToLogFile = path;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
