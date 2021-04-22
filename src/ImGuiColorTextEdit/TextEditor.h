@@ -189,7 +189,8 @@ public:
 		static const LanguageDefinition& SQL();
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
-		static const LanguageDefinition& Silice(std::string logfilename);
+		static const LanguageDefinition& Silice();
+		static const LanguageDefinition& SiliceReadOnly(std::string logfilename);
 	};
 
 	TextEditor();
