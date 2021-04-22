@@ -149,8 +149,14 @@ void FSTWindow::showPlots() {
             if (ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("PlotPayload")) {
                     int payload_i = *(const int *) payload->Data;
-                    for (int k = payload_i; k > i; k--) {
-                        std::swap(g_Plots[k], g_Plots[k - 1]);
+                    if(payload_i > i) {
+                        for (int k = payload_i; k > i; k--) {
+                            std::swap(g_Plots[k], g_Plots[k - 1]);
+                        }
+                    } else {
+                        for (int k = payload_i; k < i; k++) {
+                            std::swap(g_Plots[k], g_Plots[k + 1]);
+                        }
                     }
                 }
                 ImGui::EndDragDropTarget();

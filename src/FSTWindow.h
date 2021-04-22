@@ -20,6 +20,7 @@ typedef struct {
     std::vector<int> y_data;
     std::string name;
     fstHandle signalId;
+    ConvertType type;
 } Plot;
 
 class FSTWindow {
