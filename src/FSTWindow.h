@@ -21,6 +21,7 @@ typedef struct {
     std::string name;
     fstHandle signalId;
     ConvertType type;
+    ImVec4 color;
 } Plot;
 
 class FSTWindow {

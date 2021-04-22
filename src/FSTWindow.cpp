@@ -12,7 +12,6 @@
 #include "imgui.h"
 #include "../libs/implot/implot.h"
 #include <bitset>
-#include <iomanip>
 
 FSTReader *g_Reader = nullptr;
 std::vector<Plot> g_Plots;
@@ -70,6 +69,7 @@ void FSTWindow::showPlotMenu() {
             if (ImGui::MenuItem("Hexadecimal")) {
                 plot->type = HEXADECIMAL;
             }
+            ImGui::ColorPicker4("Color Picker",(float *) &plot->color);
             ImGui::EndPopup();
         }
     }
@@ -87,6 +87,7 @@ void FSTWindow::addPlot(fstHandle signal) {
     std::string signalName = g_Reader->getSignalName(signal);
     plot.name = signalName;
     plot.type = DECIMALS;
+    plot.color = ImVec4(1,1,1,1);
     valuesList values = g_Reader->getValues(signal);
     for (const auto &item : values) {
         plot.x_data.push_back(item.first);
@@ -131,7 +132,6 @@ void FSTWindow::showPlots() {
             plotXLimits.Max = g_Reader->getMaxTime();
         }
         ImPlot::LinkNextPlotLimits(&plotXLimits.Min, &plotXLimits.Max, nullptr, nullptr);
-        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::Button("  ");
@@ -147,6 +147,8 @@ void FSTWindow::showPlots() {
         }
 
         ImGui::PushID(i);
+        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
+        ImPlot::PushStyleColor(ImPlotCol_Line,item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
                               ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
                               ImPlotAxisFlags_Lock)) {
@@ -179,7 +181,7 @@ void FSTWindow::showPlots() {
                 }
                 ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i]);
             }
-            ImPlot::PopStyleColor();
+            ImPlot::PopStyleColor(2);
             ImPlot::PopStyleVar();
             ImPlot::EndPlot();
 
