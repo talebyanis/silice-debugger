@@ -105,6 +105,7 @@ void MainWindow::ShowDockSpace() {
 //-------------------------------------------------------
 
 void MainWindow::ShowCodeEditor() {
+    editor.setPathToLogFile(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log");
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);

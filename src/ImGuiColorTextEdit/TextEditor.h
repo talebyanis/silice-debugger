@@ -279,6 +279,9 @@ public:
 
 	// Addition
 
+	std::string pathToLogFile;
+
+	void setPathToLogFile(std::string path);
 	bool writeFromFile(std::string filepath);
 
 private:
