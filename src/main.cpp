@@ -3,11 +3,15 @@
 #include "tests/test-fstapi.h"
 #include "MainWindow.h"
 #include "../libs/implot/implot.h"
+#include "sourcePath.h"
 
 MainWindow mainWindow;
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ImGui::GetStyle().FrameRounding = 4.0f;
+    ImGui::GetStyle().GrabRounding = 4.0f;
+
     mainWindow.Render();
     ImGui::Render();
 }
@@ -64,6 +68,10 @@ int main() {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     /*ImGui::GetIO().GetClipboardTextFn = GetClipboard;
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/
+
+    mainWindow.ChangeStyle();
+    
+    
 
     SimpleUI::loop();
 
