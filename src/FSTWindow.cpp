@@ -13,12 +13,16 @@
 #include "../libs/implot/implot.h"
 #include <bitset>
 
+//-------------------------------------------------------
+
 FSTReader *g_Reader = nullptr;
 std::vector<Plot> g_Plots;
 ImPlotRange plotXLimits = ImPlotRange(-1, -1);
 fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
+
+//-------------------------------------------------------
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
@@ -77,7 +81,7 @@ void FSTWindow::showPlotMenu() {
 
 //-------------------------------------------------------
 
-//Displays a plot
+//Adds a plot to the list
 void FSTWindow::addPlot(fstHandle signal) {
     if (!g_Reader) {
         return;
@@ -97,7 +101,9 @@ void FSTWindow::addPlot(fstHandle signal) {
     g_Plots.push_back(plot);
 }
 
-//Hides a plot
+//-------------------------------------------------------
+
+//Removes a plot from the list
 void FSTWindow::removePlot(fstHandle signal) {
     g_Plots.erase(remove_if(
             g_Plots.begin(),
@@ -107,12 +113,16 @@ void FSTWindow::removePlot(fstHandle signal) {
             }), g_Plots.end());
 }
 
+//-------------------------------------------------------
+
 bool FSTWindow::isDisplayed(fstHandle signal) {
     auto res = std::find_if(g_Plots.begin(), g_Plots.end(), [signal](Plot plot) {
         return plot.signalId == signal;
     });
     return res != g_Plots.end();
 }
+
+//-------------------------------------------------------
 
 //Shows plots on the right of the window
 int payload;
@@ -126,6 +136,7 @@ void FSTWindow::showPlots() {
         //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
         ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
+
         //plot X limits to be synchronized with others plots
         if (plotXLimits.Min == -1 && plotXLimits.Max == -1) {
             plotXLimits.Min = 0;
@@ -135,11 +146,13 @@ void FSTWindow::showPlots() {
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::Button("  ");
+        //For drag&drop
         if(ImGui::IsItemHovered() && !ImGui::IsAnyMouseDown()) {
             payload = i;
         }
         ImGui::SetCursorScreenPos(cursor);
 
+        //Drag&drop source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("PlotPayload", &payload, sizeof(fstHandle));
             ImGui::Text(g_Reader->getSignalName(g_Plots[payload].signalId).c_str());
@@ -148,6 +161,7 @@ void FSTWindow::showPlots() {
 
         ImGui::PushID(i);
         ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
+        //Coloring the line
         ImPlot::PushStyleColor(ImPlotCol_Line,item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
                               ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
@@ -162,6 +176,7 @@ void FSTWindow::showPlots() {
                 plotXLimits.Max = limits.X.Max;
             }
             ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
+            //displaying values on the plot
             for (int i = 0; i < item.x_data.size(); i++) {
                 std::basic_string<char> value;
                 switch (item.type) {
@@ -185,6 +200,7 @@ void FSTWindow::showPlots() {
             ImPlot::PopStyleVar();
             ImPlot::EndPlot();
 
+            //Drag&drop target
             if (ImGui::BeginDragDropTarget()) {
                 if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
                     std::cout << "target " << i << std::endl;
@@ -206,6 +222,7 @@ void FSTWindow::showPlots() {
     ImGui::EndGroup();
 }
 
+//-------------------------------------------------------
 
 void FSTWindow::render() {
     int treeWidth = 250;
@@ -235,6 +252,8 @@ void FSTWindow::render() {
     ImGui::End();
     ImGui::PopStyleVar(); // Padding
 }
+
+//-------------------------------------------------------
 
 FSTWindow::FSTWindow(std::string file) {
     g_Reader = new FSTReader(file.c_str());
