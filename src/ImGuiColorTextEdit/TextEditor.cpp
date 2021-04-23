@@ -2043,6 +2043,7 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0x40a0a0a0, // Current line edge
 
 			// Silice Specific Index :
+			0xeefbcda0, // Type
 			0xdff0a0a0, // Const
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
@@ -2077,6 +2078,7 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0x40000000, // Current line edge
 
 			// Silice Specific Index :
+			0xeefbcda0, // Type
 			0xdff0a0a0, // Const
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
@@ -2111,6 +2113,7 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0x40000000, // Current line edge
 
 			// Silice Specific Index :
+			0xeefbcda0, // Type
 			0xdff0a0a0, // Const
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
@@ -3249,6 +3252,9 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
 
+		// Types (WIP)
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
+
 		// Preprocessor instructions
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$.*", PaletteIndex::PreprocIdentifier));
@@ -3314,6 +3320,9 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 			id.mDeclaration = "Built-in function";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
+
+		// Types (WIP)
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
 
 		LogParser lp;
 		lp.parseVio(logfilename);

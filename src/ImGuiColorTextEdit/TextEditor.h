@@ -39,6 +39,7 @@ public:
 		CurrentLineEdge,
 		
 		// Silice specific Index :
+		Type,
 		Const,
 		Wire,
 		FF,
