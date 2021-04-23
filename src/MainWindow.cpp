@@ -21,8 +21,6 @@ ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDo
                                 | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 bool p_open_dockspace = true;
 
-uint width = 1280, height = 720;
-
 TextEditor editor;
 
 FSTWindow *fstWindow = nullptr;
@@ -47,9 +45,9 @@ void MainWindow::ShowDockSpace() {
     // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
     // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("DockSpace Demo", &p_open_dockspace, window_flags);
+    ImGui::PushID("DockSpaceWnd");
+    ImGui::Begin("DockSpaceWnd", &p_open_dockspace, window_flags);
     ImGui::PopStyleVar(3);
-
     // DockSpace
     ImGuiIO &io = ImGui::GetIO();
     ImGuiID dockspace_id = ImGui::GetID("DockSpace");
@@ -100,15 +98,22 @@ void MainWindow::ShowDockSpace() {
     }
 
     ImGui::End();
+    ImGui::PopID();
 }
 
 //-------------------------------------------------------
+
+void showTestWindow() {
+    ImGui::SetNextWindowDockID(0x3);
+    ImGui::Begin("TestWnd");
+    ImGui::End;
+}
 
 void MainWindow::ShowCodeEditor() {
     editor.setPathToLogFile(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log");
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+//    ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
 
@@ -271,5 +276,6 @@ void MainWindow::ChangeStyle()
 void MainWindow::Render() {
     this->ShowDockSpace();
     this->ShowCodeEditor();
+    //showTestWindow();
     if(fstWindow != nullptr) fstWindow->render();
 }

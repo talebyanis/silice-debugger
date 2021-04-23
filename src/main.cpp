@@ -60,6 +60,12 @@ int main() {
     SimpleUI::bindImGui();
     SimpleUI::initImGui();
 
+    const char *workspacePath = SRC_PATH "/src/data/workspace.dat";
+    if (!LibSL::System::File::exists(workspacePath)) {
+        std::cerr << "Could not open workspace file " << workspacePath << std::endl;
+    }
+    ImGui::LoadIniSettingsFromDisk(workspacePath);
+
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
@@ -69,10 +75,8 @@ int main() {
     /*ImGui::GetIO().GetClipboardTextFn = GetClipboard;
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/
 
+    mainWindow = MainWindow();
     mainWindow.ChangeStyle();
-    
-    
-
     SimpleUI::loop();
 
     ImPlot::DestroyContext();

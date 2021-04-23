@@ -243,10 +243,10 @@ void FSTWindow::showPlots() {
                         value = stream.str();
                         break;
                 }
-                ImVec2 offset = ImVec2(0,0);
+                ImVec2 offset = ImVec2(0, 0);
 
-                if(i>0) {
-                    if(item.y_data[i] > item.y_data[i-1]) {
+                if (i > 0) {
+                    if (item.y_data[i] > item.y_data[i - 1]) {
                         offset.y = -6;
                     } else {
                         offset.y = 6;
@@ -272,6 +272,7 @@ void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowDockID(0x2);
     ImGui::Begin("PlotWindow", nullptr,
                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
