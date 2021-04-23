@@ -3315,7 +3315,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
 
-		LogParser lp = LogParser(logfilename);
+		LogParser lp;
+		lp.parseVio(logfilename);
 
 		// Const
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");

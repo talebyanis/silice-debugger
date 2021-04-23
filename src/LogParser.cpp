@@ -2,13 +2,13 @@
 
 LogParser::LogParser() = default;
 
-// ---------------------------------------------------------------------
+// Vio methods ---------------------------------------------------------
 
-LogParser::LogParser(std::string report_filename)
+void LogParser::parseVio(std::string vio_filename)
 {
 	std::fstream file;
 
-	file.open(report_filename, std::ios::in);
+	file.open(vio_filename, std::ios::in);
 	if (!file)
 	{
 		std::cout << "Log file was not found";
@@ -16,7 +16,6 @@ LogParser::LogParser(std::string report_filename)
 	}
 
 	std::string element;
-	std::map<std::string, report_line> rls;
 	report_line rl;
 	while (file >> element) {
 		rl.filename = element;
@@ -29,7 +28,6 @@ LogParser::LogParser(std::string report_filename)
 		file >> element;
 		rl.usage = element;
 
-		auto truc = std::pair(rl.filename, rl.varname);
 		this->report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
 }
@@ -80,17 +78,63 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string m
 	return list;
 }
 
+// Index methods -------------------------------------------------------
+
+void LogParser::parseIndex(std::string index_filename)
+{
+	std::fstream file;
+
+	file.open(index_filename, std::ios::in);
+	if (!file)
+	{
+		std::cout << "Log file was not found";
+		exit(1);
+	}
+
+	std::string element;
+	index_line il;
+	std::pair<int, int> lines;
+	while (file >> element) {
+		il.index = element;
+		file >> element;
+		lines.first = stoi(element);
+		file >> element;
+		lines.second = stoi(element);;
+		file >> element;
+		il.filename = element;
+
+		this->index_lines.emplace(std::make_pair(std::make_pair(il.filename, il.index), il));
+	}
+}
+
 // ---------------------------------------------------------------------
 
-// ???
-std::pair<int, int> LogParser::getLines(std::string file_name, std::string var_name)
+// Return lines associated with "index" from "filename"
+std::pair<int, int> LogParser::getLines(std::string filename, std::string index)
 {
-	for (auto const& [key, val] : this->report_lines)
+	std::pair<int, int> pair = std::make_pair(-1, -1);
+	for (auto const& [key, val] : this->index_lines)
 	{
-		if (val.filename == file_name && val.varname == var_name)
+		if (val.filename == filename && val.index == index)
 		{
-			return std::pair<int, int>(val.line_start, val.line_stop);
+			return val.lines;
 		}
 	}
-	return std::pair(-1, -1);
+	return pair;
+}
+
+// ---------------------------------------------------------------------
+
+// Return the index which lines includes "line"
+std::pair<std::string, std::string> LogParser::getIndex(int line)
+{
+	std::pair<std::string, std::string> pair = std::make_pair("", "");
+	for (auto const& [key, val] : this->index_lines)
+	{
+		if (val.lines.first <= line && val.lines.second >= line)
+		{
+			return key;
+		}
+	}
+	return pair;
 }
