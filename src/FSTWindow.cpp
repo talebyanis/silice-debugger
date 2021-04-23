@@ -21,6 +21,7 @@ ImPlotRange plotXLimits = ImPlotRange(-1, -1);
 fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
+double markerX = 0;
 
 //-------------------------------------------------------
 
@@ -165,7 +166,8 @@ void FSTWindow::showPlots() {
         ImPlot::PushStyleColor(ImPlotCol_Line,item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
                               ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
-                              ImPlotAxisFlags_Lock)) {
+                              ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
+            ImPlot::DragLineX("Marker", &markerX,true,ImVec4(1,0.5,0.5,1),1);
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
             ImPlotLimits limits = ImPlot::GetPlotLimits();
             //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
@@ -196,6 +198,8 @@ void FSTWindow::showPlots() {
                 }
                 ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i]);
             }
+
+
             ImPlot::PopStyleColor(2);
             ImPlot::PopStyleVar();
             ImPlot::EndPlot();
