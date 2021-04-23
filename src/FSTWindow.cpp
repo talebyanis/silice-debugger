@@ -17,7 +17,8 @@
 
 FSTReader *g_Reader = nullptr;
 std::vector<Plot> g_Plots;
-ImPlotRange plotXLimits = ImPlotRange(-1, -1);
+ImPlotRange range = ImPlotRange(-1, -1);
+ImPlotRange *plotXLimits = nullptr;
 fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
@@ -74,7 +75,7 @@ void FSTWindow::showPlotMenu() {
             if (ImGui::MenuItem("Hexadecimal")) {
                 plot->type = HEXADECIMAL;
             }
-            ImGui::ColorPicker4("Color Picker",(float *) &plot->color);
+            ImGui::ColorPicker4("Color Picker", (float *) &plot->color);
             ImGui::EndPopup();
         }
     }
@@ -92,7 +93,7 @@ void FSTWindow::addPlot(fstHandle signal) {
     std::string signalName = g_Reader->getSignalName(signal);
     plot.name = signalName;
     plot.type = DECIMALS;
-    plot.color = ImVec4(1,1,1,1);
+    plot.color = ImVec4(1, 1, 1, 1);
     valuesList values = g_Reader->getValues(signal);
     for (const auto &item : values) {
         plot.x_data.push_back(item.first);
@@ -127,6 +128,7 @@ bool FSTWindow::isDisplayed(fstHandle signal) {
 
 //Shows plots on the right of the window
 int payload;
+
 void FSTWindow::showPlots() {
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
@@ -134,21 +136,20 @@ void FSTWindow::showPlots() {
     hover = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
         Plot item = g_Plots[i];
+
         //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
-        ImPlot::SetNextPlotLimitsY(0.0 - max / 10, max + max / 10);
+        ImPlot::SetNextPlotLimitsY(0.0 - max / 3, max + max / 3);
 
-        //plot X limits to be synchronized with others plots
-        if (plotXLimits.Min == -1 && plotXLimits.Max == -1) {
-            plotXLimits.Min = 0;
-            plotXLimits.Max = g_Reader->getMaxTime();
-        }
-        ImPlot::LinkNextPlotLimits(&plotXLimits.Min, &plotXLimits.Max, nullptr, nullptr);
+        //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
+        double xMin = plotXLimits->Min;
+        double xMax = plotXLimits->Max;
+        ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::Button("  ");
         //For drag&drop
-        if(ImGui::IsItemHovered() && !ImGui::IsAnyMouseDown()) {
+        if (ImGui::IsItemHovered() && !ImGui::IsAnyMouseDown()) {
             payload = i;
         }
         ImGui::SetCursorScreenPos(cursor);
@@ -163,19 +164,65 @@ void FSTWindow::showPlots() {
         ImGui::PushID(i);
         ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
         //Coloring the line
-        ImPlot::PushStyleColor(ImPlotCol_Line,item.color);
+        ImPlot::PushStyleColor(ImPlotCol_Line, item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
                               ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
                               ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
-            ImPlot::DragLineX("Marker", &markerX,true,ImVec4(1,0.5,0.5,1),1);
+
+            //Drag&drop target
+            if (ImGui::BeginDragDropTarget()) {
+                if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
+                    if (payload > i) {
+                        for (int k = payload; k > i; k--) {
+                            std::swap(g_Plots[k], g_Plots[k - 1]);
+                        }
+                    } else if (i > payload) {
+                        for (int k = payload; k < i; k++) {
+                            std::swap(g_Plots[k], g_Plots[k + 1]);
+                        }
+                    }
+                }
+                ImGui::EndDragDropTarget();
+            }
+
+            ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
-            ImPlotLimits limits = ImPlot::GetPlotLimits();
             //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
             //and we set global X limits to this plot's
             if (ImPlot::IsPlotHovered()) {
+                ImPlotLimits limits = ImPlot::GetPlotLimits();
                 hover = item.signalId;
-                plotXLimits.Min = limits.X.Min;
-                plotXLimits.Max = limits.X.Max;
+                plotXLimits->Min = limits.X.Min;
+                plotXLimits->Max = limits.X.Max;
+                ImGui::SetKeyboardFocusHere();
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
+                    for (int ii = 0; ii < item.x_data.size(); ii++) {
+                        int x = item.x_data[ii];
+                        if (markerX < x) {
+                            markerX = x;
+                            if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
+                                double distance = plotXLimits->Max - plotXLimits->Min;
+                                plotXLimits->Min = markerX - (distance / 2);
+                                plotXLimits->Max = markerX + (distance / 2);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow), true)) {
+                    for (int ii = item.x_data.size() - 1; ii >= 0; ii--) {
+                        int x = item.x_data[ii];
+                        if (markerX > x) {
+                            markerX = x;
+                            if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
+                                double distance = plotXLimits->Max - plotXLimits->Min;
+                                plotXLimits->Min = markerX - (distance / 2);
+                                plotXLimits->Max = markerX + (distance / 2);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
             ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
             //displaying values on the plot
@@ -196,7 +243,16 @@ void FSTWindow::showPlots() {
                         value = stream.str();
                         break;
                 }
-                ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i]);
+                ImVec2 offset = ImVec2(0,0);
+
+                if(i>0) {
+                    if(item.y_data[i] > item.y_data[i-1]) {
+                        offset.y = -6;
+                    } else {
+                        offset.y = 6;
+                    }
+                }
+                ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i], false, offset);
             }
 
 
@@ -204,22 +260,6 @@ void FSTWindow::showPlots() {
             ImPlot::PopStyleVar();
             ImPlot::EndPlot();
 
-            //Drag&drop target
-            if (ImGui::BeginDragDropTarget()) {
-                if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
-                    std::cout << "target " << i << std::endl;
-                    if (payload > i) {
-                        for (int k = payload; k > i; k--) {
-                            std::swap(g_Plots[k], g_Plots[k - 1]);
-                        }
-                    } else if(i > payload){
-                        for (int k = payload; k < i; k++) {
-                            std::swap(g_Plots[k], g_Plots[k + 1]);
-                        }
-                    }
-                }
-                ImGui::EndDragDropTarget();
-            }
             ImGui::PopID();
         }
     }
@@ -261,4 +301,10 @@ void FSTWindow::render() {
 
 FSTWindow::FSTWindow(std::string file) {
     g_Reader = new FSTReader(file.c_str());
+    if (plotXLimits == nullptr) {
+        plotXLimits = &range;
+        double maxTime = g_Reader->getMaxTime();
+        plotXLimits->Min = 0 - (maxTime / 20);
+        plotXLimits->Max = maxTime + (maxTime / 20);
+    }
 }
