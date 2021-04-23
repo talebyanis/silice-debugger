@@ -3327,6 +3327,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		LogParser lp;
 		lp.parseVio(logfilename);
 
+		lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
+
 		// Const
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");
 		for (auto const& e : list) {

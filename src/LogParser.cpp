@@ -1,4 +1,5 @@
 #include "LogParser.h"
+#include <algorithm>
 
 LogParser::LogParser() = default;
 
@@ -67,24 +68,24 @@ std::string LogParser::getCol(std::string file_name, std::string var_name, int c
 // Returns a list of key (file_name, var_name) having their value's usage matching with the parameter (const, temp...)
 std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string match)
 {
-	std::list<std::pair<std::string, std::string>> list;
+	std::list<std::pair<std::string, std::string>>* list = new std::list<std::pair<std::string, std::string>>();
 	for (auto const& [key, val] : this->report_lines)
 	{
 		if (val.usage == match)
 		{
-			list.push_back(key);
+			list->push_back(key);
 		}
 	}
-	return list;
+	return *list;
 }
 
-// Index methods -------------------------------------------------------
+// FSM methods -------------------------------------------------------
 
-void LogParser::parseIndex(std::string index_filename)
+void LogParser::parseFSM(std::string fsm_filename)
 {
 	std::fstream file;
 
-	file.open(index_filename, std::ios::in);
+	file.open(fsm_filename, std::ios::in);
 	if (!file)
 	{
 		std::cout << "Log file was not found";
@@ -92,32 +93,37 @@ void LogParser::parseIndex(std::string index_filename)
 	}
 
 	std::string element;
-	index_line il;
+	fsm_line fsml;
 	std::pair<int, int> lines;
 	while (file >> element) {
-		il.index = element;
+		fsml.algo = element;
 		file >> element;
-		lines.first = stoi(element);
+		fsml.index = stoi(element);
 		file >> element;
-		lines.second = stoi(element);;
+		fsml.filename = element;
 		file >> element;
-		il.filename = element;
+		fsml.line = stoi(element);
 
-		this->index_lines.emplace(std::make_pair(std::make_pair(il.filename, il.index), il));
+		this->fsm_lines.insert(this->fsm_lines.begin(), std::make_pair(std::make_pair(fsml.filename, fsml.index), fsml));
+	}
+
+	if (!this->fsm_lines.empty())
+	{
+		sort(this->fsm_lines.begin(), this->fsm_lines.end(), fsm_line::cmp);
 	}
 }
 
 // ---------------------------------------------------------------------
 
 // Return lines associated with "index" from "filename"
-std::pair<int, int> LogParser::getLines(std::string filename, std::string index)
+std::pair<int, int> LogParser::getLines(std::string filename, int index)
 {
 	std::pair<int, int> pair = std::make_pair(-1, -1);
-	for (auto const& [key, val] : this->index_lines)
+	for (auto const& [key, val] : this->fsm_lines)
 	{
 		if (val.filename == filename && val.index == index)
 		{
-			return val.lines;
+			//return val.lines;
 		}
 	}
 	return pair;
@@ -126,10 +132,12 @@ std::pair<int, int> LogParser::getLines(std::string filename, std::string index)
 // ---------------------------------------------------------------------
 
 // Return the index which lines includes "line"
-std::pair<std::string, std::string> LogParser::getIndex(int line)
+
+/*
+std::pair<std::string, int> LogParser::getIndex(int line)
 {
 	std::pair<std::string, std::string> pair = std::make_pair("", "");
-	for (auto const& [key, val] : this->index_lines)
+	for (auto const& [key, val] : this->fsm_lines)
 	{
 		if (val.lines.first <= line && val.lines.second >= line)
 		{
@@ -138,3 +146,4 @@ std::pair<std::string, std::string> LogParser::getIndex(int line)
 	}
 	return pair;
 }
+*/

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <map>
 #include <list>
+#include <vector>
+
 
 // Stores a line from the .v.vio.log report file :
 // FILENAME - TOKEN - VARNAME - LINE - USAGE - INDEX
@@ -16,18 +18,31 @@ struct report_line {
 };
 
 // Stores a line from the .v.index.log report file :
-// INDEX - LINE_START - LINE_STOP - FILENAME
-struct index_line {
-	std::string index;
-	std::pair<int, int> lines;
+// ALGO - INDEX - FILENAME - LINE (starting line)
+struct fsm_line {
+	std::string algo;
+	int index;
 	std::string filename;
+	int line;
+
+	// Comparator used in sortFSMMap() basing on lines
+	static bool cmp(std::pair<std::pair<std::string, int>, fsm_line>& a, std::pair<std::pair<std::string, int>, fsm_line>& b)
+	{
+		// same filename
+		if (a.first.first == b.first.first)
+		{
+			// comparing lines
+			return a.second.line < b.second.line;
+		}
+		return a.first.first < b.first.first;
+	}
 };
 
 
 /*
 LogParser :
 
-Parses .v.vio.log and .v.index.log files generated after building a design
+Parses .v.vio.log and .v.fsm.log files generated after building a design
 */
 class LogParser
 {
@@ -40,14 +55,14 @@ public:
 	std::list<std::pair<std::string, std::string>> getMatch(std::string match);
 
 	//Index methods
-	void parseIndex(std::string index_filename);
-	std::pair<int, int> getLines(std::string filename, std::string index);
-	std::pair<std::string, std::string> getIndex(int line);
+	void parseFSM(std::string fsm_filename);
+	std::pair<int, int> getLines(std::string filename, int index);
+	std::pair<std::string, int> getIndex(int line);
 private:
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;
 	
-	// (filename, index)   -> index_line
-	std::map<std::pair<std::string, std::string>, index_line> index_lines;
+	// (filename, index)   -> fsm_line
+	std::vector<std::pair<std::pair<std::string, int>, fsm_line>> fsm_lines;
 };
 
