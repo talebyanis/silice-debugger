@@ -281,5 +281,5 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     this->ShowCodeEditor();
     //showTestWindow();
-    fstWindow->render();
+    if(fstWindow != nullptr) fstWindow->render();
 }

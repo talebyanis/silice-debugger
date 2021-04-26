@@ -20,6 +20,7 @@ ImPlotRange *plotXLimits = nullptr;
 fstHandle hover = 0;
 fstHandle hoveredSignal = 0;
 fstHandle qindex = 0;
+std::vector<std::pair<int, int>> qindexValues;
 double markerX = 0;
 
 //-------------------------------------------------------
@@ -134,30 +135,6 @@ void FSTWindow::showPlots() {
     hover = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
         Plot item = g_Plots[i];
-
-        {
-            int index = -1;
-            int tmp = 0;
-
-            for (int ii = 1; ii < item.x_data.size(); ii++)
-            {
-                if (markerX < item.x_data[ii] && markerX >= item.x_data[tmp])
-                {
-                    index = tmp-1;
-                    break;
-                }
-                tmp = ii;
-            }
-
-            if (index != -1)
-            {
-                editor->FSMframeAtIndex(editor->openedFile, index);
-            }
-            else
-            {
-                editor->FSMunframe();
-            }
-        }
 
         //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
@@ -318,45 +295,68 @@ void FSTWindow::render() {
     }
     ImGui::End();
     ImGui::PopStyleVar(); // Padding
-}
 
-//-------------------------------------------------------
+    int index = -1;
+    int tmp = 0;
 
-void FSTWindow::save(const char *fileName) {
-    std::ofstream out(fileName);
-    out << "//Size of g_Plots\n";
-    out << g_Plots.size() << "\n";
-    for (const Plot &item : g_Plots) {
-        out << "//Size of data for " << item.name << "\n";
-        out << item.x_data.size() << "\n";
-        for (int i = 0; i < item.x_data.size(); ++i) {
-            out << item.x_data[i] << " " << item.y_data[i] << "\n";
+    for (int ii = 1; ii < qindexValues.size(); ii++) {
+        if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
+            index = tmp - 1;
+            break;
         }
-        out << "//Name\n";
-        out << item.name << "\n";
-        out << "//signalId\n";
-        out << item.signalId;
-        out << "//type\n";
-        out << item.type;
-        out << "//Color (4 lines)\n";
+        tmp = ii;
+    }
+
+    if (index != -1) {
+        editor->FSMframeAtIndex(editor->openedFile, index);
+    } else {
+        editor->FSMunframe();
     }
 }
 
 //-------------------------------------------------------
 
-FSTWindow::FSTWindow(std::string file, TextEditor& editors) {
-    g_Reader = new FSTReader(file.c_str());
-    if (plotXLimits == nullptr) {
-        plotXLimits = &range;
-        double maxTime = g_Reader->getMaxTime();
-        plotXLimits->Min = 0 - (maxTime / 20);
-        plotXLimits->Max = maxTime + (maxTime / 20);
-    }
-    this->editor = &editors;
-
-    for (const auto &item : g_Plots) {
-        if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos) {
-            qindex = item.signalId;
+    void FSTWindow::save(const char *fileName) {
+        std::ofstream out(fileName);
+        out << "//Size of g_Plots\n";
+        out << g_Plots.size() << "\n";
+        for (const Plot &item : g_Plots) {
+            out << "//Size of data for " << item.name << "\n";
+            out << item.x_data.size() << "\n";
+            for (int i = 0; i < item.x_data.size(); ++i) {
+                out << item.x_data[i] << " " << item.y_data[i] << "\n";
+            }
+            out << "//Name\n";
+            out << item.name << "\n";
+            out << "//signalId\n";
+            out << item.signalId;
+            out << "//type\n";
+            out << item.type;
+            out << "//Color (4 lines)\n";
         }
     }
-}
+
+//-------------------------------------------------------
+
+    FSTWindow::FSTWindow(std::string file, TextEditor & editors) {
+        g_Reader = new FSTReader(file.c_str());
+        if (plotXLimits == nullptr) {
+            plotXLimits = &range;
+            double maxTime = g_Reader->getMaxTime();
+            plotXLimits->Min = 0 - (maxTime / 20);
+            plotXLimits->Max = maxTime + (maxTime / 20);
+        }
+        this->editor = &editors;
+
+        for (const auto &item : g_Reader->getScopes()) {
+            for (const auto &signal : g_Reader->getSignals(item)) {
+                if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
+                    qindex = signal;
+                }
+            }
+        }
+        valuesList valuesList = g_Reader->getValues(qindex);
+        for (const auto &item : valuesList) {
+            qindexValues.push_back(std::make_pair(item.first,item.second));
+        }
+    }
