@@ -26,6 +26,7 @@ public:
     FSTWindow(std::string file, TextEditor& editor);
     void render();
 private:
+    TextEditor* editor;
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
     bool isDisplayed(fstHandle signal);

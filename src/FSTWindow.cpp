@@ -20,7 +20,6 @@ fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
 double markerX = 0;
-TextEditor* editor;
 
 //-------------------------------------------------------
 
@@ -239,7 +238,7 @@ void FSTWindow::showPlots() {
                     
                     if (index != -1)
                     {
-                        editor->FSMframeAtIndex(editor->openedFile, index);
+                        this->editor->FSMframeAtIndex(editor->openedFile, index);
                     }
                     else
                     {
