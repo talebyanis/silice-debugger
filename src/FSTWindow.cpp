@@ -272,7 +272,7 @@ void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowDockID(0x2);
+    //ImGui::SetNextWindowDockID(0x2);
     ImGui::Begin("PlotWindow", nullptr,
                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
