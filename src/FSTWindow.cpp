@@ -10,6 +10,8 @@
 #include "../libs/implot/implot.h"
 #include <bitset>
 #include <fstream>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 //-------------------------------------------------------
 
@@ -316,47 +318,42 @@ void FSTWindow::render() {
 
 //-------------------------------------------------------
 
-    void FSTWindow::save(const char *fileName) {
-        std::ofstream out(fileName);
-        out << "//Size of g_Plots\n";
-        out << g_Plots.size() << "\n";
-        for (const Plot &item : g_Plots) {
-            out << "//Size of data for " << item.name << "\n";
-            out << item.x_data.size() << "\n";
-            for (int i = 0; i < item.x_data.size(); ++i) {
-                out << item.x_data[i] << " " << item.y_data[i] << "\n";
-            }
-            out << "//Name\n";
-            out << item.name << "\n";
-            out << "//signalId\n";
-            out << item.signalId;
-            out << "//type\n";
-            out << item.type;
-            out << "//Color (4 lines)\n";
-        }
+json FSTWindow::save() {
+    json j;
+    j["filePath"] = this->fstFilePath;
+    j["rangeMin"] = range.Min;
+    j["rangeMax"] = range.Max;
+    j["markerX"] = markerX;
+    std::vector<fstHandle> displayedPlots;
+    for (const auto &item : g_Plots) {
+        displayedPlots.push_back(item.signalId);
     }
+    j["displayedSignals"] = displayedPlots;
+    return j;
+}
 
 //-------------------------------------------------------
 
-    FSTWindow::FSTWindow(std::string file, TextEditor & editors) {
-        g_Reader = new FSTReader(file.c_str());
-        if (plotXLimits == nullptr) {
-            plotXLimits = &range;
-            double maxTime = g_Reader->getMaxTime();
-            plotXLimits->Min = 0 - (maxTime / 20);
-            plotXLimits->Max = maxTime + (maxTime / 20);
-        }
-        this->editor = &editors;
+FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
+    this->fstFilePath = file;
+    g_Reader = new FSTReader(file.c_str());
+    if (plotXLimits == nullptr) {
+        plotXLimits = &range;
+        double maxTime = g_Reader->getMaxTime();
+        plotXLimits->Min = 0 - (maxTime / 20);
+        plotXLimits->Max = maxTime + (maxTime / 20);
+    }
+    this->editor = &editors;
 
-        for (const auto &item : g_Reader->getScopes()) {
-            for (const auto &signal : g_Reader->getSignals(item)) {
-                if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
-                    qindex = signal;
-                }
+    for (const auto &item : g_Reader->getScopes()) {
+        for (const auto &signal : g_Reader->getSignals(item)) {
+            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
+                qindex = signal;
             }
         }
-        valuesList valuesList = g_Reader->getValues(qindex);
-        for (const auto &item : valuesList) {
-            qindexValues.push_back(std::make_pair(item.first,item.second));
-        }
     }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.push_back(std::make_pair(item.first, item.second));
+    }
+}

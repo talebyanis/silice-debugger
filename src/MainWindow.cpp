@@ -9,6 +9,8 @@
 #include "FSTReader.h"
 #include "sourcePath.h"
 #include "FSTWindow.h"
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
@@ -65,8 +67,22 @@ void MainWindow::ShowDockSpace() {
                     fstWindow = new FSTWindow(fullpath, editor);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
-                if (ImGui::MenuItem("Save debug state")) {
-
+            }
+            ImGui::Separator();
+            if(ImGui::MenuItem("Load debug")) {
+                std::ifstream stream(SRC_PATH "/.save/save.dat");
+                json data;
+                stream >> data;
+            }
+            if (ImGui::MenuItem("Save debug")) {
+                if(fstWindow != nullptr) {
+                    if(!exists(SRC_PATH "/.save")) {
+                        createDirectory(SRC_PATH "/.save");
+                    }
+                    std::ofstream save(SRC_PATH "/.save/save.dat");
+                    json fstWindowJSON = fstWindow->save();
+                    std::cout << std::setw(4) << fstWindowJSON << std::endl;
+                    save << std::setw(4) << fstWindowJSON << std::endl;
                 }
             }
 

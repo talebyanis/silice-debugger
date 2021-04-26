@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 #include "./ImGuiColorTextEdit/TextEditor.h"
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 #ifndef SILICE_TEXT_EDITOR_FSTWINDOW_H
 #define SILICE_TEXT_EDITOR_FSTWINDOW_H
@@ -23,9 +25,10 @@ typedef struct {
 
 class FSTWindow {
 public:
+    std::string fstFilePath;
     FSTWindow(std::string file, TextEditor& editor);
     void render();
-    void save(const char *fileName);
+    json save();
 private:
     TextEditor* editor;
     void addPlot(fstHandle signal);
