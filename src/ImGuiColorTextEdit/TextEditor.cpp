@@ -54,6 +54,11 @@ TextEditor::TextEditor()
 	// ToDo : change path w/ an argument
 	this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
 
+	// Simulating hover on an index WIP
+	this->FSMframeAtIndex("D:/IUT/stage/Silice/projects/divstd_bare/main.ice", 0);
+	
+	//this->pathToLogFile = "./build.v.vio.log";
+
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->pathToLogFile));
 	mLines.push_back(Line());
@@ -61,6 +66,7 @@ TextEditor::TextEditor()
 	// Opening a file (raw path here) on startup,
 	// ToDo : change path w/ an argument
 	this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
+	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
 }
@@ -967,10 +973,25 @@ void TextEditor::Render()
 			}
 
 			// Draw line number (right aligned)
+			// The color changes if the corresponding index is selected (fsm.log)
 			snprintf(buf, 16, "%d  ", lineNo + 1);
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-			drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+			
+			if (this->linesSelectedIndex.first != -1)
+			{
+				(lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second
+					|| (this->linesSelectedIndex.first == this->linesSelectedIndex.second 
+						&& lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second)) ?
+					drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineSelectedIndex], buf)
+					: drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+			}
+			else
+			{
+				drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+			}
+
+			
 
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
@@ -2048,6 +2069,7 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
+			0xFF0000FF, // LineSelectedIndex
 		} };
 	return p;
 }
@@ -2083,6 +2105,7 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
+			0xFF0000FF, // LineSelectedIndex
 		} };
 	return p;
 }
@@ -2118,6 +2141,7 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
+			0xFF0000FF, // LineSelectedIndex
 		} };
 	return p;
 }
@@ -2553,6 +2577,13 @@ void TextEditor::UndoRecord::Redo(TextEditor* aEditor)
 	aEditor->EnsureCursorVisible();
 }
 
+void TextEditor::setPathToLogFile(std::string path)
+{
+	assert(path != "");
+	assert(path.find(".v.vio.log"));
+	this->pathToLogFile = path;
+}
+
 bool TextEditor::writeFromFile(std::string filepath)
 {
 	std::fstream file;
@@ -2568,14 +2599,19 @@ bool TextEditor::writeFromFile(std::string filepath)
 		this->mReadOnly = true;
 		return 1;
 	}
+	std::cout << "File to write in Text Editor was not found" << std::endl;
 	return 0;
 }
 
-void TextEditor::setPathToLogFile(std::string path)
+void TextEditor::FSMframeAtIndex(std::string fsm_file, int index)
 {
-	assert(path != "");
-	assert(path.find(".v.vio.log"));
-	this->pathToLogFile = path;
+	LogParser lp;
+	lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
+	std::pair<int, int> lines = lp.getLines(fsm_file, index);
+
+	std::cout << lines.first << " to " << lines.second << std::endl;
+
+	this->linesSelectedIndex = lines;	
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
@@ -3326,8 +3362,6 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 
 		LogParser lp;
 		lp.parseVio(logfilename);
-
-		lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 
 		// Const
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");

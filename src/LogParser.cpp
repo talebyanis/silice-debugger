@@ -12,7 +12,7 @@ void LogParser::parseVio(std::string vio_filename)
 	file.open(vio_filename, std::ios::in);
 	if (!file)
 	{
-		std::cout << "Log file was not found";
+		std::cout << "VIO Log file was not found";
 		exit(1);
 	}
 
@@ -29,7 +29,7 @@ void LogParser::parseVio(std::string vio_filename)
 		file >> element;
 		rl.usage = element;
 
-		this->report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
+		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
 }
 
@@ -42,19 +42,19 @@ std::string LogParser::getCol(std::string file_name, std::string var_name, int c
 	switch (col_nb)
 	{
 	case 0:
-		return this->report_lines[std::make_pair(file_name, var_name)].filename;
+		return report_lines[std::make_pair(file_name, var_name)].filename;
 		break;
 	case 1:
-		return this->report_lines[std::make_pair(file_name, var_name)].token;
+		return report_lines[std::make_pair(file_name, var_name)].token;
 		break;
 	case 2:
-		return this->report_lines[std::make_pair(file_name, var_name)].varname;
+		return report_lines[std::make_pair(file_name, var_name)].varname;
 		break;
 	case 3:
-		return this->report_lines[std::make_pair(file_name, var_name)].line;
+		return report_lines[std::make_pair(file_name, var_name)].line;
 		break;
 	case 4:
-		return this->report_lines[std::make_pair(file_name, var_name)].usage;
+		return report_lines[std::make_pair(file_name, var_name)].usage;
 		break;
 	default:
 		break;
@@ -69,7 +69,7 @@ std::string LogParser::getCol(std::string file_name, std::string var_name, int c
 std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string match)
 {
 	std::list<std::pair<std::string, std::string>>* list = new std::list<std::pair<std::string, std::string>>();
-	for (auto const& [key, val] : this->report_lines)
+	for (auto const& [key, val] : report_lines)
 	{
 		if (val.usage == match)
 		{
@@ -88,7 +88,7 @@ void LogParser::parseFSM(std::string fsm_filename)
 	file.open(fsm_filename, std::ios::in);
 	if (!file)
 	{
-		std::cout << "Log file was not found";
+		std::cout << "FSM Log file was not found";
 		exit(1);
 	}
 
@@ -104,13 +104,19 @@ void LogParser::parseFSM(std::string fsm_filename)
 		file >> element;
 		fsml.line = stoi(element);
 
-		this->fsm_lines.insert(this->fsm_lines.begin(), std::make_pair(std::make_pair(fsml.filename, fsml.index), fsml));
+		fsm_lines.insert(fsm_lines.begin(), std::make_pair(std::make_pair(fsml.filename, fsml.index), fsml));
 	}
 
-	if (!this->fsm_lines.empty())
+	if (!fsm_lines.empty())
 	{
-		sort(this->fsm_lines.begin(), this->fsm_lines.end(), fsm_line::cmp);
+		sort(fsm_lines.begin(), fsm_lines.end(), fsm_line::cmp);
 	}
+
+	// uncomment to print fsm_lines
+	/*for (auto i : this->fsm_lines)
+	{
+		std::cout << i.second.filename << " " << i.second.line << " " << i.second.index << std::endl;
+	}*/
 }
 
 // ---------------------------------------------------------------------
@@ -118,32 +124,25 @@ void LogParser::parseFSM(std::string fsm_filename)
 // Return lines associated with "index" from "filename"
 std::pair<int, int> LogParser::getLines(std::string filename, int index)
 {
-	std::pair<int, int> pair = std::make_pair(-1, -1);
-	for (auto const& [key, val] : this->fsm_lines)
+	std::pair<int, int> pair = std::make_pair(-1, -2); // -2 = inf
+	bool found = false;
+	for (auto const& [key, val] : fsm_lines)
 	{
+		if (found)
+		{ 
+			pair.second = val.line;
+			return pair;
+		}
 		if (val.filename == filename && val.index == index)
 		{
-			//return val.lines;
+			pair.first = val.line;
+			found = true;
 		}
 	}
-	return pair;
-}
-
-// ---------------------------------------------------------------------
-
-// Return the index which lines includes "line"
-
-/*
-std::pair<std::string, int> LogParser::getIndex(int line)
-{
-	std::pair<std::string, std::string> pair = std::make_pair("", "");
-	for (auto const& [key, val] : this->fsm_lines)
+	if (found)
 	{
-		if (val.lines.first <= line && val.lines.second >= line)
-		{
-			return key;
-		}
+		pair.second = pair.first;
+		return pair;
 	}
 	return pair;
 }
-*/

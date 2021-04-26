@@ -17,7 +17,7 @@ struct report_line {
 	std::string index;
 };
 
-// Stores a line from the .v.index.log report file :
+// Stores a line from the .v.fsm.log report file :
 // ALGO - INDEX - FILENAME - LINE (starting line)
 struct fsm_line {
 	std::string algo;
@@ -57,7 +57,6 @@ public:
 	//Index methods
 	void parseFSM(std::string fsm_filename);
 	std::pair<int, int> getLines(std::string filename, int index);
-	std::pair<std::string, int> getIndex(int line);
 private:
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;
