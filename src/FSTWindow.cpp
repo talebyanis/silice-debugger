@@ -12,6 +12,7 @@
 #include "imgui.h"
 #include "../libs/implot/implot.h"
 #include <bitset>
+#include <fstream>
 
 //-------------------------------------------------------
 
@@ -300,6 +301,27 @@ void FSTWindow::render() {
 
 //-------------------------------------------------------
 
+void FSTWindow::save(const char *fileName) {
+    std::ofstream out(fileName);
+    out << "//Size of g_Plots\n";
+    out << g_Plots.size() << "\n";
+    for (const Plot &item : g_Plots) {
+        out << "//Size of data for " << item.name << "\n";
+        out << item.x_data.size() << "\n";
+        for (int i = 0; i < item.x_data.size(); ++i) {
+            out << item.x_data[i] << " " << item.y_data[i] << "\n";
+        }
+        out << "//Name\n";
+        out << item.name << "\n";
+        out << "//signalId\n";
+        out << item.signalId;
+        out << "//type\n";
+        out << item.type;
+        out << "//Color (4 lines)\n";
+    }
+}
+
+//-------------------------------------------------------
 FSTWindow::FSTWindow(std::string file) {
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {

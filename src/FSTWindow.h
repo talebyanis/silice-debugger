@@ -28,6 +28,7 @@ class FSTWindow {
 public:
     FSTWindow(std::string file);
     void render();
+    void save(const char *fileName);
 private:
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);

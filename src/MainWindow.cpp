@@ -67,6 +67,9 @@ void MainWindow::ShowDockSpace() {
                     fstWindow = new FSTWindow(fullpath);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
+                if (ImGui::MenuItem("Save debug state")) {
+
+                }
             }
 
             ImGui::Separator();
