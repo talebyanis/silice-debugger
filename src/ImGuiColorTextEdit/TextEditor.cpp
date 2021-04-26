@@ -50,13 +50,11 @@ TextEditor::TextEditor()
 	, mShowWhitespaces(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
-	// Setting path to .v.vio.log file on startup,
+	// Setting paths on startup,
 	// ToDo : change path w/ an argument
+	this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 	this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
-
-	// Simulating hover on an index WIP
-	this->FSMframeAtIndex("D:/IUT/stage/Silice/projects/divstd_bare/main.ice", 0);
-	
+	this->openedFile = SRC_PATH "/examples/divstd_bare/main.ice";
 	//this->pathToLogFile = "./build.v.vio.log";
 
 	SetPalette(GetDarkPalette());
@@ -65,7 +63,7 @@ TextEditor::TextEditor()
 
 	// Opening a file (raw path here) on startup,
 	// ToDo : change path w/ an argument
-	this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
+	this->writeFromFile(this->openedFile);
 	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
@@ -2605,13 +2603,16 @@ bool TextEditor::writeFromFile(std::string filepath)
 
 void TextEditor::FSMframeAtIndex(std::string fsm_file, int index)
 {
-	LogParser lp;
-	lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 	std::pair<int, int> lines = lp.getLines(fsm_file, index);
 
-	std::cout << lines.first << " to " << lines.second << std::endl;
+	//std::cout << lines.first << " to " << lines.second << std::endl;
 
 	this->linesSelectedIndex = lines;	
+}
+
+void TextEditor::FSMunframe()
+{
+	this->linesSelectedIndex = std::pair(-1, -1);
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)

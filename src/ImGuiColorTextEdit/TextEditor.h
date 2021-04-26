@@ -282,11 +282,14 @@ public:
 
 	// Addition
 	std::string pathToLogFile;
+	std::string openedFile;
 	std::pair<int, int> linesSelectedIndex;
+	LogParser lp;
 
 	void setPathToLogFile(std::string path);
 	bool writeFromFile(std::string filepath);
 	void FSMframeAtIndex(std::string fsm_file, int index);
+	void FSMunframe();
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;

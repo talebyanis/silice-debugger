@@ -32,7 +32,14 @@ struct fsm_line {
 		if (a.first.first == b.first.first)
 		{
 			// comparing lines
-			return a.second.line < b.second.line;
+			if (a.second.line == b.second.line)
+			{
+				return a.second.index < b.second.index;
+			}
+			else
+			{
+				return a.second.line < b.second.line;
+			}
 		}
 		return a.first.first < b.first.first;
 	}

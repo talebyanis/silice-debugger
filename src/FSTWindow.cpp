@@ -1,6 +1,3 @@
-//
-// Created by antoine on 16/04/2021.
-//
 #define IMGUI_ENABLE_MATH_OPERATOR
 
 #include "FSTWindow.h"
@@ -23,6 +20,7 @@ fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
 double markerX = 0;
+TextEditor* editor;
 
 //-------------------------------------------------------
 
@@ -223,6 +221,31 @@ void FSTWindow::showPlots() {
                         }
                     }
                 }
+
+                if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos)
+                {
+                    int index = -1;
+                    int tmp = 0;
+
+                    for (int i = 1; i < item.x_data.size(); i++)
+                    {
+                        if (markerX < item.x_data[i] && markerX >= item.x_data[tmp])
+                        {
+                            index = tmp-1;
+                            break;
+                        }
+                        tmp = i;
+                    }
+                    
+                    if (index != -1)
+                    {
+                        editor->FSMframeAtIndex(editor->openedFile, index);
+                    }
+                    else
+                    {
+                        editor->FSMunframe();
+                    }
+                }
             }
             ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
             //displaying values on the plot
@@ -300,7 +323,7 @@ void FSTWindow::render() {
 
 //-------------------------------------------------------
 
-FSTWindow::FSTWindow(std::string file) {
+FSTWindow::FSTWindow(std::string file, TextEditor& editors) {
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
@@ -308,4 +331,5 @@ FSTWindow::FSTWindow(std::string file) {
         plotXLimits->Min = 0 - (maxTime / 20);
         plotXLimits->Max = maxTime + (maxTime / 20);
     }
+    editor = &editors;
 }

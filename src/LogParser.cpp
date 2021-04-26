@@ -113,10 +113,10 @@ void LogParser::parseFSM(std::string fsm_filename)
 	}
 
 	// uncomment to print fsm_lines
-	/*for (auto i : this->fsm_lines)
+	for (auto i : this->fsm_lines)
 	{
 		std::cout << i.second.filename << " " << i.second.line << " " << i.second.index << std::endl;
-	}*/
+	}
 }
 
 // ---------------------------------------------------------------------
