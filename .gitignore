@@ -7,3 +7,4 @@ CMakeFiles
 CMakeCache.txt
 src/sourcePath.h
 .vs
+*build.v.fsm.log
