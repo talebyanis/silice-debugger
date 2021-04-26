@@ -39,10 +39,13 @@ public:
 		CurrentLineEdge,
 		
 		// Silice specific Index :
+		Type,
 		Const,
 		Wire,
 		FF,
 		Temp,
+
+		LineSelectedIndex,
 
 		Max,
 	
@@ -278,11 +281,12 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
-
 	std::string pathToLogFile;
+	std::pair<int, int> linesSelectedIndex;
 
 	void setPathToLogFile(std::string path);
 	bool writeFromFile(std::string filepath);
+	void FSMframeAtIndex(std::string fsm_file, int index);
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
