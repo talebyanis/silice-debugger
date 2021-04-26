@@ -18,7 +18,6 @@ std::vector<Plot> g_Plots;
 ImPlotRange range = ImPlotRange(-1, -1);
 ImPlotRange *plotXLimits = nullptr;
 fstHandle hover = 0;
-ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
 fstHandle qindex = 0;
 double markerX = 0;
@@ -244,30 +243,6 @@ void FSTWindow::showPlots() {
                             }
                             break;
                         }
-                    }
-                }
-                if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos)
-                {
-                    int index = -1;
-                    int tmp = 0;
-
-                    for (int i = 1; i < item.x_data.size(); i++)
-                    {
-                        if (markerX < item.x_data[i] && markerX >= item.x_data[tmp])
-                        {
-                            index = tmp-1;
-                            break;
-                        }
-                        tmp = i;
-                    }
-                    
-                    if (index != -1)
-                    {
-                        this->editor->FSMframeAtIndex(editor->openedFile, index);
-                    }
-                    else
-                    {
-                        editor->FSMunframe();
                     }
                 }
             }
