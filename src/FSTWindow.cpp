@@ -1,6 +1,3 @@
-//
-// Created by antoine on 16/04/2021.
-//
 #define IMGUI_ENABLE_MATH_OPERATOR
 
 #include "FSTWindow.h"
@@ -23,6 +20,7 @@ ImPlotRange *plotXLimits = nullptr;
 fstHandle hover = 0;
 ConvertType convertType = DECIMALS;
 fstHandle hoveredSignal = 0;
+fstHandle qindex = 0;
 double markerX = 0;
 
 //-------------------------------------------------------
@@ -137,6 +135,30 @@ void FSTWindow::showPlots() {
     hover = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
         Plot item = g_Plots[i];
+
+        {
+            int index = -1;
+            int tmp = 0;
+
+            for (int ii = 1; ii < item.x_data.size(); ii++)
+            {
+                if (markerX < item.x_data[ii] && markerX >= item.x_data[tmp])
+                {
+                    index = tmp-1;
+                    break;
+                }
+                tmp = ii;
+            }
+
+            if (index != -1)
+            {
+                editor->FSMframeAtIndex(editor->openedFile, index);
+            }
+            else
+            {
+                editor->FSMunframe();
+            }
+        }
 
         //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
@@ -322,12 +344,20 @@ void FSTWindow::save(const char *fileName) {
 }
 
 //-------------------------------------------------------
-FSTWindow::FSTWindow(std::string file) {
+
+FSTWindow::FSTWindow(std::string file, TextEditor& editors) {
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
         double maxTime = g_Reader->getMaxTime();
         plotXLimits->Min = 0 - (maxTime / 20);
         plotXLimits->Max = maxTime + (maxTime / 20);
+    }
+    this->editor = &editors;
+
+    for (const auto &item : g_Plots) {
+        if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos) {
+            qindex = item.signalId;
+        }
     }
 }

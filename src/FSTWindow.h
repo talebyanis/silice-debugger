@@ -1,10 +1,7 @@
-//
-// Created by antoine on 16/04/2021.
-//
-
 #include "FSTReader.h"
 #include <vector>
 #include <string>
+#include "./ImGuiColorTextEdit/TextEditor.h"
 
 #ifndef SILICE_TEXT_EDITOR_FSTWINDOW_H
 #define SILICE_TEXT_EDITOR_FSTWINDOW_H
@@ -26,10 +23,11 @@ typedef struct {
 
 class FSTWindow {
 public:
-    FSTWindow(std::string file);
+    FSTWindow(std::string file, TextEditor& editor);
     void render();
     void save(const char *fileName);
 private:
+    TextEditor* editor;
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
     bool isDisplayed(fstHandle signal);

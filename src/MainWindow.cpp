@@ -4,7 +4,6 @@
 #include <string>
 #include <LibSL.h>
 #include "imgui.h"
-#include "ImGuiColorTextEdit/TextEditor.h"
 #include "FileDialog.h"
 #include "../libs/implot/implot.h"
 #include "FSTReader.h"
@@ -64,7 +63,7 @@ void MainWindow::ShowDockSpace() {
                     if (fstWindow) {
                         delete fstWindow;
                     }
-                    fstWindow = new FSTWindow(fullpath);
+                    fstWindow = new FSTWindow(fullpath, editor);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
                 if (ImGui::MenuItem("Save debug state")) {
