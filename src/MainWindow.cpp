@@ -22,7 +22,6 @@ bool p_open_dockspace = true;
 
 TextEditor editor;
 
-
 FSTWindow *fstWindow = nullptr;
 
 LogParser lp;

@@ -246,6 +246,30 @@ void FSTWindow::showPlots() {
                         }
                     }
                 }
+                if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos)
+                {
+                    int index = -1;
+                    int tmp = 0;
+
+                    for (int i = 1; i < item.x_data.size(); i++)
+                    {
+                        if (markerX < item.x_data[i] && markerX >= item.x_data[tmp])
+                        {
+                            index = tmp-1;
+                            break;
+                        }
+                        tmp = i;
+                    }
+                    
+                    if (index != -1)
+                    {
+                        this->editor->FSMframeAtIndex(editor->openedFile, index);
+                    }
+                    else
+                    {
+                        editor->FSMunframe();
+                    }
+                }
             }
             ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
             //displaying values on the plot
