@@ -10,6 +10,7 @@
 #include "sourcePath.h"
 #include "FSTWindow.h"
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
@@ -31,7 +32,7 @@ LogParser lp;
 //-------------------------------------------------------
 
 void MainWindow::ShowDockSpace() {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
@@ -69,19 +70,24 @@ void MainWindow::ShowDockSpace() {
                 }
             }
             ImGui::Separator();
-            if(ImGui::MenuItem("Load debug")) {
+            if (ImGui::MenuItem("Load debug")) {
                 std::ifstream stream(SRC_PATH "/.save/save.dat");
                 json data;
                 stream >> data;
+                if (fstWindow) {
+                    delete fstWindow;
+                }
+                fstWindow = new FSTWindow(data, editor);
+                std::cout << "debug opened with file " << data["filePath"] << std::endl;
             }
-            if (ImGui::MenuItem("Save debug")) {
-                if(fstWindow != nullptr) {
-                    if(!exists(SRC_PATH "/.save")) {
+            if (ImGui::MenuItem("Save debug", NULL, false, fstWindow != nullptr)) {
+                if (fstWindow != nullptr) {
+                    if (!exists(SRC_PATH "/.save")) {
                         createDirectory(SRC_PATH "/.save");
                     }
                     std::ofstream save(SRC_PATH "/.save/save.dat");
                     json fstWindowJSON = fstWindow->save();
-                    std::cout << std::setw(4) << fstWindowJSON << std::endl;
+                    //std::cout << std::setw(4) << fstWindowJSON << std::endl;
                     save << std::setw(4) << fstWindowJSON << std::endl;
                 }
             }
@@ -141,8 +147,7 @@ void MainWindow::ShowCodeEditor() {
                 auto fullpath = openFileDialog(OFD_EXTENSIONS);
                 if (!fullpath.empty()) {
                     fs::path path = fs::path(fullpath);
-                    if (editor.writeFromFile(path.string()))
-                    {
+                    if (editor.writeFromFile(path.string())) {
                         fileFullPath = path;
                     }
                 }
@@ -236,12 +241,11 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-void MainWindow::ChangeStyle()
-{
+void MainWindow::ChangeStyle() {
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
 
-    ImVec4* colors = ImGui::GetStyle().Colors;
+    ImVec4 *colors = ImGui::GetStyle().Colors;
     colors[ImGuiCol_Text] = ImVec4(0.95f, 0.96f, 0.98f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.36f, 0.42f, 0.47f, 1.00f);
     colors[ImGuiCol_WindowBg] = ImVec4(0.11f, 0.15f, 0.17f, 1.00f);
@@ -297,5 +301,5 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     this->ShowCodeEditor();
     //showTestWindow();
-    if(fstWindow != nullptr) fstWindow->render();
+    if (fstWindow != nullptr) fstWindow->render();
 }

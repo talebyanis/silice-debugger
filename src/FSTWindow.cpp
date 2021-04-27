@@ -325,10 +325,13 @@ json FSTWindow::save() {
     j["rangeMax"] = range.Max;
     j["markerX"] = markerX;
     std::vector<fstHandle> displayedPlots;
+    std::vector<ConvertType> displayedTypes;
     for (const auto &item : g_Plots) {
         displayedPlots.push_back(item.signalId);
+        displayedTypes.push_back(item.type);
     }
     j["displayedSignals"] = displayedPlots;
+    j["displayedTypes"] = displayedTypes;
     return j;
 }
 
@@ -355,5 +358,30 @@ FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
     valuesList valuesList = g_Reader->getValues(qindex);
     for (const auto &item : valuesList) {
         qindexValues.push_back(std::make_pair(item.first, item.second));
+    }
+}
+
+FSTWindow::FSTWindow(json data, TextEditor &editors) {
+    this->fstFilePath = data["filePath"];
+    g_Reader = new FSTReader(this->fstFilePath.c_str());
+    range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
+    plotXLimits = &range;
+    this->editor = &editors;
+    markerX = data["markerX"];
+
+    for (const auto &item : g_Reader->getScopes()) {
+        for (const auto &signal : g_Reader->getSignals(item)) {
+            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
+                qindex = signal;
+            }
+        }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.push_back(std::make_pair(item.first, item.second));
+    }
+    for (int i = 0; i < data["displayedSignals"].size(); ++i) {
+        this->addPlot(data["displayedSignals"][i]);
+        g_Plots[i].type = data["displayedTypes"][i];
     }
 }

@@ -27,6 +27,7 @@ class FSTWindow {
 public:
     std::string fstFilePath;
     FSTWindow(std::string file, TextEditor& editor);
+    FSTWindow(json data, TextEditor &editors);
     void render();
     json save();
 private:

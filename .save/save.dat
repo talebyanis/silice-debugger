@@ -1,11 +1,18 @@
 {
     "displayedSignals": [
-        10,
-        17,
-        21
+        6,
+        11,
+        13,
+        14
+    ],
+    "displayedTypes": [
+        0,
+        1,
+        1,
+        2
     ],
     "filePath": "/home/antoine/icarus.fst",
-    "markerX": 0.0,
-    "rangeMax": 267750.0,
-    "rangeMin": -12750.0
+    "markerX": 205152.54237288138,
+    "rangeMax": 349318.023725135,
+    "rangeMin": 182899.46927256457
 }
