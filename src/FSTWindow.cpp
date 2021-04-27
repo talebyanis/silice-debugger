@@ -55,7 +55,8 @@ void FSTWindow::showPlotMenu() {
     }
     if (plot) {
         if (ImGui::BeginPopupContextWindow()) {
-            ImGui::Text(g_Reader->getSignalName(hoveredSignal).c_str());
+            ImGui::Text("   Value Format");
+            ImGui::Separator();
             if (ImGui::MenuItem("Binary")) {
                 plot->type = BINARY;
             }
@@ -65,11 +66,19 @@ void FSTWindow::showPlotMenu() {
             if (ImGui::MenuItem("Hexadecimal")) {
                 plot->type = HEXADECIMAL;
             }
+            if (ImGui::InputText("  Custom", customFilterBuffer, sizeof(customFilterBuffer)))
+            {
+                plot->customtype_string = customFilterBuffer;
+                plot->type = CUSTOM;
+            } 
+            ImGui::Separator();
+            ImGui::Text("   Plot Color Picker : ");
+            ImGui::Separator();
             ImGui::ColorPicker4("Color Picker", (float *) &plot->color);
             ImGui::EndPopup();
         }
     }
-    ImGui::InputText("Filter", filterBuffer, sizeof(filterBuffer));
+    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
 }
 
 //-------------------------------------------------------
@@ -113,6 +122,97 @@ bool FSTWindow::isDisplayed(fstHandle signal) {
         return plot.signalId == signal;
     });
     return res != g_Plots.end();
+}
+
+//-------------------------------------------------------
+
+// Function to convert binary to decimal
+int FSTWindow::binaryToDecimal(std::string n)
+{
+    std::string num = n;
+    int dec_value = 0;
+
+    // Initializing base value to 1, i.e 2^0
+    int base = 1;
+
+    int len = num.length();
+    for (int i = len - 1; i >= 0; i--) {
+        if (num[i] == '1')
+            dec_value += base;
+        base = base * 2;
+    }
+
+    return dec_value;
+}
+
+//-------------------------------------------------------
+
+std::string FSTWindow::parseCustomExp(std::string expression, int value)
+{
+    std::string res = "";
+
+    // Converting value to Binary
+    std::string binaryVal;
+    binaryVal = std::bitset<16>(value).to_string();
+
+    char current = '0';
+    std::string number = "";
+    int numberInt = 0;
+    std::stringstream stream;
+    std::string buffer = "";
+
+    // Parsing the expression and generating res
+    for (char& c: expression)
+    {
+        std::cout << "char: c=" << c << std::endl;
+        switch (c)
+        {
+        case 'b': // binary
+        case 'd': // decimal 
+        case 'x': // hex
+            if (current != '0') return "";
+            current = c;
+            break;
+        case ';':
+            if (current == '0') return "";
+            numberInt = stoi(number);
+            if (numberInt > binaryVal.length()) return "";
+
+            for (int i = 0; i < numberInt; i++)
+            {
+                buffer += binaryVal[0]; // putting the first bit in the buffer
+                binaryVal.erase(binaryVal.begin()); // removing the first bit
+            }
+
+            std::cout << binaryVal << std::endl;
+
+            switch (current)
+            {
+            case 'b':
+                buffer.erase(0, buffer.find_first_not_of('0'));
+                if (buffer.empty()) buffer = "0";
+                res += "b(" + buffer + ")";
+                break;
+            case 'd':
+                std::cout << "              valeur : " << std::to_string(this->binaryToDecimal(buffer)) << buffer << std::endl;
+                res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                break;
+            case 'x':
+                //stream << std::hex << item.y_data[i];
+                stream << std::hex << this->binaryToDecimal(buffer);
+                res += "x(" + stream.str() + ")";
+                break;
+            }
+            current = '0';
+            number = "";
+            break;
+        default:  // number
+            if (current == '0') return "";
+            number += c;
+            break;
+        }
+    }
+    return res;
 }
 
 //-------------------------------------------------------
@@ -225,6 +325,7 @@ void FSTWindow::showPlots() {
                     ImPlot::PlotText("x", item.x_data[i+1], item.y_data[i]);
                 } else {
                     std::basic_string<char> value;
+                    std::stringstream stream;
                     ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
                     switch (item.type) {
                         case BINARY:
@@ -236,13 +337,20 @@ void FSTWindow::showPlots() {
                             value = std::to_string(item.y_data[i]);
                             break;
                         case HEXADECIMAL:
-                            std::stringstream stream;
                             stream << std::hex << item.y_data[i];
                             value = stream.str();
                             break;
+                        case CUSTOM:
+                            value = parseCustomExp(item.customtype_string, item.y_data[i]);
+                            std::cout << "Valeur : " << value << std::endl;
+                            if (value == "")
+                            {
+                                std::cout << "bad" << std::endl;
+                                value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
+                            }
+                            break;
                     }
                     ImVec2 offset = ImVec2(0, 0);
-
                     if (i > 0) {
                         if (item.y_data[i] > item.y_data[i - 1]) {
                             offset.y = -6;
