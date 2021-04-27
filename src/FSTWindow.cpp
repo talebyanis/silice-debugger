@@ -164,7 +164,6 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value)
     // Parsing the expression and generating res
     for (char& c: expression)
     {
-        std::cout << "char: c=" << c << std::endl;
         switch (c)
         {
         case 'b': // binary
@@ -184,21 +183,16 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value)
                 binaryVal.erase(binaryVal.begin()); // removing the first bit
             }
 
-            std::cout << binaryVal << std::endl;
-
             switch (current)
             {
             case 'b':
-                buffer.erase(0, buffer.find_first_not_of('0'));
                 if (buffer.empty()) buffer = "0";
                 res += "b(" + buffer + ")";
                 break;
             case 'd':
-                std::cout << "              valeur : " << std::to_string(this->binaryToDecimal(buffer)) << buffer << std::endl;
                 res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                 break;
             case 'x':
-                //stream << std::hex << item.y_data[i];
                 stream << std::hex << this->binaryToDecimal(buffer);
                 res += "x(" + stream.str() + ")";
                 break;
@@ -323,8 +317,6 @@ void FSTWindow::showPlots() {
                 switch (item.type) {
                     case BINARY:
                         value = std::bitset<16>(item.y_data[i]).to_string();
-                        //remove all 0 in front
-                        value.erase(0, value.find_first_not_of('0'));
                         break;
                     case DECIMALS:
                         value = std::to_string(item.y_data[i]);
@@ -335,10 +327,8 @@ void FSTWindow::showPlots() {
                         break;
                     case CUSTOM:
                         value = parseCustomExp(item.customtype_string, item.y_data[i]);
-                        std::cout << "Valeur : " << value << std::endl;
                         if (value == "")
                         {
-                            std::cout << "bad" << std::endl;
                             value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
                         }
                         break;
