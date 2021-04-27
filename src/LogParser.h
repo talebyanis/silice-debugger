@@ -1,11 +1,11 @@
+#pragma once
+
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <list>
 #include <vector>
-
-
 // Stores a line from the .v.vio.log report file :
 // FILENAME - TOKEN - VARNAME - LINE - USAGE - INDEX
 struct report_line {

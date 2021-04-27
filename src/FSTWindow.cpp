@@ -309,42 +309,50 @@ void FSTWindow::showPlots() {
                     }
                 }
             }
-            ImPlot::PushStyleColor(ImPlotCol_LegendText, ImVec4(0.15, 0.35, 0.15, 1));
+
             //displaying values on the plot
             for (int i = 0; i < item.x_data.size(); i++) {
-                std::basic_string<char> value;
-                std::stringstream stream;
-                switch (item.type) {
-                    case BINARY:
-                        value = std::bitset<16>(item.y_data[i]).to_string();
-                        break;
-                    case DECIMALS:
-                        value = std::to_string(item.y_data[i]);
-                        break;
-                    case HEXADECIMAL:
-                        stream << std::hex << item.y_data[i];
-                        value = stream.str();
-                        break;
-                    case CUSTOM:
-                        value = parseCustomExp(item.customtype_string, item.y_data[i]);
-                        if (value == "")
-                        {
-                            value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
-                        }
-                        break;
-                }
-                ImVec2 offset = ImVec2(0, 0);
-
-                if (i > 0) {
-                    if (item.y_data[i] > item.y_data[i - 1]) {
-                        offset.y = -6;
-                    } else {
-                        offset.y = 6;
+                if(item.y_data[i] == -1) {
+                    ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 0, 0, 1));
+                    ImPlot::PlotText("x", item.x_data[i], item.y_data[i]);
+                    ImPlot::PlotText("x", (item.x_data[i] + item.x_data[i+1])/2, item.y_data[i]);
+                    ImPlot::PlotText("x", item.x_data[i+1], item.y_data[i]);
+                } else {
+                    std::basic_string<char> value;
+                    std::stringstream stream;
+                    ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+                    switch (item.type) {
+                        case BINARY:
+                            break;
+                        case DECIMALS:
+                            value = std::to_string(item.y_data[i]);
+                            break;
+                        case HEXADECIMAL:
+                            stream << std::hex << item.y_data[i];
+                            value = stream.str();
+                            break;
+                        case CUSTOM:
+                            value = parseCustomExp(item.customtype_string, item.y_data[i]);
+                            std::cout << "Valeur : " << value << std::endl;
+                            if (value == "")
+                            {
+                                std::cout << "bad" << std::endl;
+                                value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
+                            }
+                            break;
                     }
+                    ImVec2 offset = ImVec2(0, 0);
+                    if (i > 0) {
+                        if (item.y_data[i] > item.y_data[i - 1]) {
+                            offset.y = -6;
+                        } else {
+                            offset.y = 6;
+                            value = std::bitset<16>(item.y_data[i]).to_string();
+                        }
+                    }
+                    ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i], false, offset);
                 }
-                ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i], false, offset);
             }
-
 
             ImPlot::PopStyleColor(2);
             ImPlot::PopStyleVar();
