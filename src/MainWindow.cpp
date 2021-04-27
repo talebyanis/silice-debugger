@@ -23,10 +23,6 @@ ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDo
                                 | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 bool p_open_dockspace = true;
 
-TextEditor editor;
-
-FSTWindow *fstWindow = nullptr;
-
 LogParser lp;
 
 //-------------------------------------------------------
