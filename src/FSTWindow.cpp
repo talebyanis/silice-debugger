@@ -1,31 +1,12 @@
-#define IMGUI_ENABLE_MATH_OPERATOR
-
 #include "FSTWindow.h"
-
 #include <algorithm>
 #include <list>
 #include <iostream>
-#include <sstream>
 #include "imgui.h"
-#include "../libs/implot/implot.h"
 #include <bitset>
-#include <fstream>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
-
-//-------------------------------------------------------
-
-FSTReader *g_Reader = nullptr;
-std::vector<Plot> g_Plots;
-ImPlotRange range = ImPlotRange(-1, -1);
-ImPlotRange *plotXLimits = nullptr;
-fstHandle hover = 0;
-fstHandle hoveredSignal = 0;
-fstHandle qindex = 0;
-std::vector<std::pair<int, int>> qindexValues;
-double markerX = 0;
-char filterBuffer[100];
 
 //-------------------------------------------------------
 

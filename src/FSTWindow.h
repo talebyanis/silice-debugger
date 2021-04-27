@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "./ImGuiColorTextEdit/TextEditor.h"
+#include "../libs/implot/implot.h"
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
@@ -31,6 +32,16 @@ public:
     void render();
     json save();
 private:
+    std::vector<Plot> g_Plots;
+    FSTReader *g_Reader = nullptr;
+    ImPlotRange range = ImPlotRange(-1, -1);
+    ImPlotRange *plotXLimits = nullptr;
+    fstHandle hover = 0;
+    fstHandle hoveredSignal = 0;
+    fstHandle qindex = 0;
+    std::vector<std::pair<int, int>> qindexValues;
+    double markerX = 0;
+    char filterBuffer[100] = {};
     TextEditor* editor;
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
