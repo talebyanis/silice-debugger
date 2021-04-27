@@ -11,6 +11,7 @@
 #include <bitset>
 #include <fstream>
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
 
 //-------------------------------------------------------
@@ -24,6 +25,7 @@ fstHandle hoveredSignal = 0;
 fstHandle qindex = 0;
 std::vector<std::pair<int, int>> qindexValues;
 double markerX = 0;
+char filterBuffer[100];
 
 //-------------------------------------------------------
 
@@ -34,25 +36,29 @@ void FSTWindow::showPlotMenu() {
         if (ImGui::TreeNode(item.c_str())) {
             int count = 0;
             for (const auto &signal : g_Reader->getSignals(item)) {
-                if (hover == signal) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-                }
-                ImGui::PushID(count);
-                if (ImGui::MenuItem(g_Reader->getSignalName(signal).c_str(), "", FSTWindow::isDisplayed(signal))) {
-                    if (!FSTWindow::isDisplayed(signal)) {
-                        this->addPlot(signal);
-                    } else {
-                        this->removePlot(signal);
+                std::string name = g_Reader->getSignalName(signal);
+                if (name.find(filterBuffer) != std::string::npos) {
+                    //std::cout << filterBuffer << " " << name << " " << (name.find(filterBuffer) == std::string::npos) << std::endl;
+                    if (hover == signal) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
+                    ImGui::PushID(count);
+                    if (ImGui::MenuItem(name.c_str(), "", FSTWindow::isDisplayed(signal))) {
+                        if (!FSTWindow::isDisplayed(signal)) {
+                            this->addPlot(signal);
+                        } else {
+                            this->removePlot(signal);
+                        }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                        hoveredSignal = signal;
+                    }
+                    ImGui::PopID();
+                    if (hover == signal) {
+                        ImGui::PopStyleColor();
+                    }
+                    count++;
                 }
-                if (ImGui::IsItemHovered()) {
-                    hoveredSignal = signal;
-                }
-                ImGui::PopID();
-                if (hover == signal) {
-                    ImGui::PopStyleColor();
-                }
-                count++;
             }
             ImGui::TreePop();
         }
@@ -80,6 +86,7 @@ void FSTWindow::showPlotMenu() {
             ImGui::EndPopup();
         }
     }
+    ImGui::InputText("Filter", filterBuffer, sizeof(filterBuffer));
 }
 
 //-------------------------------------------------------
