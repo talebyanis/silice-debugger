@@ -14,6 +14,7 @@ using json = nlohmann::json;
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
+    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
     //For every scope we have one TreeNode
     for (const auto &item : g_Reader->getScopes()) {
         if (ImGui::TreeNode(item.c_str())) {
@@ -78,7 +79,6 @@ void FSTWindow::showPlotMenu() {
             ImGui::EndPopup();
         }
     }
-    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
 }
 
 //-------------------------------------------------------
