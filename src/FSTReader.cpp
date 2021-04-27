@@ -19,6 +19,7 @@ std::mutex g_Mutex;
 
 int decodeValue(const char *str) {
     int val = 0;
+    if(*str == 'x') { return -1; }
     while (*str != '\0') {
         val = (val << 1) | (*str == '1' ? 1 : 0);
         str++;
