@@ -147,7 +147,7 @@ int FSTWindow::binaryToDecimal(std::string n)
 
 //-------------------------------------------------------
 
-std::string FSTWindow::parseCustomExp(std::string expression, int value, int size)
+std::string FSTWindow::parseCustomExp(std::string expression, int value)
 {
     std::string res = "";
 
@@ -184,6 +184,8 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value, int siz
                 binaryVal.erase(binaryVal.begin()); // removing the first bit
             }
 
+            std::cout << binaryVal << std::endl;
+
             switch (current)
             {
             case 'b':
@@ -202,6 +204,7 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value, int siz
                 break;
             }
             current = '0';
+            number = "";
             break;
         default:  // number
             if (current == '0') return "";
@@ -331,7 +334,7 @@ void FSTWindow::showPlots() {
                         value = stream.str();
                         break;
                     case CUSTOM:
-                        value = parseCustomExp("b8;d8;", item.y_data[i], 16);
+                        value = parseCustomExp(item.customtype_string, item.y_data[i]);
                         std::cout << "Valeur : " << value << std::endl;
                         if (value == "")
                         {
