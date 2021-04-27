@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include <bitset>
 #include <nlohmann/json.hpp>
+#include <sstream>
 
 using json = nlohmann::json;
 
