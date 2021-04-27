@@ -8,3 +8,5 @@ CMakeCache.txt
 src/sourcePath.h
 .vs
 *build.v.fsm.log
+
+.save/save.dat
