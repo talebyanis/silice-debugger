@@ -12,7 +12,8 @@ using json = nlohmann::json;
 enum ConvertType {
     BINARY = 0,
     DECIMALS = 1,
-    HEXADECIMAL = 2
+    HEXADECIMAL = 2,
+    CUSTOM = 3,
 };
 
 typedef struct {
@@ -21,6 +22,7 @@ typedef struct {
     std::string name;
     fstHandle signalId;
     ConvertType type;
+    std::string customtype_string;
     ImVec4 color;
 } Plot;
 
@@ -41,13 +43,16 @@ private:
     fstHandle qindex = 0;
     std::vector<std::pair<int, int>> qindexValues;
     double markerX = 0;
-    char filterBuffer[100] = {};
+    char filterBuffer[256] = {};
+    char customFilterBuffer[256] = {};
     TextEditor* editor;
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
     bool isDisplayed(fstHandle signal);
     void showPlots();
     void showPlotMenu();
+    std::string parseCustomExp(std::string expression, int value, int size);
+    int binaryToDecimal(std::string n);
 };
 
 
