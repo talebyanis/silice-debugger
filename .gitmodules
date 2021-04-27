@@ -4,3 +4,6 @@
 [submodule "libs/LibSL"]
 	path = libs/LibSL
 	url = https://github.com/shin0bi-y/LibSL
+[submodule "libs/json"]
+	path = libs/json
+	url = git@github.com:nlohmann/json.git

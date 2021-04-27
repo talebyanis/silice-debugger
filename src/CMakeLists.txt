@@ -27,6 +27,7 @@ target_link_libraries(silice-text-editor
         fstapi
         Threads::Threads
         implot
+        nlohmann_json
         )
 
 

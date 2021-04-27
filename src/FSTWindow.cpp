@@ -10,6 +10,9 @@
 #include "../libs/implot/implot.h"
 #include <bitset>
 #include <fstream>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
 
 //-------------------------------------------------------
 
@@ -20,7 +23,9 @@ ImPlotRange *plotXLimits = nullptr;
 fstHandle hover = 0;
 fstHandle hoveredSignal = 0;
 fstHandle qindex = 0;
+std::vector<std::pair<int, int>> qindexValues;
 double markerX = 0;
+char filterBuffer[100];
 
 //-------------------------------------------------------
 
@@ -31,25 +36,29 @@ void FSTWindow::showPlotMenu() {
         if (ImGui::TreeNode(item.c_str())) {
             int count = 0;
             for (const auto &signal : g_Reader->getSignals(item)) {
-                if (hover == signal) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-                }
-                ImGui::PushID(count);
-                if (ImGui::MenuItem(g_Reader->getSignalName(signal).c_str(), "", FSTWindow::isDisplayed(signal))) {
-                    if (!FSTWindow::isDisplayed(signal)) {
-                        this->addPlot(signal);
-                    } else {
-                        this->removePlot(signal);
+                std::string name = g_Reader->getSignalName(signal);
+                if (name.find(filterBuffer) != std::string::npos) {
+                    //std::cout << filterBuffer << " " << name << " " << (name.find(filterBuffer) == std::string::npos) << std::endl;
+                    if (hover == signal) {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
+                    ImGui::PushID(count);
+                    if (ImGui::MenuItem(name.c_str(), "", FSTWindow::isDisplayed(signal))) {
+                        if (!FSTWindow::isDisplayed(signal)) {
+                            this->addPlot(signal);
+                        } else {
+                            this->removePlot(signal);
+                        }
+                    }
+                    if (ImGui::IsItemHovered()) {
+                        hoveredSignal = signal;
+                    }
+                    ImGui::PopID();
+                    if (hover == signal) {
+                        ImGui::PopStyleColor();
+                    }
+                    count++;
                 }
-                if (ImGui::IsItemHovered()) {
-                    hoveredSignal = signal;
-                }
-                ImGui::PopID();
-                if (hover == signal) {
-                    ImGui::PopStyleColor();
-                }
-                count++;
             }
             ImGui::TreePop();
         }
@@ -77,6 +86,7 @@ void FSTWindow::showPlotMenu() {
             ImGui::EndPopup();
         }
     }
+    ImGui::InputText("Filter", filterBuffer, sizeof(filterBuffer));
 }
 
 //-------------------------------------------------------
@@ -134,30 +144,6 @@ void FSTWindow::showPlots() {
     hover = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
         Plot item = g_Plots[i];
-
-        {
-            int index = -1;
-            int tmp = 0;
-
-            for (int ii = 1; ii < item.x_data.size(); ii++)
-            {
-                if (markerX < item.x_data[ii] && markerX >= item.x_data[tmp])
-                {
-                    index = tmp-1;
-                    break;
-                }
-                tmp = ii;
-            }
-
-            if (index != -1)
-            {
-                editor->FSMframeAtIndex(editor->openedFile, index);
-            }
-            else
-            {
-                editor->FSMunframe();
-            }
-        }
 
         //set the plots Y limits to just below the lowest value to just upper the highest
         double max = *std::max_element(item.y_data.begin(), item.y_data.end());
@@ -318,33 +304,48 @@ void FSTWindow::render() {
     }
     ImGui::End();
     ImGui::PopStyleVar(); // Padding
-}
 
-//-------------------------------------------------------
+    int index = -1;
+    int tmp = 0;
 
-void FSTWindow::save(const char *fileName) {
-    std::ofstream out(fileName);
-    out << "//Size of g_Plots\n";
-    out << g_Plots.size() << "\n";
-    for (const Plot &item : g_Plots) {
-        out << "//Size of data for " << item.name << "\n";
-        out << item.x_data.size() << "\n";
-        for (int i = 0; i < item.x_data.size(); ++i) {
-            out << item.x_data[i] << " " << item.y_data[i] << "\n";
+    for (int ii = 1; ii < qindexValues.size(); ii++) {
+        if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
+            index = tmp - 1;
+            break;
         }
-        out << "//Name\n";
-        out << item.name << "\n";
-        out << "//signalId\n";
-        out << item.signalId;
-        out << "//type\n";
-        out << item.type;
-        out << "//Color (4 lines)\n";
+        tmp = ii;
+    }
+
+    if (index != -1) {
+        editor->FSMframeAtIndex(editor->openedFile, index);
+    } else {
+        editor->FSMunframe();
     }
 }
 
 //-------------------------------------------------------
 
-FSTWindow::FSTWindow(std::string file, TextEditor& editors) {
+json FSTWindow::save() {
+    json j;
+    j["filePath"] = this->fstFilePath;
+    j["rangeMin"] = range.Min;
+    j["rangeMax"] = range.Max;
+    j["markerX"] = markerX;
+    std::vector<fstHandle> displayedPlots;
+    std::vector<ConvertType> displayedTypes;
+    for (const auto &item : g_Plots) {
+        displayedPlots.push_back(item.signalId);
+        displayedTypes.push_back(item.type);
+    }
+    j["displayedSignals"] = displayedPlots;
+    j["displayedTypes"] = displayedTypes;
+    return j;
+}
+
+//-------------------------------------------------------
+
+FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
+    this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
@@ -354,9 +355,40 @@ FSTWindow::FSTWindow(std::string file, TextEditor& editors) {
     }
     this->editor = &editors;
 
-    for (const auto &item : g_Plots) {
-        if (g_Reader->getSignalName(item.signalId).find("_q_index") != std::string::npos) {
-            qindex = item.signalId;
+    for (const auto &item : g_Reader->getScopes()) {
+        for (const auto &signal : g_Reader->getSignals(item)) {
+            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
+                qindex = signal;
+            }
         }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.push_back(std::make_pair(item.first, item.second));
+    }
+}
+
+FSTWindow::FSTWindow(json data, TextEditor &editors) {
+    this->fstFilePath = data["filePath"];
+    g_Reader = new FSTReader(this->fstFilePath.c_str());
+    range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
+    plotXLimits = &range;
+    this->editor = &editors;
+    markerX = data["markerX"];
+
+    for (const auto &item : g_Reader->getScopes()) {
+        for (const auto &signal : g_Reader->getSignals(item)) {
+            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
+                qindex = signal;
+            }
+        }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.push_back(std::make_pair(item.first, item.second));
+    }
+    for (int i = 0; i < data["displayedSignals"].size(); ++i) {
+        this->addPlot(data["displayedSignals"][i]);
+        g_Plots[i].type = data["displayedTypes"][i];
     }
 }
