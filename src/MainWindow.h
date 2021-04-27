@@ -9,7 +9,7 @@ Is used to spawn elements in an ImGui frame
 */
 class MainWindow {
 private:
-    FSTWindow *fstWindow = nullptr;
+    FSTWindow fstWindow;
     TextEditor editor;
 public:
     void ShowDockSpace();

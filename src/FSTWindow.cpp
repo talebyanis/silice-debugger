@@ -414,6 +414,8 @@ void FSTWindow::render() {
         tmp = ii;
     }
 
+    if(!editor) return;
+
     if (index != -1) {
         editor->FSMframeAtIndex(editor->openedFile, index);
     } else {
@@ -442,7 +444,16 @@ json FSTWindow::save() {
 
 //-------------------------------------------------------
 
-FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
+void FSTWindow::clean() {
+    g_Plots.clear();
+    qindexValues.clear();
+    g_Reader = nullptr;
+}
+
+//-------------------------------------------------------
+
+void FSTWindow::load(std::string file, TextEditor &editors) {
+    this->clean();
     this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {
@@ -466,7 +477,8 @@ FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
     }
 }
 
-FSTWindow::FSTWindow(json data, TextEditor &editors) {
+void FSTWindow::load(json data, TextEditor &editors) {
+    this->clean();
     this->fstFilePath = data["filePath"];
     g_Reader = new FSTReader(this->fstFilePath.c_str());
     range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
@@ -489,4 +501,5 @@ FSTWindow::FSTWindow(json data, TextEditor &editors) {
         this->addPlot(data["displayedSignals"][i]);
         g_Plots[i].type = data["displayedTypes"][i];
     }
+    std::cout << g_Plots[0].x_data.size() << std::endl;
 }

@@ -58,10 +58,7 @@ void MainWindow::ShowDockSpace() {
             if (ImGui::MenuItem("Open fst")) {
                 auto fullpath = openFileDialog(OFD_FILTER_ALL);
                 if (!fullpath.empty()) {
-                    if (fstWindow) {
-                        delete fstWindow;
-                    }
-                    fstWindow = new FSTWindow(fullpath, editor);
+                    fstWindow.load(fullpath, editor);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
             }
@@ -70,23 +67,20 @@ void MainWindow::ShowDockSpace() {
                 std::ifstream stream(SRC_PATH "/.save/save.dat");
                 json data;
                 stream >> data;
-                if (fstWindow) {
-                    delete fstWindow;
-                }
-                fstWindow = new FSTWindow(data, editor);
+                fstWindow.load(data, editor);
                 std::cout << "debug opened with file " << data["filePath"] << std::endl;
             }
-            if (ImGui::MenuItem("Save debug", NULL, false, fstWindow != nullptr)) {
-                if (fstWindow != nullptr) {
+            if (ImGui::MenuItem("Save debug", NULL, false)) {
+                //if (fstWindow != NULL) {
                     if (!exists(SRC_PATH "/.save")) {
                         createDirectory(SRC_PATH "/.save");
                     }
                     std::ofstream save(SRC_PATH "/.save/save.dat");
-                    json fstWindowJSON = fstWindow->save();
+                    json fstWindowJSON = fstWindow.save();
                     //std::cout << std::setw(4) << fstWindowJSON << std::endl;
                     save << std::setw(4) << fstWindowJSON << std::endl;
                 }
-            }
+            //}
 
             ImGui::Separator();
 
@@ -297,5 +291,5 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     this->ShowCodeEditor();
     //showTestWindow();
-    if (fstWindow != nullptr) fstWindow->render();
+    fstWindow.render();
 }

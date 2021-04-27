@@ -29,8 +29,9 @@ typedef struct {
 class FSTWindow {
 public:
     std::string fstFilePath;
-    FSTWindow(std::string file, TextEditor& editor);
-    FSTWindow(json data, TextEditor &editors);
+    FSTWindow() = default;
+    void load(std::string file, TextEditor& editor);
+    void load(json data, TextEditor &editors);
     void render();
     json save();
 private:
@@ -46,6 +47,7 @@ private:
     char filterBuffer[256] = {};
     char customFilterBuffer[256] = {};
     TextEditor* editor;
+    void clean();
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
     bool isDisplayed(fstHandle signal);
