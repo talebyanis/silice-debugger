@@ -257,7 +257,7 @@ void FSTWindow::showPlots() {
         //Coloring the line
         ImPlot::PushStyleColor(ImPlotCol_Line, item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
-                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
+                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos, NULL,
                               ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
 
             //Drag&drop target
