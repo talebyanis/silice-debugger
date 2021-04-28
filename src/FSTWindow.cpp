@@ -333,10 +333,8 @@ void FSTWindow::showPlots() {
                             break;
                         case CUSTOM:
                             value = parseCustomExp(item.customtype_string, item.y_data[i]);
-                            std::cout << "Valeur : " << value << std::endl;
                             if (value == "")
                             {
-                                std::cout << "bad" << std::endl;
                                 value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
                             }
                             break;
@@ -347,7 +345,6 @@ void FSTWindow::showPlots() {
                             offset.y = -6;
                         } else {
                             offset.y = 6;
-                            value = std::bitset<16>(item.y_data[i]).to_string();
                         }
                     }
                     ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i], false, offset);
