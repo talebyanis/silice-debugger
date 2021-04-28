@@ -14,6 +14,7 @@ using json = nlohmann::json;
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
+    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
     //For every scope we have one TreeNode
     for (const auto &item : g_Reader->getScopes()) {
         if (ImGui::TreeNode(item.c_str())) {
@@ -78,7 +79,6 @@ void FSTWindow::showPlotMenu() {
             ImGui::EndPopup();
         }
     }
-    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
 }
 
 //-------------------------------------------------------
@@ -251,7 +251,7 @@ void FSTWindow::showPlots() {
         //Coloring the line
         ImPlot::PushStyleColor(ImPlotCol_Line, item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
-                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild, NULL,
+                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos, NULL,
                               ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
 
             //Drag&drop target
@@ -406,6 +406,8 @@ void FSTWindow::render() {
         tmp = ii;
     }
 
+    if(!editor) return;
+
     if (index != -1) {
         editor->FSMframeAtIndex(editor->openedFile, index);
     } else {
@@ -434,7 +436,16 @@ json FSTWindow::save() {
 
 //-------------------------------------------------------
 
-FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
+void FSTWindow::clean() {
+    g_Plots.clear();
+    qindexValues.clear();
+    g_Reader = nullptr;
+}
+
+//-------------------------------------------------------
+
+void FSTWindow::load(std::string file, TextEditor &editors) {
+    this->clean();
     this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str());
     if (plotXLimits == nullptr) {
@@ -458,7 +469,8 @@ FSTWindow::FSTWindow(std::string file, TextEditor &editors) {
     }
 }
 
-FSTWindow::FSTWindow(json data, TextEditor &editors) {
+void FSTWindow::load(json data, TextEditor &editors) {
+    this->clean();
     this->fstFilePath = data["filePath"];
     g_Reader = new FSTReader(this->fstFilePath.c_str());
     range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
@@ -481,4 +493,5 @@ FSTWindow::FSTWindow(json data, TextEditor &editors) {
         this->addPlot(data["displayedSignals"][i]);
         g_Plots[i].type = data["displayedTypes"][i];
     }
+    std::cout << g_Plots[0].x_data.size() << std::endl;
 }

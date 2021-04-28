@@ -8,7 +8,6 @@
 #include "FSTReader.h"
 
 void *g_Wave = nullptr;
-
 std::map<std::string, std::list<fstHandle>> g_ScopeToSignals;
 std::map<fstHandle, std::string> g_HandleToName;
 std::map<fstHandle, valuesList> g_Values;
@@ -132,7 +131,16 @@ ImU64 FSTReader::getMaxTime() {
 
 // ---------------------------------------------------------------------
 
+void clean() {
+    g_Values.clear();
+    g_ScopeToSignals.clear();
+    g_HandleToName.clear();
+}
+
+// ---------------------------------------------------------------------
+
 FSTReader::FSTReader(const char *file) {
+    clean();
     if (!LibSL::System::File::exists(file)) {
         std::cerr << "Could not open fst wave file " << file << std::endl;
     }

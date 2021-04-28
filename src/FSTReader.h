@@ -5,11 +5,13 @@
 #include <list>
 #include "imgui.h"
 #include <string>
+#include <map>
 
 typedef std::list<std::pair<ImU64 , ImU64>> valuesList;
 
 class FSTReader {
 private :
+
     void initMaps();
 public:
     ImU64 getMaxTime();
