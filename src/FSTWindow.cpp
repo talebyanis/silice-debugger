@@ -132,7 +132,6 @@ int FSTWindow::binaryToDecimal(std::string n)
     std::string num = n;
     int dec_value = 0;
 
-    // Initializing base value to 1, i.e 2^0
     int base = 1;
 
     int len = num.length();
@@ -323,6 +322,7 @@ void FSTWindow::showPlots() {
                     ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
                     switch (item.type) {
                         case BINARY:
+                            value = std::bitset<16>(item.y_data[i]).to_string();
                             break;
                         case DECIMALS:
                             value = std::to_string(item.y_data[i]);
