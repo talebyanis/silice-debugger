@@ -77,8 +77,6 @@ int main() {
     mainWindow = MainWindow();
     mainWindow.ChangeStyle();
 
-
-
     SimpleUI::loop();
 
     ImPlot::DestroyContext();

@@ -168,6 +168,8 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
     std::stringstream stream;
     std::string buffer = "";
 
+    //ToDo : regex
+
     // Parsing the expression and generating res
     for (char &c: expression) {
         switch (c) {
