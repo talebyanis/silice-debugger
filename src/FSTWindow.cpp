@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 #include <nlohmann/json.hpp>
-
 using json = nlohmann::json;
 
 //-------------------------------------------------------
@@ -28,7 +27,7 @@ void FSTWindow::showPlotMenu() {
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
                     ImGui::PushID(count);
-                    if (ImGui::MenuItem(name.c_str(), "", FSTWindow::isDisplayed(signal))) {
+                    if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0,25) + "...").c_str()  : name.c_str()), "", FSTWindow::isDisplayed(signal))) {
                         if (!FSTWindow::isDisplayed(signal)) {
                             this->addPlot(signal);
                         } else {
@@ -37,6 +36,9 @@ void FSTWindow::showPlotMenu() {
                     }
                     if (ImGui::IsItemHovered()) {
                         hoverRightClickMenu = signal;
+                        ImGui::BeginTooltip();
+                        ImGui::Text("%s", name.c_str());
+                        ImGui::EndTooltip();
                     }
                     ImGui::PopID();
                     if (hoverHighLight == signal) {
@@ -232,7 +234,6 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
 int payload;
 
 void FSTWindow::showPlots() {
-    ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
     //reset hoverForHighLight to not change the color of a name if no plot is hovered
     hoverHighLight = 0;
@@ -259,7 +260,7 @@ void FSTWindow::showPlots() {
         //Drag&drop source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("PlotPayload", &payload, sizeof(fstHandle));
-            ImGui::Text(g_Reader->getSignalName(g_Plots[payload].signalId).c_str());
+            ImGui::Text("%s", g_Reader->getSignalName(g_Plots[payload].signalId).c_str());
             ImGui::EndDragDropSource();
         }
 
@@ -287,16 +288,22 @@ void FSTWindow::showPlots() {
                 ImGui::EndDragDropTarget();
             }
 
+            //Marker
             ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
+
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
-            //If the mouse is hoverForHighLight the plot, we take it's id to change the color of the right name on the left
-            //and we set global X limits to this plot's
+
             if (ImPlot::IsPlotHovered()) {
-                ImPlotLimits limits = ImPlot::GetPlotLimits();
+                //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
                 hoverHighLight = item.signalId;
                 hoverRightClickMenu = item.signalId;
+
+                //modifies the range for all plots to be sync
+                ImPlotLimits limits = ImPlot::GetPlotLimits();
                 plotXLimits->Min = limits.X.Min;
                 plotXLimits->Max = limits.X.Max;
+
+                //Arrows to move to values change
                 ImGui::SetKeyboardFocusHere();
                 if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
                     for (int ii = 0; ii < item.x_data.size(); ii++) {
@@ -326,6 +333,8 @@ void FSTWindow::showPlots() {
                         }
                     }
                 }
+
+                //Double click to move marker
                 if(ImGui::IsMouseDoubleClicked(0)) {
                     markerX = ImPlot::GetPlotMousePos().x;
                 }
@@ -342,6 +351,7 @@ void FSTWindow::showPlots() {
                     std::basic_string<char> value;
                     std::stringstream stream;
                     ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+                    //Converting to binary,decimal, hexa or custom user input
                     switch (item.type) {
                         case BINARY:
                             value = std::bitset<16>(item.y_data[i]).to_string();
@@ -360,6 +370,7 @@ void FSTWindow::showPlots() {
                             }
                             break;
                     }
+                    //Offset to place the value correctly
                     ImVec2 offset = ImVec2(0, 0);
                     if (i > 0) {
                         if (item.y_data[i] > item.y_data[i - 1]) {
@@ -375,7 +386,6 @@ void FSTWindow::showPlots() {
             ImPlot::PopStyleColor(2);
             ImPlot::PopStyleVar();
             ImPlot::EndPlot();
-
             ImGui::PopID();
         }
     }
@@ -389,7 +399,6 @@ void FSTWindow::render() {
     int treeWidth = 250;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImVec2(treeWidth + 500, 500), ImGuiCond_FirstUseEver);
-    //ImGui::SetNextWindowDockID(0x2);
     ImGui::Begin("PlotWindow", nullptr,
                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
@@ -484,7 +493,7 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     }
     valuesList valuesList = g_Reader->getValues(qindex);
     for (const auto &item : valuesList) {
-        qindexValues.push_back(std::make_pair(item.first, item.second));
+        qindexValues.emplace_back(item.first, item.second);
     }
 }
 
@@ -506,7 +515,7 @@ void FSTWindow::load(json data, TextEditor &editors) {
     }
     valuesList valuesList = g_Reader->getValues(qindex);
     for (const auto &item : valuesList) {
-        qindexValues.push_back(std::make_pair(item.first, item.second));
+        qindexValues.emplace_back(item.first, item.second);
     }
     for (int i = 0; i < data["displayedSignals"].size(); ++i) {
         this->addPlot(data["displayedSignals"][i]);
