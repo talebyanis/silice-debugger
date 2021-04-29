@@ -17,13 +17,14 @@ void FSTWindow::showPlotMenu() {
     ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
     //For every scope we have one TreeNode
     for (const auto &item : g_Reader->getScopes()) {
+        //count for hidden signals
         int hiddenCount = 0;
         if (ImGui::TreeNode(item.c_str())) {
             int count = 0;
             for (const auto &signal : g_Reader->getSignals(item)) {
                 std::string name = g_Reader->getSignalName(signal);
                 if (name.find(filterBuffer) != std::string::npos) {
-                    if (hover == signal) {
+                    if (hoverHighLight == signal) {
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
                     ImGui::PushID(count);
@@ -35,10 +36,10 @@ void FSTWindow::showPlotMenu() {
                         }
                     }
                     if (ImGui::IsItemHovered()) {
-                        hoveredSignal = signal;
+                        hoverRightClickMenu = signal;
                     }
                     ImGui::PopID();
-                    if (hover == signal) {
+                    if (hoverHighLight == signal) {
                         ImGui::PopStyleColor();
                     }
                     count++;
@@ -52,10 +53,15 @@ void FSTWindow::showPlotMenu() {
             ImGui::TreePop();
         }
     }
+    showRightClickPlotSettings(hoverRightClickMenu);
+}
 
+//-------------------------------------------------------
+
+void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
     Plot *plot = nullptr;
     for (Plot &item : g_Plots) {
-        if (item.signalId == hoveredSignal) {
+        if (item.signalId == signal) {
             plot = &item;
         }
     }
@@ -214,8 +220,8 @@ int payload;
 void FSTWindow::showPlots() {
     ImVec2 wSize = ImGui::GetWindowSize();
     ImGui::BeginGroup();
-    //reset hover to not change the color of a name if no plot is hovered
-    hover = 0;
+    //reset hoverForHighLight to not change the color of a name if no plot is hovered
+    hoverHighLight = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
         Plot item = g_Plots[i];
 
@@ -248,7 +254,7 @@ void FSTWindow::showPlots() {
         //Coloring the line
         ImPlot::PushStyleColor(ImPlotCol_Line, item.color);
         if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
-                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos, NULL,
+                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos | ImPlotFlags_NoMenus, NULL,
                               ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
 
             //Drag&drop target
@@ -269,11 +275,12 @@ void FSTWindow::showPlots() {
 
             ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
             ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
-            //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
+            //If the mouse is hoverForHighLight the plot, we take it's id to change the color of the right name on the left
             //and we set global X limits to this plot's
             if (ImPlot::IsPlotHovered()) {
                 ImPlotLimits limits = ImPlot::GetPlotLimits();
-                hover = item.signalId;
+                hoverHighLight = item.signalId;
+                hoverRightClickMenu = item.signalId;
                 plotXLimits->Min = limits.X.Min;
                 plotXLimits->Max = limits.X.Max;
                 ImGui::SetKeyboardFocusHere();
@@ -356,6 +363,7 @@ void FSTWindow::showPlots() {
         }
     }
     ImGui::EndGroup();
+    this->showRightClickPlotSettings(hoverRightClickMenu);
 }
 
 //-------------------------------------------------------
