@@ -3262,6 +3262,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 	static LanguageDefinition langDef;
 	if (!inited)
 	{
+        Identifier id;
 		static const char* const keywords[] = {
 				"algorithm", "output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
 		};
@@ -3270,21 +3271,12 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 			langDef.mKeywords.insert(k);
 
 
+		// ToDo : add every built-in functions
 		static const char* const identifiers[] = {
-				"assert", "collectgarbage", "dofile", "error", "getmetatable", "ipairs", "loadfile", "load", "loadstring",  "next",  "pairs",  "pcall",  "print",  "rawequal",  "rawlen",  "rawget",  "rawset",
-				"select",  "setmetatable",  "tonumber",  "tostring",  "type",  "xpcall",  "_G",  "_VERSION","arshift", "band", "bnot", "bor", "bxor", "btest", "extract", "lrotate", "lshift", "replace",
-				"rrotate", "rshift", "create", "resume", "running", "status", "wrap", "yield", "isyieldable", "debug","getuservalue", "gethook", "getinfo", "getlocal", "getregistry", "getmetatable",
-				"getupvalue", "upvaluejoin", "upvalueid", "setuservalue", "sethook", "setlocal", "setmetatable", "setupvalue", "traceback", "close", "flush", "input", "lines", "open", "output", "popen",
-				"read", "tmpfile", "type", "write", "close", "flush", "lines", "read", "seek", "setvbuf", "write", "__gc", "__tostring", "abs", "acos", "asin", "atan", "ceil", "cos", "deg", "exp", "tointeger",
-				"floor", "fmod", "ult", "log", "max", "min", "modf", "rad", "random", "randomseed", "sin", "sqrt", "string", "tan", "type", "atan2", "cosh", "sinh", "tanh",
-				"pow", "frexp", "ldexp", "log10", "pi", "huge", "maxinteger", "mininteger", "loadlib", "searchpath", "seeall", "preload", "cpath", "path", "searchers", "loaded", "module", "require", "clock",
-				"date", "difftime", "execute", "exit", "getenv", "remove", "rename", "setlocale", "time", "tmpname", "byte", "char", "dump", "find", "format", "gmatch", "gsub", "len", "lower", "match", "rep",
-				"reverse", "sub", "upper", "pack", "packsize", "unpack", "concat", "maxn", "insert", "pack", "unpack", "remove", "move", "sort", "offset", "codepoint", "char", "len", "codes", "charpattern",
-				"coroutine", "table", "io", "os", "string", "utf8", "bit32", "math", "debug", "package", "__display", "__write", "__signed", "__unsigned"
+                "__display", "__write", "__signed", "__unsigned"
 		};
 		for (auto& k : identifiers)
 		{
-			Identifier id;
 			id.mDeclaration = "Built-in function";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
@@ -3329,8 +3321,10 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 {
 	static bool inited = false;
 	static LanguageDefinition langDef;
+
 	if (!inited)
 	{
+        Identifier id;
 		static const char* const keywords[] = {
 				"algorithm", "output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
 		};
@@ -3338,22 +3332,12 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		for (auto& k : keywords)
 			langDef.mKeywords.insert(k);
 
-
+        // ToDo : add every built-in functions
 		static const char* const identifiers[] = {
-				"assert", "collectgarbage", "dofile", "error", "getmetatable", "ipairs", "loadfile", "load", "loadstring",  "next",  "pairs",  "pcall",  "print",  "rawequal",  "rawlen",  "rawget",  "rawset",
-				"select",  "setmetatable",  "tonumber",  "tostring",  "type",  "xpcall",  "_G",  "_VERSION","arshift", "band", "bnot", "bor", "bxor", "btest", "extract", "lrotate", "lshift", "replace",
-				"rrotate", "rshift", "create", "resume", "running", "status", "wrap", "yield", "isyieldable", "debug","getuservalue", "gethook", "getinfo", "getlocal", "getregistry", "getmetatable",
-				"getupvalue", "upvaluejoin", "upvalueid", "setuservalue", "sethook", "setlocal", "setmetatable", "setupvalue", "traceback", "close", "flush", "input", "lines", "open", "output", "popen",
-				"read", "tmpfile", "type", "write", "close", "flush", "lines", "read", "seek", "setvbuf", "write", "__gc", "__tostring", "abs", "acos", "asin", "atan", "ceil", "cos", "deg", "exp", "tointeger",
-				"floor", "fmod", "ult", "log", "max", "min", "modf", "rad", "random", "randomseed", "sin", "sqrt", "string", "tan", "type", "atan2", "cosh", "sinh", "tanh",
-				"pow", "frexp", "ldexp", "log10", "pi", "huge", "maxinteger", "mininteger", "loadlib", "searchpath", "seeall", "preload", "cpath", "path", "searchers", "loaded", "module", "require", "clock",
-				"date", "difftime", "execute", "exit", "getenv", "remove", "rename", "setlocale", "time", "tmpname", "byte", "char", "dump", "find", "format", "gmatch", "gsub", "len", "lower", "match", "rep",
-				"reverse", "sub", "upper", "pack", "packsize", "unpack", "concat", "maxn", "insert", "pack", "unpack", "remove", "move", "sort", "offset", "codepoint", "char", "len", "codes", "charpattern",
-				"coroutine", "table", "io", "os", "string", "utf8", "bit32", "math", "debug", "package", "__display", "__write", "__signed", "__unsigned"
+				"__display", "__write", "__signed", "__unsigned"
 		};
 		for (auto& k : identifiers)
-		{
-			Identifier id;
+        {
 			id.mDeclaration = "Built-in function";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
@@ -3368,24 +3352,32 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Const));
+            id.mDeclaration = "Constant variable";
+            langDef.mIdentifiers.insert(std::make_pair(std::string("\\b" + e.second + "\\b"), id));
 		}
 
 		// Wire
 		list = lp.getMatch("wire");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Wire));
+            id.mDeclaration = "Wire variable";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
 		// Flip Flop
 		list = lp.getMatch("ff");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::FF));
+            id.mDeclaration = "Flip-Flop variable";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
 		// Temp
 		list = lp.getMatch("temp");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Temp));
+            id.mDeclaration = "Temp variable";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
 
