@@ -11,7 +11,6 @@ void render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
-
     mainWindow.Render();
     ImGui::Render();
 }
@@ -77,6 +76,9 @@ int main() {
 
     mainWindow = MainWindow();
     mainWindow.ChangeStyle();
+
+
+
     SimpleUI::loop();
 
     ImPlot::DestroyContext();
