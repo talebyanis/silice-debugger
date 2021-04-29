@@ -27,7 +27,7 @@ void FSTWindow::showPlotMenu() {
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
                     ImGui::PushID(count);
-                    if (ImGui::MenuItem(name.c_str(), "", FSTWindow::isDisplayed(signal))) {
+                    if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0,25) + "...").c_str()  : name.c_str()), "", FSTWindow::isDisplayed(signal))) {
                         if (!FSTWindow::isDisplayed(signal)) {
                             this->addPlot(signal);
                         } else {
@@ -36,6 +36,9 @@ void FSTWindow::showPlotMenu() {
                     }
                     if (ImGui::IsItemHovered()) {
                         hoverRightClickMenu = signal;
+                        ImGui::BeginTooltip();
+                        ImGui::Text("%s", name.c_str());
+                        ImGui::EndTooltip();
                     }
                     ImGui::PopID();
                     if (hoverHighLight == signal) {
