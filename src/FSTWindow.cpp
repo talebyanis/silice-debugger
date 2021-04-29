@@ -166,7 +166,8 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
     for (char &c: expression) {
         switch (c) {
             case 'b': // binary
-            case 'd': // decimal
+            case 'd': // signed decimal
+            case 'u': // unsigned decimal
             case 'x': // hex
                 if (current != '0') return "";
                 current = c;
@@ -186,12 +187,23 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
                         if (buffer.empty()) buffer = "0";
                         res += "b(" + buffer + ")";
                         break;
+                    case 'u':
+                        res += "u(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                        break;
                     case 'd':
+                        if (buffer[0] == '1')
+                        {
+                            buffer.erase(buffer.begin()); // removing the first bit
+                            res += "d(-" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                            break;
+                        }
                         res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                         break;
                     case 'x':
                         stream << std::hex << this->binaryToDecimal(buffer);
                         res += "x(" + stream.str() + ")";
+                        break;
+                    default:
                         break;
                 }
                 current = '0';
