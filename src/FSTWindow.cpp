@@ -17,12 +17,12 @@ void FSTWindow::showPlotMenu() {
     ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
     //For every scope we have one TreeNode
     for (const auto &item : g_Reader->getScopes()) {
+        int hiddenCount = 0;
         if (ImGui::TreeNode(item.c_str())) {
             int count = 0;
             for (const auto &signal : g_Reader->getSignals(item)) {
                 std::string name = g_Reader->getSignalName(signal);
                 if (name.find(filterBuffer) != std::string::npos) {
-                    //std::cout << filterBuffer << " " << name << " " << (name.find(filterBuffer) == std::string::npos) << std::endl;
                     if (hover == signal) {
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
@@ -42,7 +42,12 @@ void FSTWindow::showPlotMenu() {
                         ImGui::PopStyleColor();
                     }
                     count++;
+                } else {
+                    hiddenCount++;
                 }
+            }
+            if (hiddenCount != 0) {
+                ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(),NULL,false,false);
             }
             ImGui::TreePop();
         }
@@ -67,11 +72,10 @@ void FSTWindow::showPlotMenu() {
             if (ImGui::MenuItem("Hexadecimal")) {
                 plot->type = HEXADECIMAL;
             }
-            if (ImGui::InputText("  Custom", customFilterBuffer, sizeof(customFilterBuffer)))
-            {
+            if (ImGui::InputText("  Custom", customFilterBuffer, sizeof(customFilterBuffer))) {
                 plot->customtype_string = customFilterBuffer;
                 plot->type = CUSTOM;
-            } 
+            }
             ImGui::Separator();
             ImGui::Text("   Plot Color Picker : ");
             ImGui::Separator();
@@ -127,8 +131,7 @@ bool FSTWindow::isDisplayed(fstHandle signal) {
 //-------------------------------------------------------
 
 // Function to convert binary to decimal
-int FSTWindow::binaryToDecimal(std::string n)
-{
+int FSTWindow::binaryToDecimal(std::string n) {
     std::string num = n;
     int dec_value = 0;
 
@@ -146,8 +149,7 @@ int FSTWindow::binaryToDecimal(std::string n)
 
 //-------------------------------------------------------
 
-std::string FSTWindow::parseCustomExp(std::string expression, int value)
-{
+std::string FSTWindow::parseCustomExp(std::string expression, int value) {
     std::string res = "";
 
     // Converting value to Binary
@@ -161,48 +163,44 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value)
     std::string buffer = "";
 
     // Parsing the expression and generating res
-    for (char& c: expression)
-    {
-        switch (c)
-        {
-        case 'b': // binary
-        case 'd': // decimal 
-        case 'x': // hex
-            if (current != '0') return "";
-            current = c;
-            break;
-        case ';':
-            if (current == '0') return "";
-            numberInt = stoi(number);
-            if (numberInt > binaryVal.length()) return "";
+    for (char &c: expression) {
+        switch (c) {
+            case 'b': // binary
+            case 'd': // decimal
+            case 'x': // hex
+                if (current != '0') return "";
+                current = c;
+                break;
+            case ';':
+                if (current == '0') return "";
+                numberInt = stoi(number);
+                if (numberInt > binaryVal.length()) return "";
 
-            for (int i = 0; i < numberInt; i++)
-            {
-                buffer += binaryVal[0]; // putting the first bit in the buffer
-                binaryVal.erase(binaryVal.begin()); // removing the first bit
-            }
+                for (int i = 0; i < numberInt; i++) {
+                    buffer += binaryVal[0]; // putting the first bit in the buffer
+                    binaryVal.erase(binaryVal.begin()); // removing the first bit
+                }
 
-            switch (current)
-            {
-            case 'b':
-                if (buffer.empty()) buffer = "0";
-                res += "b(" + buffer + ")";
+                switch (current) {
+                    case 'b':
+                        if (buffer.empty()) buffer = "0";
+                        res += "b(" + buffer + ")";
+                        break;
+                    case 'd':
+                        res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                        break;
+                    case 'x':
+                        stream << std::hex << this->binaryToDecimal(buffer);
+                        res += "x(" + stream.str() + ")";
+                        break;
+                }
+                current = '0';
+                number = "";
                 break;
-            case 'd':
-                res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+            default:  // number
+                if (current == '0') return "";
+                number += c;
                 break;
-            case 'x':
-                stream << std::hex << this->binaryToDecimal(buffer);
-                res += "x(" + stream.str() + ")";
-                break;
-            }
-            current = '0';
-            number = "";
-            break;
-        default:  // number
-            if (current == '0') return "";
-            number += c;
-            break;
         }
     }
     return res;
@@ -311,11 +309,11 @@ void FSTWindow::showPlots() {
 
             //displaying values on the plot
             for (int i = 0; i < item.x_data.size(); i++) {
-                if(item.y_data[i] == -1) {
+                if (item.y_data[i] == -1) {
                     ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 0, 0, 1));
                     ImPlot::PlotText("x", item.x_data[i], item.y_data[i]);
-                    ImPlot::PlotText("x", (item.x_data[i] + item.x_data[i+1])/2, item.y_data[i]);
-                    ImPlot::PlotText("x", item.x_data[i+1], item.y_data[i]);
+                    ImPlot::PlotText("x", (item.x_data[i] + item.x_data[i + 1]) / 2, item.y_data[i]);
+                    ImPlot::PlotText("x", item.x_data[i + 1], item.y_data[i]);
                 } else {
                     std::basic_string<char> value;
                     std::stringstream stream;
@@ -333,8 +331,7 @@ void FSTWindow::showPlots() {
                             break;
                         case CUSTOM:
                             value = parseCustomExp(item.customtype_string, item.y_data[i]);
-                            if (value == "")
-                            {
+                            if (value == "") {
                                 value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
                             }
                             break;
@@ -403,7 +400,7 @@ void FSTWindow::render() {
         tmp = ii;
     }
 
-    if(!editor) return;
+    if (!editor) return;
 
     if (index != -1) {
         editor->FSMframeAtIndex(editor->openedFile, index);
