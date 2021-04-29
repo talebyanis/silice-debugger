@@ -312,6 +312,9 @@ void FSTWindow::showPlots() {
                         }
                     }
                 }
+                if(ImGui::IsMouseDoubleClicked(0)) {
+                    markerX = ImPlot::GetPlotMousePos().x;
+                }
             }
 
             //displaying values on the plot
