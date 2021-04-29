@@ -39,8 +39,8 @@ private:
     FSTReader *g_Reader = nullptr;
     ImPlotRange range = ImPlotRange(-1, -1);
     ImPlotRange *plotXLimits = nullptr;
-    fstHandle hover = 0;
-    fstHandle hoveredSignal = 0;
+    fstHandle hoverHighLight = 0;
+    fstHandle hoverRightClickMenu = 0;
     fstHandle qindex = 0;
     std::vector<std::pair<int, int>> qindexValues;
     double markerX = 0;
@@ -55,6 +55,7 @@ private:
     void showPlotMenu();
     std::string parseCustomExp(std::string expression, int value);
     int binaryToDecimal(std::string n);
+    void showRightClickPlotSettings(fstHandle signal);
 };
 
 
