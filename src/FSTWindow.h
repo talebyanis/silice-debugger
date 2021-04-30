@@ -24,6 +24,7 @@ typedef struct {
     ConvertType type;
     std::string customtype_string;
     ImVec4 color;
+    bool fold;
 } Plot;
 
 class FSTWindow {

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <nlohmann/json.hpp>
+
 using json = nlohmann::json;
 
 //-------------------------------------------------------
@@ -27,7 +28,8 @@ void FSTWindow::showPlotMenu() {
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                     }
                     ImGui::PushID(count);
-                    if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0,25) + "...").c_str()  : name.c_str()), "", FSTWindow::isDisplayed(signal))) {
+                    if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()), "",
+                                        FSTWindow::isDisplayed(signal))) {
                         if (!FSTWindow::isDisplayed(signal)) {
                             this->addPlot(signal);
                         } else {
@@ -50,7 +52,7 @@ void FSTWindow::showPlotMenu() {
                 }
             }
             if (hiddenCount != 0) {
-                ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(),NULL,false,false);
+                ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
             }
             ImGui::TreePop();
         }
@@ -105,6 +107,7 @@ void FSTWindow::addPlot(fstHandle signal) {
     std::string signalName = g_Reader->getSignalName(signal);
     plot.name = signalName;
     plot.type = DECIMALS;
+    plot.fold = false;
     plot.color = ImVec4(1, 1, 1, 1);
     valuesList values = g_Reader->getValues(signal);
     for (const auto &item : values) {
@@ -199,8 +202,7 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
                         res += "u(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                         break;
                     case 'd':
-                        if (buffer[0] == '1')
-                        {
+                        if (buffer[0] == '1') {
                             buffer.erase(buffer.begin()); // removing the first bit
                             res += "d(-" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                             break;
@@ -230,164 +232,177 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
 
 //Shows plots on the right of the window
 int payload;
-
 void FSTWindow::showPlots() {
-    ImGui::BeginGroup();
-    //reset hoverForHighLight to not change the color of a name if no plot is hovered
+    //reset hoverHighLight to not change the color of a name if no plot is hovered
     hoverHighLight = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
-        Plot item = g_Plots[i];
-
-        //set the plots Y limits to just below the lowest value to just upper the highest
-        double max = *std::max_element(item.y_data.begin(), item.y_data.end());
-        ImPlot::SetNextPlotLimitsY(0.0 - max / 3, max + max / 3);
-
-        //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
-        double xMin = plotXLimits->Min;
-        double xMax = plotXLimits->Max;
-        ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
+        Plot *item = &g_Plots[i];
+        ImGui::PushID(i);
+        ImGui::BeginGroup();
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
-        ImGui::Button("  ");
-        //For drag&drop
-        if (ImGui::IsItemHovered() && !ImGui::IsAnyMouseDown()) {
-            payload = i;
+        ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursor.x, cursor.y),
+                                                  ImVec2(cursor.x + 1000, cursor.y + 20),
+                                                  IM_COL32(51, 64, 74, 255));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+        ImGui::Button(item->name.c_str());
+        ImGui::SameLine();
+        if (ImGui::Button("Fold/Unfold")) {
+            std::cout << i << std::endl;
+            item->fold = !item->fold;
         }
-        ImGui::SetCursorScreenPos(cursor);
+        ImGui::PopStyleVar(2);
 
-        //Drag&drop source
+
+        if (!item->fold) {
+            ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
+            //Coloring the line
+            ImPlot::PushStyleColor(ImPlotCol_Line, item->color);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+
+            //set the plots Y limits to just below the lowest value to just upper the highest
+            double max = *std::max_element(item->y_data.begin(), item->y_data.end());
+            ImPlot::SetNextPlotLimitsY(0.0 - max / 3, max + max / 3);
+
+            //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
+            double xMin = plotXLimits->Min;
+            double xMax = plotXLimits->Max;
+            ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
+
+            if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
+                                  ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
+                                  ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
+                                  NULL,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
+                //Marker
+                ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
+
+                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[0], (int *) &item->y_data[0],
+                                   item->x_data.size());
+
+                if (ImPlot::IsPlotHovered()) {
+                    //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
+                    hoverHighLight = item->signalId;
+                    hoverRightClickMenu = item->signalId;
+
+                    //modifies the range for all plots to be sync
+                    ImPlotLimits limits = ImPlot::GetPlotLimits();
+                    plotXLimits->Min = limits.X.Min;
+                    plotXLimits->Max = limits.X.Max;
+
+                    //Arrows to move to values change
+                    ImGui::SetKeyboardFocusHere();
+                    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
+                        for (int ii = 0; ii < item->x_data.size(); ii++) {
+                            int x = item->x_data[ii];
+                            if (markerX < x) {
+                                markerX = x;
+                                if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
+                                    double distance = plotXLimits->Max - plotXLimits->Min;
+                                    plotXLimits->Min = markerX - (distance / 2);
+                                    plotXLimits->Max = markerX + (distance / 2);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow), true)) {
+                        for (int ii = item->x_data.size() - 1; ii >= 0; ii--) {
+                            int x = item->x_data[ii];
+                            if (markerX > x) {
+                                markerX = x;
+                                if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
+                                    double distance = plotXLimits->Max - plotXLimits->Min;
+                                    plotXLimits->Min = markerX - (distance / 2);
+                                    plotXLimits->Max = markerX + (distance / 2);
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    //Double click to move marker
+                    if (ImGui::IsMouseDoubleClicked(0)) {
+                        markerX = ImPlot::GetPlotMousePos().x;
+                    }
+                }
+
+                //displaying values on the plot
+                for (int i = 0; i < item->x_data.size(); i++) {
+                    if (item->y_data[i] == -1) {
+                        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 0, 0, 1));
+                        ImPlot::PlotText("x", item->x_data[i], item->y_data[i]);
+                        ImPlot::PlotText("x", (item->x_data[i] + item->x_data[i + 1]) / 2, item->y_data[i]);
+                        ImPlot::PlotText("x", item->x_data[i + 1], item->y_data[i]);
+                    } else {
+                        std::basic_string<char> value;
+                        std::stringstream stream;
+                        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+                        //Converting to binary,decimal, hexa or custom user input
+                        switch (item->type) {
+                            case BINARY:
+                                value = std::bitset<16>(item->y_data[i]).to_string();
+                                break;
+                            case DECIMALS:
+                                value = std::to_string(item->y_data[i]);
+                                break;
+                            case HEXADECIMAL:
+                                stream << std::hex << item->y_data[i];
+                                value = stream.str();
+                                break;
+                            case CUSTOM:
+                                value = parseCustomExp(item->customtype_string, item->y_data[i]);
+                                if (value == "") {
+                                    value = std::to_string(item->y_data[i]); // Using Decimal if the expression is bad
+                                }
+                                break;
+                        }
+                        //Offset to place the value correctly
+                        ImVec2 offset = ImVec2(0, 0);
+                        if (i > 0) {
+                            if (item->y_data[i] > item->y_data[i - 1]) {
+                                offset.y = -6;
+                            } else {
+                                offset.y = 6;
+                            }
+                        }
+                        ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+                    }
+                }
+
+                ImPlot::PopStyleColor(2);
+                ImPlot::PopStyleVar();
+                ImPlot::EndPlot();
+            }
+        }
+
+        ImGui::EndGroup();
+
+/*        //Drag&drop source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("PlotPayload", &payload, sizeof(fstHandle));
             ImGui::Text("%s", g_Reader->getSignalName(g_Plots[payload].signalId).c_str());
             ImGui::EndDragDropSource();
         }
+        ImGui::PopID();
 
-        ImGui::PushID(i);
-        ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
-        //Coloring the line
-        ImPlot::PushStyleColor(ImPlotCol_Line, item.color);
-        if (ImPlot::BeginPlot(item.name.c_str(), NULL, NULL, ImVec2(-1, 100),
-                              ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos | ImPlotFlags_NoMenus, NULL,
-                              ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
-
-            //Drag&drop target
-            if (ImGui::BeginDragDropTarget()) {
-                if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
-                    if (payload > i) {
-                        for (int k = payload; k > i; k--) {
-                            std::swap(g_Plots[k], g_Plots[k - 1]);
-                        }
-                    } else if (i > payload) {
-                        for (int k = payload; k < i; k++) {
-                            std::swap(g_Plots[k], g_Plots[k + 1]);
-                        }
+        //Drag&drop target
+        if (ImGui::BeginDragDropTarget()) {
+            if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
+                if (payload > i) {
+                    for (int k = payload; k > i; k--) {
+                        std::swap(g_Plots[k], g_Plots[k - 1]);
                     }
-                }
-                ImGui::EndDragDropTarget();
-            }
-
-            //Marker
-            ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
-
-            ImPlot::PlotStairs(item.name.c_str(), (int *) &item.x_data[0], (int *) &item.y_data[0], item.x_data.size());
-
-            if (ImPlot::IsPlotHovered()) {
-                //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
-                hoverHighLight = item.signalId;
-                hoverRightClickMenu = item.signalId;
-
-                //modifies the range for all plots to be sync
-                ImPlotLimits limits = ImPlot::GetPlotLimits();
-                plotXLimits->Min = limits.X.Min;
-                plotXLimits->Max = limits.X.Max;
-
-                //Arrows to move to values change
-                ImGui::SetKeyboardFocusHere();
-                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
-                    for (int ii = 0; ii < item.x_data.size(); ii++) {
-                        int x = item.x_data[ii];
-                        if (markerX < x) {
-                            markerX = x;
-                            if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
-                                double distance = plotXLimits->Max - plotXLimits->Min;
-                                plotXLimits->Min = markerX - (distance / 2);
-                                plotXLimits->Max = markerX + (distance / 2);
-                            }
-                            break;
-                        }
+                } else if (i > payload) {
+                    for (int k = payload; k < i; k++) {
+                        std::swap(g_Plots[k], g_Plots[k + 1]);
                     }
-                }
-                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow), true)) {
-                    for (int ii = item.x_data.size() - 1; ii >= 0; ii--) {
-                        int x = item.x_data[ii];
-                        if (markerX > x) {
-                            markerX = x;
-                            if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
-                                double distance = plotXLimits->Max - plotXLimits->Min;
-                                plotXLimits->Min = markerX - (distance / 2);
-                                plotXLimits->Max = markerX + (distance / 2);
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                //Double click to move marker
-                if(ImGui::IsMouseDoubleClicked(0)) {
-                    markerX = ImPlot::GetPlotMousePos().x;
                 }
             }
-
-            //displaying values on the plot
-            for (int i = 0; i < item.x_data.size(); i++) {
-                if (item.y_data[i] == -1) {
-                    ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 0, 0, 1));
-                    ImPlot::PlotText("x", item.x_data[i], item.y_data[i]);
-                    ImPlot::PlotText("x", (item.x_data[i] + item.x_data[i + 1]) / 2, item.y_data[i]);
-                    ImPlot::PlotText("x", item.x_data[i + 1], item.y_data[i]);
-                } else {
-                    std::basic_string<char> value;
-                    std::stringstream stream;
-                    ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
-                    //Converting to binary,decimal, hexa or custom user input
-                    switch (item.type) {
-                        case BINARY:
-                            value = std::bitset<16>(item.y_data[i]).to_string();
-                            break;
-                        case DECIMALS:
-                            value = std::to_string(item.y_data[i]);
-                            break;
-                        case HEXADECIMAL:
-                            stream << std::hex << item.y_data[i];
-                            value = stream.str();
-                            break;
-                        case CUSTOM:
-                            value = parseCustomExp(item.customtype_string, item.y_data[i]);
-                            if (value == "") {
-                                value = std::to_string(item.y_data[i]); // Using Decimal if the expression is bad
-                            }
-                            break;
-                    }
-                    //Offset to place the value correctly
-                    ImVec2 offset = ImVec2(0, 0);
-                    if (i > 0) {
-                        if (item.y_data[i] > item.y_data[i - 1]) {
-                            offset.y = -6;
-                        } else {
-                            offset.y = 6;
-                        }
-                    }
-                    ImPlot::PlotText(value.c_str(), item.x_data[i], item.y_data[i], false, offset);
-                }
-            }
-
-            ImPlot::PopStyleColor(2);
-            ImPlot::PopStyleVar();
-            ImPlot::EndPlot();
-            ImGui::PopID();
-        }
+            ImGui::EndDragDropTarget();
+        }*/
     }
-    ImGui::EndGroup();
     this->showRightClickPlotSettings(hoverRightClickMenu);
 }
 
