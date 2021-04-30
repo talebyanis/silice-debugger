@@ -67,6 +67,9 @@ TextEditor::TextEditor()
 	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
+
+    // Set cursor on top of the code
+    SetCursorPosition(Coordinates(0, 0));
 }
 
 TextEditor::~TextEditor()
@@ -971,26 +974,35 @@ void TextEditor::Render()
 				}
 			}
 
-			// Draw line number (right aligned)
+
 			// The color changes if the corresponding index is selected (fsm.log)
 			snprintf(buf, 16, "%d  ", lineNo + 1);
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-			
+
+            // Draw Index
 			if (this->linesSelectedIndex.first != -1)
 			{
-				(lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second
-					|| (this->linesSelectedIndex.first == this->linesSelectedIndex.second 
-						&& lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second)) ?
-					drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineSelectedIndex], buf)
-					: drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
-			}
-			else
-			{
-				drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+				if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
+				   (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
+                {
+                    auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
+
+                    if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    {
+                        /*
+                         * // Draw a ToolBox ?
+                        ImGui::BeginTooltip();
+                        ImGui::Text(" Cycle ");
+                        ImGui::EndTooltip();
+                         */
+                    }
+                }
 			}
 
-			
+            // Draw line number (right aligned)
+            drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
 
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
@@ -2069,6 +2081,7 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF0000FF, // LineSelectedIndex
+            0xFF000040, // Cycle
 		} };
 	return p;
 }
@@ -2105,6 +2118,7 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF0000FF, // LineSelectedIndex
+            0xFF0000FF, // Cycle
 		} };
 	return p;
 }
@@ -2141,6 +2155,7 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF0000FF, // LineSelectedIndex
+            0xFF0000FF, // Cycle
 		} };
 	return p;
 }
@@ -2605,9 +2620,6 @@ bool TextEditor::writeFromFile(std::string filepath)
 void TextEditor::FSMframeAtIndex(std::string fsm_file, int index)
 {
 	std::pair<int, int> lines = lp.getLines(fsm_file, index);
-
-	//std::cout << lines.first << " to " << lines.second << std::endl;
-
 	this->linesSelectedIndex = lines;	
 }
 

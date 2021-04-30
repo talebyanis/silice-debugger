@@ -94,7 +94,6 @@ void LogParser::parseFSM(std::string fsm_filename)
 
 	std::string element;
 	fsm_line fsml;
-	std::pair<int, int> lines;
 	while (file >> element) {
 		fsml.algo = element;
 		file >> element;

@@ -47,6 +47,7 @@ public:
 		Temp,
 
 		LineSelectedIndex,
+        IndexLine,
 
 		Max,
 	
