@@ -872,6 +872,7 @@ void TextEditor::Render()
 	const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
 	mCharAdvance = ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
+
 	/* Update palette with the current alpha from style */
 	for (int i = 0; i < (int)PaletteIndex::Max; ++i)
 	{
@@ -2615,6 +2616,13 @@ void TextEditor::FSMunframe()
 	this->linesSelectedIndex = std::pair(-1, -1);
 }
 
+void TextEditor::ScaleFont(bool make_bigger)
+{
+    static float scale = 1;
+    make_bigger ? scale += .1 : scale -= .1;
+    ImGui::GetFont()->Scale=scale;
+}
+
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
 	const char* p = in_begin;
@@ -3283,6 +3291,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 
 		// Types (WIP)
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("uint[0-9]+", PaletteIndex::Type));
 
 		// Preprocessor instructions
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));

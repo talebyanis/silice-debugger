@@ -19,3 +19,26 @@ algorithm main(output uint8 leds)
   leds = result[0,8];
 
 }
+
+wd
+aw
+daw
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+awdawdaw
+
+
+
+wda

@@ -27,8 +27,9 @@ bool p_open_dockspace = true;
 LogParser lp;
 
 static GLuint g_FontTexture;
+
 static ImFont* font_general;
-static ImFont* font_code;
+static ImFont* font_code; // font used for the TextEditor's code
 
 //-------------------------------------------------------
 
@@ -187,7 +188,6 @@ void MainWindow::ShowDockSpace() {
 void MainWindow::ShowCodeEditor() {
     auto cpos = editor.GetCursorPosition();
 
-    ImGui::PushFont(font_code);
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
@@ -284,17 +284,41 @@ void MainWindow::ShowCodeEditor() {
                 editor.CanUndo() ? "*" : " ",
                 editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath.string()).c_str());
 
+    ImGui::PushFont(font_code);
     editor.Render("TextEditor");
+    this->ZoomMouseWheel();
+    ImGui::PopFont();
 
     ImGui::End();
-    ImGui::PopFont();
+}
+
+//-------------------------------------------------------
+
+// Currently DownArrow + Wheel to zoom -> needs to be fixed
+void MainWindow::ZoomMouseWheel()
+{
+    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow), true))
+    {
+        if (ImGui::GetIO().MouseWheel > 0)
+        {
+            if (ImGui::GetFontSize() < 28) {
+                editor.ScaleFont(true);
+            }
+        }
+        else if (ImGui::GetIO().MouseWheel < 0)
+        {
+            if (ImGui::GetFontSize() > 13) {
+                editor.ScaleFont(false);
+            }
+        }
+    }
+
 }
 
 //-------------------------------------------------------
 
 void MainWindow::ChangeStyle() {
-
-    ImGui_Impl_CreateFontsTexture(18, 18, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
+    ImGui_Impl_CreateFontsTexture(18, 22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
@@ -354,7 +378,6 @@ void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
     this->ShowCodeEditor();
-    //showTestWindow();
     fstWindow.render();
     ImGui::PopFont();
 }

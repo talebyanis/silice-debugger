@@ -291,6 +291,7 @@ public:
 	bool writeFromFile(std::string filepath);
 	void FSMframeAtIndex(std::string fsm_file, int index);
 	void FSMunframe();
+	void ScaleFont(bool make_bigger);
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
