@@ -233,7 +233,6 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
 //-------------------------------------------------------
 
 //Shows plots on the right of the window
-int payload;
 void FSTWindow::showPlots() {
     //reset hoverHighLight to not change the color of a name if no plot is hovered
     hoverHighLight = 0;
@@ -244,14 +243,14 @@ void FSTWindow::showPlots() {
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursor.x, cursor.y),
-                                                  ImVec2(cursor.x + 1000, cursor.y + 20),
+                                                  ImVec2(cursor.x + 1000, cursor.y + 25),
                                                   IM_COL32(51, 64, 74, 255));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
-        if (ImGui::Button("Fold/Unfold")) {
-            std::cout << i << std::endl;
+        ImGui::SetCursorScreenPos(ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 23,cursor.y));
+        if (ImGui::Button("Folding")) {
             item->fold = !item->fold;
         }
         ImGui::PopStyleVar(2);
