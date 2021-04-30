@@ -12,7 +12,6 @@ typedef std::list<std::pair<ImU64 , ImU64>> valuesList;
 
 class FSTReader {
 private :
-
     void initMaps();
 public:
     ImU64 getMaxTime();
@@ -22,6 +21,7 @@ public:
     valuesList getValues(fstHandle signal);
     std::vector<int> getErrors(fstHandle signal);
     std::string getSignalName(fstHandle signal);
+    std::list<int> get_q_index_values();
 };
 
 #endif

@@ -457,7 +457,7 @@ void FSTWindow::render() {
 
     for (int ii = 1; ii < qindexValues.size(); ii++) {
         if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
-            index = tmp - 1;
+            index = tmp;
             break;
         }
         tmp = ii;
@@ -465,11 +465,8 @@ void FSTWindow::render() {
 
     if (!editor) return;
 
-    if (index != -1) {
-        editor->FSMframeAtIndex(editor->openedFile, index);
-    } else {
-        editor->FSMunframe();
-    }
+    (index != -1) ? editor->FSMframeAtIndex(index)
+        : editor->FSMunframe();
 }
 
 //-------------------------------------------------------
@@ -524,6 +521,8 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     for (const auto &item : valuesList) {
         qindexValues.emplace_back(item.first, item.second);
     }
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
 void FSTWindow::load(json data, TextEditor &editors) {
@@ -551,4 +550,6 @@ void FSTWindow::load(json data, TextEditor &editors) {
         g_Plots[i].type = data["displayedTypes"][i];
     }
     std::cout << g_Plots[0].x_data.size() << std::endl;
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
 }

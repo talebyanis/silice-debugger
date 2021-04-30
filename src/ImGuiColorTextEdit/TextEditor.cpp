@@ -974,29 +974,42 @@ void TextEditor::Render()
 				}
 			}
 
-
-			// The color changes if the corresponding index is selected (fsm.log)
 			snprintf(buf, 16, "%d  ", lineNo + 1);
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
-            // Draw Index
+			if (!this->linesIndexes.empty())
+			{
+				for (std::pair<int, int>& indexes : this->linesIndexes)
+				{
+					if (lineNo + 1 >= indexes.first && lineNo + 1 < indexes.second ||
+						(indexes.first == indexes.second && lineNo + 1 >= indexes.first && lineNo + 1 <= indexes.second))
+					{
+						auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+						drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
+						break;
+					}
+				}
+			}
+
+            // Draw selected and others Index (Silice)
 			if (this->linesSelectedIndex.first != -1)
 			{
 				if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
 				   (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
                 {
                     auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
+                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
                     if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
                     {
-                        /*
-                         * // Draw a ToolBox ?
+                        
+                        // Draw a ToolBox
                         ImGui::BeginTooltip();
-                        ImGui::Text(" Cycle ");
+                        ImGui::Text(" This set is selected by ");
+                        ImGui::Text(" the marker in FSMWindows ");
                         ImGui::EndTooltip();
-                         */
+                         
                     }
                 }
 			}
@@ -2080,8 +2093,8 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
-            0xFF000040, // Cycle
+			0xFF000040, // SelectedIndexLine
+            0xFF303030, // IndexLine
 		} };
 	return p;
 }
@@ -2117,8 +2130,8 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
-            0xFF0000FF, // Cycle
+			0xFF000040, // SelectedIndexLine
+			0x0000FF40, // IndexLine
 		} };
 	return p;
 }
@@ -2154,8 +2167,8 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
-            0xFF0000FF, // Cycle
+			0xFF000040, // SelectedIndexLine
+			0x0000FF40, // IndexLine
 		} };
 	return p;
 }
@@ -2617,15 +2630,23 @@ bool TextEditor::writeFromFile(std::string filepath)
 	return 0;
 }
 
-void TextEditor::FSMframeAtIndex(std::string fsm_file, int index)
+void TextEditor::FSMframeAtIndex(int index)
 {
-	std::pair<int, int> lines = lp.getLines(fsm_file, index);
-	this->linesSelectedIndex = lines;	
+	this->linesSelectedIndex = lp.getLines(this->openedFile, index);
 }
 
 void TextEditor::FSMunframe()
 {
 	this->linesSelectedIndex = std::pair(-1, -1);
+}
+
+void TextEditor::setIndexPairs(std::list<int> indexes)
+{
+	for (int& index : indexes)
+	{
+		this->linesIndexes.push_back(this->lp.getLines(this->openedFile, index));
+	}
+	std::cout << "index received" << std::endl;
 }
 
 void TextEditor::ScaleFont(bool make_bigger)
@@ -3359,7 +3380,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		};
 		for (auto& k : identifiers)
         {
-			id.mDeclaration = "Built-in function";
+			id.mDeclaration = " Built-in function ";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
 
@@ -3373,7 +3394,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Const));
-            id.mDeclaration = "Constant variable";
+            id.mDeclaration = " Constant variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string("\\b" + e.second + "\\b"), id));
 		}
 
@@ -3381,7 +3402,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("wire");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Wire));
-            id.mDeclaration = "Wire variable";
+            id.mDeclaration = " Wire variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
@@ -3389,7 +3410,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("ff");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::FF));
-            id.mDeclaration = "Flip-Flop variable";
+            id.mDeclaration = " Flip-Flop variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
@@ -3397,7 +3418,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("temp");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Temp));
-            id.mDeclaration = "Temp variable";
+            id.mDeclaration = " Temp variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
