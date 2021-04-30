@@ -27,7 +27,68 @@ bool p_open_dockspace = true;
 LogParser lp;
 
 static GLuint g_FontTexture;
-static ImFont* font;
+static ImFont* font_general;
+static ImFont* font_code;
+
+//-------------------------------------------------------
+
+static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, std::string general_font_name, std::string code_font_name)
+{
+    // Build texture atlas
+    ImGuiIO& io = ::ImGui::GetIO();
+    unsigned char* pixels;
+    int width, height;
+#if 0
+    ImFontConfig font_cfg = ImFontConfig();
+    font_cfg.SizePixels = font_size;
+    io.Fonts->AddFontDefault(&font_cfg);
+#else
+    std::string font_path = std::string(SRC_PATH "/src/data/fonts/" + general_font_name);
+    if (LibSL::System::File::exists(font_path.c_str())) {
+        ImFontConfig cfg;
+        cfg.OversampleH = 2;
+        cfg.OversampleV = 2;
+        cfg.PixelSnapH = true;
+        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), general_font_size, &cfg, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    } else {
+        std::cerr << Console::red << "General Font '" << font_path << "' not found" << std::endl;
+    }
+    font_path = std::string(SRC_PATH "/src/data/fonts/" + code_font_name);
+    if (LibSL::System::File::exists(font_path.c_str())) {
+        ImFontConfig cfg;
+        cfg.OversampleH = 2;
+        cfg.OversampleV = 2;
+        cfg.PixelSnapH = true;
+        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), code_font_size, &cfg, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+    } else {
+        std::cerr << Console::red << "Code Font '" << font_path << "' not found" << std::endl;
+    }
+
+
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
+
+    // Upload texture to graphics system
+    GLint last_texture;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+    glGenTextures(1, &g_FontTexture);
+    glBindTexture(GL_TEXTURE_2D, g_FontTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+    // Store our identifier
+    io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
+
+    // Restore state
+    glBindTexture(GL_TEXTURE_2D, last_texture);
+
+    // Cleanup
+    io.Fonts->ClearTexData();
+    io.Fonts->ClearInputData();
+#endif
+
+    return true;
+}
 
 //-------------------------------------------------------
 
@@ -123,17 +184,10 @@ void MainWindow::ShowDockSpace() {
 
 //-------------------------------------------------------
 
-void showTestWindow() {
-    ImGui::SetNextWindowDockID(0x3);
-    ImGui::Begin("TestWnd");
-    ImGui::End();
-}
-
 void MainWindow::ShowCodeEditor() {
     auto cpos = editor.GetCursorPosition();
 
-    ImGui::PushFont(font);
-    //ImGui::SetNextWindowDockID(0x1);
+    ImGui::PushFont(font_code);
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
@@ -238,58 +292,9 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-
-static bool ImGui_Impl_CreateFontsTexture(float font_size)
-{
-    // Build texture atlas
-    ImGuiIO& io = ::ImGui::GetIO();
-    unsigned char* pixels;
-    int width, height;
-#if 0
-    ImFontConfig font_cfg = ImFontConfig();
-    font_cfg.SizePixels = font_size;
-    io.Fonts->AddFontDefault(&font_cfg);
-#else
-    std::string font_path = std::string("/home/shinobi/work/stage/testFont/Ruda-Bold.ttf");
-    if (LibSL::System::File::exists(font_path.c_str())) {
-        ImFontConfig cfg;
-        cfg.OversampleH = 2;
-        cfg.OversampleV = 2;
-        cfg.PixelSnapH = true;
-        font = io.Fonts->AddFontFromFileTTF(font_path.c_str(), font_size, &cfg, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-    } else {
-        std::cerr << Console::red << "Font '" << font_path << "' not found" << std::endl;
-    }
-
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
-
-    // Upload texture to graphics system
-    GLint last_texture;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glGenTextures(1, &g_FontTexture);
-    glBindTexture(GL_TEXTURE_2D, g_FontTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    // Store our identifier
-    io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
-
-    // Restore state
-    glBindTexture(GL_TEXTURE_2D, last_texture);
-
-    // Cleanup
-    io.Fonts->ClearTexData();
-    io.Fonts->ClearInputData();
-#endif
-
-    return true;
-}
-
-//-------------------------------------------------------
-
 void MainWindow::ChangeStyle() {
-    ImGui_Impl_CreateFontsTexture(18);
+
+    ImGui_Impl_CreateFontsTexture(18, 18, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
@@ -346,8 +351,10 @@ void MainWindow::ChangeStyle() {
 }
 
 void MainWindow::Render() {
+    ImGui::PushFont(font_general);
     this->ShowDockSpace();
     this->ShowCodeEditor();
     //showTestWindow();
     fstWindow.render();
+    ImGui::PopFont();
 }
