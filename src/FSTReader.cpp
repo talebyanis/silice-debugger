@@ -11,6 +11,7 @@ void *g_Wave = nullptr;
 std::map<std::string, std::list<fstHandle>> g_ScopeToSignals;
 std::map<fstHandle, std::string> g_HandleToName;
 std::map<fstHandle, valuesList> g_Values;
+std::map<fstHandle, std::vector<int>> g_Errors;
 
 std::mutex g_Mutex;
 
@@ -60,7 +61,12 @@ void FSTReader::initMaps() {
     std::thread th([this]() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
             std::unique_lock<std::mutex> lock(g_Mutex);
-            g_Values[facidx].push_back(std::make_pair((int) time, decodeValue(reinterpret_cast<const char *>(value))));
+            int dvalue = decodeValue(reinterpret_cast<const char *>(value));
+            if(dvalue != -1) {
+                g_Values[facidx].push_back(std::make_pair((int) time, dvalue));
+            } else {
+                g_Errors[facidx].push_back((int) time);
+            }
             std::this_thread::yield();
         };
         fstReaderIterBlocks(g_Wave, l, NULL, NULL);
@@ -90,6 +96,12 @@ void FSTReader::initMaps() {
 
 valuesList FSTReader::getValues(fstHandle signal) {
     return g_Values[signal];
+}
+
+// ---------------------------------------------------------------------
+
+std::vector<int> FSTReader::getErrors(fstHandle signal) {
+    return g_Errors[signal];
 }
 
 // ---------------------------------------------------------------------

@@ -249,7 +249,8 @@ void FSTWindow::showPlots() {
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
-        ImGui::SetCursorScreenPos(ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 23,cursor.y));
+        ImGui::SetCursorScreenPos(
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 23, cursor.y));
         if (ImGui::Button("Folding")) {
             item->fold = !item->fold;
         }
@@ -282,6 +283,26 @@ void FSTWindow::showPlots() {
                 ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[0], (int *) &item->y_data[0],
                                    item->x_data.size());
 
+
+                std::vector<int> errors = g_Reader->getErrors(item->signalId);
+                int maxY = -1;
+                for (const auto &y : item->y_data) {
+                    if (y > maxY) maxY = y;
+                }
+                for (const auto &error : errors) {
+                    int next = -1;
+                    for (const auto &x : item->x_data) {
+                        if (error < x) {
+                            next = x;
+                            break;
+                        }
+                    }
+                    ImPlot::PushPlotClipRect();
+                    ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - maxY));
+                    ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * maxY));
+                    ImPlot::GetPlotDrawList()->AddRectFilled(min, max, IM_COL32(255, 0, 0, 100));
+                    ImPlot::PopPlotClipRect();
+                }
                 if (ImPlot::IsPlotHovered()) {
                     //If the mouse is hover the plot, we take it's id to change the color of the right name on the left
                     hoverHighLight = item->signalId;
@@ -331,45 +352,39 @@ void FSTWindow::showPlots() {
 
                 //displaying values on the plot
                 for (int i = 0; i < item->x_data.size(); i++) {
-                    if (item->y_data[i] == -1) {
-                        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 0, 0, 1));
-                        ImPlot::PlotText("x", item->x_data[i], item->y_data[i]);
-                        ImPlot::PlotText("x", (item->x_data[i] + item->x_data[i + 1]) / 2, item->y_data[i]);
-                        ImPlot::PlotText("x", item->x_data[i + 1], item->y_data[i]);
-                    } else {
-                        std::basic_string<char> value;
-                        std::stringstream stream;
-                        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
-                        //Converting to binary,decimal, hexa or custom user input
-                        switch (item->type) {
-                            case BINARY:
-                                value = std::bitset<16>(item->y_data[i]).to_string();
-                                break;
-                            case DECIMALS:
-                                value = std::to_string(item->y_data[i]);
-                                break;
-                            case HEXADECIMAL:
-                                stream << std::hex << item->y_data[i];
-                                value = stream.str();
-                                break;
-                            case CUSTOM:
-                                value = parseCustomExp(item->customtype_string, item->y_data[i]);
-                                if (value == "") {
-                                    value = std::to_string(item->y_data[i]); // Using Decimal if the expression is bad
-                                }
-                                break;
-                        }
-                        //Offset to place the value correctly
-                        ImVec2 offset = ImVec2(0, 0);
-                        if (i > 0) {
-                            if (item->y_data[i] > item->y_data[i - 1]) {
-                                offset.y = -6;
-                            } else {
-                                offset.y = 6;
+                    std::basic_string<char> value;
+                    std::stringstream stream;
+                    ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+                    //Converting to binary,decimal, hexa or custom user input
+                    switch (item->type) {
+                        case BINARY:
+                            value = std::bitset<16>(item->y_data[i]).to_string();
+                            break;
+                        case DECIMALS:
+                            value = std::to_string(item->y_data[i]);
+                            break;
+                        case HEXADECIMAL:
+                            stream << std::hex << item->y_data[i];
+                            value = stream.str();
+                            break;
+                        case CUSTOM:
+                            value = parseCustomExp(item->customtype_string, item->y_data[i]);
+                            if (value == "") {
+                                value = std::to_string(item->y_data[i]); // Using Decimal if the expression is bad
                             }
-                        }
-                        ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+                            break;
                     }
+                    //Offset to place the value correctly
+                    ImVec2 offset = ImVec2(0, 0);
+                    if (i > 0) {
+                        if (item->y_data[i] > item->y_data[i - 1]) {
+                            offset.y = -6;
+                        } else {
+                            offset.y = 6;
+                        }
+                    }
+                    ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+
                 }
 
                 ImPlot::PopStyleColor(2);
