@@ -54,7 +54,7 @@ private:
     bool isDisplayed(fstHandle signal);
     void showPlots();
     void showPlotMenu();
-    std::string parseCustomExp(std::string expression, int value);
+    std::string parseCustomExp(const std::string& expression, int value);
     int binaryToDecimal(std::string n);
     void showRightClickPlotSettings(fstHandle signal);
 };

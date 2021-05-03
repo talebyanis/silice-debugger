@@ -160,23 +160,24 @@ int FSTWindow::binaryToDecimal(std::string n) {
 
 //-------------------------------------------------------
 
-std::string FSTWindow::parseCustomExp(std::string expression, int value) {
-    std::string res = "";
+std::string FSTWindow::parseCustomExp(const std::string& expression, int value) {
+    std::string res;
 
     // Converting value to Binary
     std::string binaryVal;
     binaryVal = std::bitset<16>(value).to_string();
 
     char current = '0';
-    std::string number = "";
+    std::string number;
     int numberInt = 0;
     std::stringstream stream;
-    std::string buffer = "";
+    std::string buffer;
 
     //ToDo : regex
 
     // Parsing the expression and generating res
-    for (char &c: expression) {
+    for (char c: expression) {
+        std::cout << "current : " << current << std::endl;
         switch (c) {
             case 'b': // binary
             case 'd': // signed decimal
@@ -223,7 +224,10 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
                 break;
             default:  // number
                 if (current == '0') return "";
-                number += c;
+                if (isdigit(c)) //checking if the char is a digit value
+                    number += c;
+                else
+                    return "";
                 break;
         }
     }
