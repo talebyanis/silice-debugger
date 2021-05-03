@@ -47,14 +47,16 @@ private:
     double markerX = 0;
     char filterBuffer[256] = {};
     char customFilterBuffer[256] = {};
+    int bit_left_custom;
     TextEditor* editor;
+
     void clean();
     void addPlot(fstHandle signal);
     void removePlot(fstHandle signal);
     bool isDisplayed(fstHandle signal);
     void showPlots();
     void showPlotMenu();
-    std::string parseCustomExp(const std::string& expression, int value);
+    std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
     int binaryToDecimal(std::string n);
     void showRightClickPlotSettings(fstHandle signal);
 };
