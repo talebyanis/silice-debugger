@@ -978,21 +978,25 @@ void TextEditor::Render()
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
+            // Draw selected and others Index (Silice)
+
 			if (!this->linesIndexes.empty())
 			{
 				for (std::pair<int, int>& indexes : this->linesIndexes)
 				{
-					if (lineNo + 1 >= indexes.first && lineNo + 1 < indexes.second ||
-						(indexes.first == indexes.second && lineNo + 1 >= indexes.first && lineNo + 1 <= indexes.second))
-					{
-						auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-						drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
-						break;
-					}
+				    if (indexes.first != -1)
+                    {
+                        if (lineNo + 1 >= indexes.first && lineNo + 1 < indexes.second ||
+                            (indexes.first == indexes.second && lineNo + 1 >= indexes.first && lineNo + 1 <= indexes.second))
+                        {
+                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                            drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
+                            break;
+                        }
+                    }
 				}
 			}
 
-            // Draw selected and others Index (Silice)
 			if (this->linesSelectedIndex.first != -1)
 			{
 				if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
@@ -1003,7 +1007,6 @@ void TextEditor::Render()
 
                     if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
                     {
-                        
                         // Draw a ToolBox
                         ImGui::BeginTooltip();
                         ImGui::Text(" This set is selected by ");

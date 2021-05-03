@@ -20,25 +20,3 @@ algorithm main(output uint8 leds)
 
 }
 
-wd
-aw
-daw
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-awdawdaw
-
-
-
-wda
