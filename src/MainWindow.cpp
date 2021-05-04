@@ -294,10 +294,9 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-// Currently DownArrow + Wheel to zoom -> needs to be fixed
 void MainWindow::ZoomMouseWheel()
 {
-    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow), true))
+    if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL])
     {
         if (ImGui::GetIO().MouseWheel > 0)
         {
@@ -312,7 +311,6 @@ void MainWindow::ZoomMouseWheel()
             }
         }
     }
-
 }
 
 //-------------------------------------------------------
