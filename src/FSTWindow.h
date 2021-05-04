@@ -47,7 +47,7 @@ private:
     double markerX = 0;
     char filterBuffer[256] = {};
     char customFilterBuffer[256] = {};
-    int bit_left_custom;
+    int bit_left_custom = 16;
     TextEditor* editor;
 
     void clean();

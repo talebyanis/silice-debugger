@@ -47,7 +47,8 @@ public:
 		Temp,
 
         SelectedIndexLine,
-        IndexLine,
+        IndexLineA,
+        IndexLineB,
 
 		Max,
 	
@@ -285,7 +286,7 @@ public:
 	// Addition
 	std::string pathToLogFile;
 	std::string openedFile;
-	std::list<std::pair<int, int>> linesIndexes;
+	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
 	std::pair<int, int> linesSelectedIndex;
 	LogParser lp;
 

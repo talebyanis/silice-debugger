@@ -332,8 +332,7 @@ void FSTWindow::showPlots() {
                     //Arrows to move to values change
                     ImGui::SetKeyboardFocusHere();
                     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
-                        for (int ii = 0; ii < item->x_data.size(); ii++) {
-                            int x = item->x_data[ii];
+                        for (int x : item->x_data) {
                             if (markerX < x) {
                                 markerX = x;
                                 if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {

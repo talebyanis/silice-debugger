@@ -978,19 +978,21 @@ void TextEditor::Render()
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
-            // Draw selected and others Index (Silice)
+            // Draw selected (and others) Index (Silice)
 
 			if (!this->linesIndexes.empty())
 			{
-				for (std::pair<int, int>& indexes : this->linesIndexes)
+				for (std::pair<int, std::pair<int, int>>& indexes : this->linesIndexes)
 				{
 				    if (indexes.first != -1)
                     {
-                        if (lineNo + 1 >= indexes.first && lineNo + 1 < indexes.second ||
-                            (indexes.first == indexes.second && lineNo + 1 >= indexes.first && lineNo + 1 <= indexes.second))
+                        if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
+                            (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
                         {
                             auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                            drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLine]);
+                            (indexes.first %2)
+                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
+                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
                             break;
                         }
                     }
@@ -2097,7 +2099,8 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF000040, // SelectedIndexLine
-            0xFF303030, // IndexLine
+            0xFF303030, // IndexLineA
+            0xFF252525, // IndexLineB
 		} };
 	return p;
 }
@@ -2134,7 +2137,8 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF000040, // SelectedIndexLine
-			0x0000FF40, // IndexLine
+			0xFF303030, // IndexLineA
+			0xFF353535, // IndexLineB
 		} };
 	return p;
 }
@@ -2171,7 +2175,8 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
 			0xFF000040, // SelectedIndexLine
-			0x0000FF40, // IndexLine
+			0xFF303030, // IndexLineA
+			0xFF353535, // IndexLineB
 		} };
 	return p;
 }
@@ -2647,7 +2652,7 @@ void TextEditor::setIndexPairs(std::list<int> indexes)
 {
 	for (int& index : indexes)
 	{
-		this->linesIndexes.push_back(this->lp.getLines(this->openedFile, index));
+		this->linesIndexes.emplace_back(index, this->lp.getLines(this->openedFile, index));
 	}
 	std::cout << "index received" << std::endl;
 }
