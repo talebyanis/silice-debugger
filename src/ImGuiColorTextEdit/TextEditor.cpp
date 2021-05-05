@@ -30,7 +30,7 @@ TextEditor::TextEditor()
 	, mUndoIndex(0)
 	, mTabSize(4)
 	, mOverwrite(false)
-	, mReadOnly(false)
+	, mReadOnly(true)
 	, mWithinRender(false)
 	, mScrollToCursor(false)
 	, mScrollToTop(false)
@@ -981,44 +981,47 @@ void TextEditor::Render()
 
             // Draw selected (and others) Index (Silice)
 
-			if (!this->linesIndexes.empty())
-			{
-				for (std::pair<int, std::pair<int, int>>& indexes : this->linesIndexes)
-				{
-				    if (indexes.first != -1)
+            if (mReadOnly)
+            {
+                if (!this->linesIndexes.empty())
+                {
+                    for (std::pair<int, std::pair<int, int>>& indexes : this->linesIndexes)
                     {
-                        if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
-                            (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
+                        if (indexes.first != -1)
                         {
-                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                            (indexes.first %2)
+                            if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
+                                (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
+                            {
+                                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                                (indexes.first %2)
                                 ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
                                 : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
-                            break;
+                                break;
+                            }
                         }
                     }
-				}
-			}
+                }
 
-			if (this->linesSelectedIndex.first != -1)
-			{
-				if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
-				   (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
+                if (this->linesSelectedIndex.first != -1)
                 {
-                    auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
-
-                    if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
+                        (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
                     {
-                        // Draw a ToolBox
-                        ImGui::BeginTooltip();
-                        ImGui::Text(" This set is selected by ");
-                        ImGui::Text(" the marker in FSMWindows ");
-                        ImGui::EndTooltip();
-                         
+                        auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                        drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
+
+                        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                        {
+                            // Draw a ToolBox
+                            ImGui::BeginTooltip();
+                            ImGui::Text(" This set is selected by ");
+                            ImGui::Text(" the marker in FSMWindows ");
+                            ImGui::EndTooltip();
+
+                        }
                     }
                 }
-			}
+            }
 
             // Draw line number (right aligned)
             drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
@@ -2100,7 +2103,7 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF000040, // SelectedIndexLine
+			0xFF300000, // SelectedIndexLine
             0xFF303030, // IndexLineA
             0xFF252525, // IndexLineB
 		} };
@@ -2138,7 +2141,7 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF000040, // SelectedIndexLine
+			0xFF300000, // SelectedIndexLine
 			0xFF303030, // IndexLineA
 			0xFF353535, // IndexLineB
 		} };
@@ -2176,7 +2179,7 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF000040, // SelectedIndexLine
+			0xFF300000, // SelectedIndexLine
 			0xFF303030, // IndexLineA
 			0xFF353535, // IndexLineB
 		} };
@@ -2760,7 +2763,7 @@ static bool TokenizeCStyleNumber(const char* in_begin, const char* in_end, const
 		p++;
 	}
 
-	if (hasNumber == false)
+	if (!hasNumber)
 		return false;
 
 	bool isFloat = false;
