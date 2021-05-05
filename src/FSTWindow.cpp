@@ -456,7 +456,7 @@ void FSTWindow::render() {
         ImVec2 wPos = ImGui::GetCursorScreenPos();
         ImVec2 wSize = ImGui::GetWindowSize();
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y));
-        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y), true,
+        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y-25), true,
                           ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlotMenu();
@@ -464,7 +464,7 @@ void FSTWindow::render() {
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(ImVec2(wPos.x + treeWidth, wPos.y));
-        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y), true,
+        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y-25), true,
                           ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlots();
@@ -531,10 +531,14 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
         plotXLimits->Max = maxTime + (maxTime / 20);
     }
     this->editor = &editors;
-    for (const auto &item : g_Reader->scopes) {
-        for (const auto &signal : item->signals) {
-            if (signal.second.name.find("_q_index") != std::string::npos) {
-                qindex = signal.second.id;
+    for (const auto &scope : g_Reader->scopes) {
+        if (scope->name == "__main")
+        {
+            std::cout << "here" << std::endl;
+            for (const auto &signal : scope->signals) {
+                if (signal.second.name.find("_q_index") != std::string::npos) {
+                    qindex = signal.second.id;
+                }
             }
         }
     }
@@ -554,10 +558,14 @@ void FSTWindow::load(json data, TextEditor &editors) {
     this->editor = &editors;
     markerX = data["markerX"];
 
-    for (const auto &item : g_Reader->scopes) {
-        for (const auto &signal : item->signals) {
-            if (signal.second.name.find("_q_index") != std::string::npos) {
-                qindex = signal.second.id;
+    for (const auto &scope : g_Reader->scopes) {
+        if (scope->name == "__main")
+        {
+            std::cout << "here" << std::endl;
+            for (const auto &signal : scope->signals) {
+                if (signal.second.name.find("_q_index") != std::string::npos) {
+                    qindex = signal.second.id;
+                }
             }
         }
     }
