@@ -8,11 +8,8 @@
 #include "FSTReader.h"
 
 void *g_Wave = nullptr;
-std::map<std::string, std::list<fstHandle>> g_ScopeToSignals;
-std::map<fstHandle, std::string> g_HandleToName;
 std::map<fstHandle, valuesList> g_Values;
 std::map<fstHandle, std::vector<int>> g_Errors;
-std::list<int> _q_index_values;
 
 std::mutex g_Mutex;
 
@@ -68,13 +65,6 @@ void FSTReader::initMaps() {
             int dvalue = decodeValue(reinterpret_cast<const char *>(value));
             if (dvalue != -1) {
                 g_Values[facidx].push_back(std::make_pair((int) time, dvalue));
-                if (g_HandleToName[facidx].find("_q_index") != std::string::npos)
-                {
-                    if ((std::find(_q_index_values.begin(), _q_index_values.end(), dvalue) == _q_index_values.end()))
-                    {
-                        _q_index_values.push_back(dvalue);
-                    }
-                }
             } else {
                 g_Errors[facidx].push_back((int) time);
             }
@@ -163,15 +153,26 @@ ImU64 FSTReader::getMaxTime() {
 
 std::list<int> FSTReader::get_q_index_values()
 {
-    return _q_index_values;
+    std::list<int> values;
+
+    for (const auto &scope : scopes) {
+        for (const auto &signal : scope->signals) {
+            if(signal.second.name.find("_q_index") != std::string::npos) {
+                for (const auto &item : signal.second.values) {
+                    values.emplace_back(item.first);
+                }
+                return values;
+            }
+        }
+    }
+
+    return values;
 }
 
 // ---------------------------------------------------------------------
 
 void clean() {
     g_Values.clear();
-    g_ScopeToSignals.clear();
-    g_HandleToName.clear();
 }
 
 // ---------------------------------------------------------------------

@@ -531,19 +531,6 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
         plotXLimits->Max = maxTime + (maxTime / 20);
     }
     this->editor = &editors;
-
-    for (const auto &item : g_Reader->scopes) {
-        for (const auto &signal : item->signals) {
-            if (signal.second.name.find("_q_index") != std::string::npos) {
-                qindex = signal.second.id;
-            }
-        }
-    }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
-    }
-
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
@@ -555,23 +542,5 @@ void FSTWindow::load(json data, TextEditor &editors) {
     plotXLimits = &range;
     this->editor = &editors;
     markerX = data["markerX"];
-
-    for (const auto &item : g_Reader->scopes) {
-        for (const auto &signal : item->signals) {
-            if (signal.second.name.find("_q_index") != std::string::npos) {
-                qindex = signal.second.id;
-            }
-        }
-    }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
-    }
-    for (int i = 0; i < data["displayedSignals"].size(); ++i) {
-        this->addPlot(data["displayedSignals"][i]);
-        g_Plots[i].type = data["displayedTypes"][i];
-    }
-    std::cout << g_Plots[0].x_data.size() << std::endl;
-
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }
