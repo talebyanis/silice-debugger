@@ -1,8 +1,0 @@
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/../common/divint_std.ice ac ac 22 ff
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/../common/divint_std.ice diff diff 23 wire
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/../common/divint_std.ice i i 25 ff
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/../common/divint_std.ice num num 31 wire
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/../common/divint_std.ice den den 33 wire
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/main.ice num num 9 const
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/main.ice den den 10 const
-D:/IUT/stage/silice-text-editor/examples/divstd_bare/main.ice result result 11 temp
