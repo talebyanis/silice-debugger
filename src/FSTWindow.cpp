@@ -480,6 +480,7 @@ void FSTWindow::render() {
     for (int ii = 1; ii < qindexValues.size(); ii++) {
         if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
             index = tmp;
+            std::cout << index << std::endl;
             break;
         }
         tmp = ii;
@@ -531,6 +532,17 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
         plotXLimits->Max = maxTime + (maxTime / 20);
     }
     this->editor = &editors;
+    for (const auto &item : g_Reader->scopes) {
+        for (const auto &signal : item->signals) {
+            if (signal.second.name.find("_q_index") != std::string::npos) {
+                qindex = signal.second.id;
+            }
+        }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.emplace_back(item.first, item.second);
+    }
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
@@ -542,5 +554,18 @@ void FSTWindow::load(json data, TextEditor &editors) {
     plotXLimits = &range;
     this->editor = &editors;
     markerX = data["markerX"];
+
+    for (const auto &item : g_Reader->scopes) {
+        for (const auto &signal : item->signals) {
+            if (signal.second.name.find("_q_index") != std::string::npos) {
+                qindex = signal.second.id;
+            }
+        }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.emplace_back(item.first, item.second);
+    }
+
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }

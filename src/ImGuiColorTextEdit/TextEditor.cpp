@@ -2654,6 +2654,7 @@ void TextEditor::setIndexPairs(std::list<int> indexes)
 {
 	for (int& index : indexes)
 	{
+		std::cout << index << std::endl;
 		this->linesIndexes.emplace_back(index, this->lp.getLines(this->openedFile, index));
 	}
 	std::cout << "index received" << std::endl;
