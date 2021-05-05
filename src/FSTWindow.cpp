@@ -14,50 +14,53 @@ using json = nlohmann::json;
 
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
-    ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
-    //For every scope we have one TreeNode
-    for (const auto &item : g_Reader->getScopes()) {
-        //count for hidden signals
-        int hiddenCount = 0;
-        if (ImGui::TreeNode(item.c_str())) {
-            int count = 0;
-            for (const auto &signal : g_Reader->getSignals(item)) {
-                std::string name = g_Reader->getSignalName(signal);
-                if (name.find(filterBuffer) != std::string::npos) {
-                    if (hoverHighLight == signal) {
-                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-                    }
-                    ImGui::PushID(count);
-                    if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()), "",
-                                        FSTWindow::isDisplayed(signal))) {
-                        if (!FSTWindow::isDisplayed(signal)) {
-                            this->addPlot(signal);
-                        } else {
-                            this->removePlot(signal);
+    if (g_Reader != nullptr) {
+        ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
+        //For every scope we have one TreeNode
+        for (const auto &scope : g_Reader->scopes) {
+            //count for hidden signals
+            int hiddenCount = 0;
+            if (ImGui::TreeNode(scope->name.c_str())) {
+                int count = 0;
+                for (const auto &signal : scope->signals) {
+                    std::string name = signal.second.name;
+                    if (name.find(filterBuffer) != std::string::npos) {
+                        if (hoverHighLight == signal.second.id) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                         }
+                        ImGui::PushID(count);
+                        if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                            "",
+                                            FSTWindow::isDisplayed(signal.second.id))) {
+                            if (!FSTWindow::isDisplayed(signal.second.id)) {
+                                this->addPlot(signal.second.id);
+                            } else {
+                                this->removePlot(signal.second.id);
+                            }
+                        }
+                        if (ImGui::IsItemHovered()) {
+                            hoverRightClickMenu = signal.second.id;
+                            ImGui::BeginTooltip();
+                            ImGui::Text("%s", name.c_str());
+                            ImGui::EndTooltip();
+                        }
+                        ImGui::PopID();
+                        if (hoverHighLight == signal.second.id) {
+                            ImGui::PopStyleColor();
+                        }
+                        count++;
+                    } else {
+                        hiddenCount++;
                     }
-                    if (ImGui::IsItemHovered()) {
-                        hoverRightClickMenu = signal;
-                        ImGui::BeginTooltip();
-                        ImGui::Text("%s", name.c_str());
-                        ImGui::EndTooltip();
-                    }
-                    ImGui::PopID();
-                    if (hoverHighLight == signal) {
-                        ImGui::PopStyleColor();
-                    }
-                    count++;
-                } else {
-                    hiddenCount++;
                 }
+                if (hiddenCount != 0) {
+                    ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
+                }
+                ImGui::TreePop();
             }
-            if (hiddenCount != 0) {
-                ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
-            }
-            ImGui::TreePop();
         }
+        showRightClickPlotSettings(hoverRightClickMenu);
     }
-    showRightClickPlotSettings(hoverRightClickMenu);
 }
 
 //-------------------------------------------------------
@@ -104,7 +107,7 @@ void FSTWindow::addPlot(fstHandle signal) {
     }
     Plot plot;
     plot.signalId = signal;
-    std::string signalName = g_Reader->getSignalName(signal);
+    std::string signalName = g_Reader->getSignal(signal)->name;
     plot.name = signalName;
     plot.type = DECIMALS;
     plot.fold = false;
@@ -395,18 +398,19 @@ void FSTWindow::showPlots() {
 
         ImGui::EndGroup();
 
-/*        //Drag&drop source
+/*
+       //Drag&drop source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-            ImGui::SetDragDropPayload("PlotPayload", &payload, sizeof(fstHandle));
-            ImGui::Text("%s", g_Reader->getSignalName(g_Plots[payload].signalId).c_str());
+            ImGui::SetDragDropPayload("PlotPayload", &i, sizeof(fstHandle));
+            ImGui::Text("%s", g_Reader->getSignalName(g_Plots[i].signalId).c_str());
             ImGui::EndDragDropSource();
         }
         ImGui::PopID();
-
         //Drag&drop target
         if (ImGui::BeginDragDropTarget()) {
             if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
-                if (payload > i) {
+                int data = reinterpret_cast<int>(pload->Data);
+                if (data > i) {
                     for (int k = payload; k > i; k--) {
                         std::swap(g_Plots[k], g_Plots[k - 1]);
                     }
@@ -513,10 +517,10 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     }
     this->editor = &editors;
 
-    for (const auto &item : g_Reader->getScopes()) {
-        for (const auto &signal : g_Reader->getSignals(item)) {
-            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
-                qindex = signal;
+    for (const auto &item : g_Reader->scopes) {
+        for (const auto &signal : item->signals) {
+            if (signal.second.name.find("_q_index") != std::string::npos) {
+                qindex = signal.second.id;
             }
         }
     }
@@ -535,10 +539,10 @@ void FSTWindow::load(json data, TextEditor &editors) {
     this->editor = &editors;
     markerX = data["markerX"];
 
-    for (const auto &item : g_Reader->getScopes()) {
-        for (const auto &signal : g_Reader->getSignals(item)) {
-            if (g_Reader->getSignalName(signal).find("_q_index") != std::string::npos) {
-                qindex = signal;
+    for (const auto &item : g_Reader->scopes) {
+        for (const auto &signal : item->signals) {
+            if (signal.second.name.find("_q_index") != std::string::npos) {
+                qindex = signal.second.id;
             }
         }
     }

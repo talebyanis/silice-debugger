@@ -7,7 +7,7 @@
 #include "imgui.h"
 #include "FileDialog.h"
 #include "../libs/implot/implot.h"
-#include "FSTReader.h"
+#include "FST/FSTReader.h"
 #include "sourcePath.h"
 #include "FSTWindow.h"
 #include <nlohmann/json.hpp>

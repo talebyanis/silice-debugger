@@ -1,4 +1,4 @@
-#include "FSTReader.h"
+#include "FST/FSTReader.h"
 #include "FSTWindow.h"
 
 /*

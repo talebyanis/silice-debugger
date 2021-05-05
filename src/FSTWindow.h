@@ -1,4 +1,4 @@
-#include "FSTReader.h"
+#include "FST/FSTReader.h"
 #include <vector>
 #include <string>
 #include "./ImGuiColorTextEdit/TextEditor.h"

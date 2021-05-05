@@ -8,14 +8,13 @@ add_executable(silice-text-editor
         LogParser.cpp
         FileDialog.h
         FileDialog.cpp
-        FSTReader.h
-        FSTReader.cpp
         FSTWindow.h
         FSTWindow.cpp 
         MainWindow.h
         MainWindow.cpp
         main.cpp
-        )
+        FST/Signal.h FST/DQPair.h FST/Scope.h FST/FSTReader.h
+        FST/Signal.cpp FST/DQPair.cpp FST/Scope.cpp FST/FSTReader.cpp)
 
 FIND_PACKAGE(Threads REQUIRED)
 

@@ -19,7 +19,7 @@ std::mutex g_Mutex;
 
 int decodeValue(const char *str) {
     int val = 0;
-    if(*str == 'x') { return -1; }
+    if (*str == 'x') { return -1; }
     while (*str != '\0') {
         val = (val << 1) | (*str == '1' ? 1 : 0);
         str++;
@@ -30,27 +30,29 @@ int decodeValue(const char *str) {
 // ---------------------------------------------------------------------
 
 void FSTReader::initMaps() {
-    std::string currentScope;
-    std::list<fstHandle> currentSignals = {};
-
-    struct fstHier *hier = fstReaderIterateHier(g_Wave);
+    //Generate all scopes and their's signals
+    Scope *currentScope = nullptr;
+    fstHier *hier = fstReaderIterateHier(g_Wave);
     do {
         switch (hier->htyp) {
             case FST_HT_SCOPE:
-                if (currentScope.compare(hier->u.var.name) != 0) {
-                    currentSignals.sort();
-                    if (!currentScope.empty()) g_ScopeToSignals.insert(std::make_pair(currentScope, currentSignals));
-                    currentSignals = {};
-                    currentScope = hier->u.var.name;
-                }
+                //std::cerr << "scope " << hier->u.scope.name << std::endl;
+                currentScope = new Scope(*hier);
+                this->scopes.push_back(currentScope);
                 break;
             case FST_HT_ATTRBEGIN:
+//                std::cerr << "FST HT ATTRBEGIN" << hier->u.attr.arg << std::endl;
                 break;
             case FST_HT_VAR:
-                g_HandleToName.insert(std::make_pair(hier->u.var.handle, hier->u.var.name));
-                currentSignals.push_back(hier->u.var.handle);
+                if (currentScope == nullptr) {
+                    std::cerr << "current scope null" << std::endl;
+                } else {
+                    //std::cerr << "  reader add " << hier->u.var.name << " " << "to " << currentScope->name << std::endl;
+                    currentScope->add(*hier);
+                }
                 break;
             default:
+//                std::cerr << "default " << hier->u.var.name << std::endl;
                 break;
         }
         hier = fstReaderIterateHier(g_Wave);
@@ -58,11 +60,12 @@ void FSTReader::initMaps() {
 
     fstReaderSetFacProcessMaskAll(g_Wave);
 
+    //Get all values in g_Values & g_Errors
     std::thread th([this]() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
             std::unique_lock<std::mutex> lock(g_Mutex);
             int dvalue = decodeValue(reinterpret_cast<const char *>(value));
-            if(dvalue != -1) {
+            if (dvalue != -1) {
                 g_Values[facidx].push_back(std::make_pair((int) time, dvalue));
             } else {
                 g_Errors[facidx].push_back((int) time);
@@ -74,6 +77,7 @@ void FSTReader::initMaps() {
 
     th.join();
 
+    //Find max time to add a point on the plots to the end
     ImU64 maxTime = getMaxTime();
     for (auto &item : g_Values) {
         valuesList *values = &item.second;
@@ -90,40 +94,46 @@ void FSTReader::initMaps() {
             values->push_back(std::make_pair(maxTime, lastValue));
         }
     }
+
+    //Fill values & errors
+    for (auto item : g_Values) {
+        fstHandle currentHandle = item.first;
+        for (auto scope : this->scopes) {
+            Signal *current = scope->getSignal(currentHandle);
+            if (current)
+                current->values = item.second;
+        }
+    }
+    for (const auto item : g_Errors) {
+        fstHandle currentHandle = item.first;
+        for (Scope *scope : this->scopes) {
+            Signal *current = scope->getSignal(currentHandle);
+            if (current)
+                current->errors = item.second;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------
+
+Signal *FSTReader::getSignal(fstHandle signal) {
+    Signal *res;
+    for (const auto &scope : scopes) {
+        if ((res = scope->getSignal(signal))) break;
+    }
+    return res;
 }
 
 // ---------------------------------------------------------------------
 
 valuesList FSTReader::getValues(fstHandle signal) {
-    return g_Values[signal];
+    return this->getSignal(signal)->values;
 }
 
 // ---------------------------------------------------------------------
 
 std::vector<int> FSTReader::getErrors(fstHandle signal) {
-    return g_Errors[signal];
-}
-
-// ---------------------------------------------------------------------
-
-std::string FSTReader::getSignalName(fstHandle signal) {
-    return g_HandleToName[signal];
-}
-
-// ---------------------------------------------------------------------
-
-std::list<std::string> FSTReader::getScopes() {
-    std::list<std::string> scopes = {};
-    for (const auto &item : g_ScopeToSignals) {
-        scopes.push_back(item.first);
-    }
-    return scopes;
-}
-
-// ---------------------------------------------------------------------
-
-std::list<fstHandle> FSTReader::getSignals(std::string scope) {
-    return g_ScopeToSignals[scope];
+    return this->getSignal(signal)->errors;
 }
 
 // ---------------------------------------------------------------------
