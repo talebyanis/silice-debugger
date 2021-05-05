@@ -50,6 +50,7 @@ TextEditor::TextEditor()
 	, mShowWhitespaces(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
+	this->p_open_editor = false;
 	// Setting paths on startup,
 	// ToDo : change path w/ an argument
 	this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
@@ -67,6 +68,9 @@ TextEditor::TextEditor()
 	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
+
+    // Set cursor on top of the code
+    SetCursorPosition(Coordinates(0, 0));
 }
 
 TextEditor::~TextEditor()
@@ -872,6 +876,7 @@ void TextEditor::Render()
 	const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
 	mCharAdvance = ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
+
 	/* Update palette with the current alpha from style */
 	for (int i = 0; i < (int)PaletteIndex::Max; ++i)
 	{
@@ -970,26 +975,53 @@ void TextEditor::Render()
 				}
 			}
 
-			// Draw line number (right aligned)
-			// The color changes if the corresponding index is selected (fsm.log)
 			snprintf(buf, 16, "%d  ", lineNo + 1);
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
-			
-			if (this->linesSelectedIndex.first != -1)
+
+            // Draw selected (and others) Index (Silice)
+
+			if (!this->linesIndexes.empty())
 			{
-				(lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second
-					|| (this->linesSelectedIndex.first == this->linesSelectedIndex.second 
-						&& lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second)) ?
-					drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineSelectedIndex], buf)
-					: drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
-			}
-			else
-			{
-				drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+				for (std::pair<int, std::pair<int, int>>& indexes : this->linesIndexes)
+				{
+				    if (indexes.first != -1)
+                    {
+                        if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
+                            (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
+                        {
+                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                            (indexes.first %2)
+                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
+                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
+                            break;
+                        }
+                    }
+				}
 			}
 
-			
+			if (this->linesSelectedIndex.first != -1)
+			{
+				if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
+				   (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
+                {
+                    auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
+
+                    if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    {
+                        // Draw a ToolBox
+                        ImGui::BeginTooltip();
+                        ImGui::Text(" This set is selected by ");
+                        ImGui::Text(" the marker in FSMWindows ");
+                        ImGui::EndTooltip();
+                         
+                    }
+                }
+			}
+
+            // Draw line number (right aligned)
+            drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
 
 			if (mState.mCursorPosition.mLine == lineNo)
 			{
@@ -1168,6 +1200,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	if (mHandleMouseInputs)
 		HandleMouseInputs();
 
+    this->p_open_editor = ImGui::IsWindowFocused();
 	ColorizeInternal();
 	Render();
 
@@ -2067,7 +2100,9 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
+			0xFF000040, // SelectedIndexLine
+            0xFF303030, // IndexLineA
+            0xFF252525, // IndexLineB
 		} };
 	return p;
 }
@@ -2103,7 +2138,9 @@ const TextEditor::Palette& TextEditor::GetLightPalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
+			0xFF000040, // SelectedIndexLine
+			0xFF303030, // IndexLineA
+			0xFF353535, // IndexLineB
 		} };
 	return p;
 }
@@ -2139,7 +2176,9 @@ const TextEditor::Palette& TextEditor::GetRetroBluePalette()
 			0xa9025fa0, // Wire
 			0x3a7d9ca0, // FF
 			0x91a7c5a0, // Temp
-			0xFF0000FF, // LineSelectedIndex
+			0xFF000040, // SelectedIndexLine
+			0xFF303030, // IndexLineA
+			0xFF353535, // IndexLineB
 		} };
 	return p;
 }
@@ -2601,18 +2640,30 @@ bool TextEditor::writeFromFile(std::string filepath)
 	return 0;
 }
 
-void TextEditor::FSMframeAtIndex(std::string fsm_file, int index)
+void TextEditor::FSMframeAtIndex(int index)
 {
-	std::pair<int, int> lines = lp.getLines(fsm_file, index);
-
-	//std::cout << lines.first << " to " << lines.second << std::endl;
-
-	this->linesSelectedIndex = lines;	
+	this->linesSelectedIndex = lp.getLines(this->openedFile, index);
 }
 
 void TextEditor::FSMunframe()
 {
 	this->linesSelectedIndex = std::pair(-1, -1);
+}
+
+void TextEditor::setIndexPairs(std::list<int> indexes)
+{
+	for (int& index : indexes)
+	{
+		this->linesIndexes.emplace_back(index, this->lp.getLines(this->openedFile, index));
+	}
+	std::cout << "index received" << std::endl;
+}
+
+void TextEditor::ScaleFont(bool make_bigger)
+{
+    static float scale = 1;
+    make_bigger ? scale += .05 : scale -= .05;
+    ImGui::GetFont()->Scale=scale;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
@@ -3283,6 +3334,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 
 		// Types (WIP)
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
+		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("uint[0-9]+", PaletteIndex::Type));
 
 		// Preprocessor instructions
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));
@@ -3338,7 +3390,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		};
 		for (auto& k : identifiers)
         {
-			id.mDeclaration = "Built-in function";
+			id.mDeclaration = " Built-in function ";
 			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
 		}
 
@@ -3352,7 +3404,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Const));
-            id.mDeclaration = "Constant variable";
+            id.mDeclaration = " Constant variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string("\\b" + e.second + "\\b"), id));
 		}
 
@@ -3360,7 +3412,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("wire");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Wire));
-            id.mDeclaration = "Wire variable";
+            id.mDeclaration = " Wire variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
@@ -3368,7 +3420,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("ff");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::FF));
-            id.mDeclaration = "Flip-Flop variable";
+            id.mDeclaration = " Flip-Flop variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 
@@ -3376,7 +3428,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 		list = lp.getMatch("temp");
 		for (auto const& e : list) {
 			langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\b" + e.second + "\\b", PaletteIndex::Temp));
-            id.mDeclaration = "Temp variable";
+            id.mDeclaration = " Temp variable ";
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
 		}
 

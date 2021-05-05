@@ -41,7 +41,9 @@ void mainScanCodeUnpressed(uint _sc) { }
 
 void mainMouseMoved(uint _x, uint _y) { }
 
-void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) {  }
+void mainMousePressed(uint _x, uint _y, uint _button, uint _flags) { }
+
+void mainMouseWheel(int _wheel) { }
 
 int main() {
     SimpleUI::init(1280, 720, "");
@@ -55,6 +57,7 @@ int main() {
 
     SimpleUI::onMouseMotion = mainMouseMoved;
     SimpleUI::onMouseButtonPressed = mainMousePressed;
+    SimpleUI::onMouseWheel = mainMouseWheel;
 
     SimpleUI::bindImGui();
     SimpleUI::initImGui();
@@ -71,6 +74,7 @@ int main() {
     SimpleUI::onReshape(1280, 720);
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    ImGui::GetIO().FontAllowUserScaling = true;
     /*ImGui::GetIO().GetClipboardTextFn = GetClipboard;
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/
 

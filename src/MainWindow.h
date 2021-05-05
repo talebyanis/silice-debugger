@@ -14,6 +14,7 @@ private:
 public:
     void ShowDockSpace();
     void ShowCodeEditor();
+    void ZoomMouseWheel();
     void ChangeStyle();
     void Render();
 };

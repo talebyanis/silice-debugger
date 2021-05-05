@@ -89,6 +89,9 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
                 plot->customtype_string = customFilterBuffer;
                 plot->type = CUSTOM;
             }
+            (this->bit_left_custom==-1)
+            ? ImGui::Text("Bad custom expression")
+            : ImGui::Text("Bit left for custom printing : %d", this->bit_left_custom);
             ImGui::Separator();
             ImGui::Text("   Plot Color Picker : ");
             ImGui::Separator();
@@ -163,35 +166,41 @@ int FSTWindow::binaryToDecimal(std::string n) {
 
 //-------------------------------------------------------
 
-std::string FSTWindow::parseCustomExp(std::string expression, int value) {
-    std::string res = "";
+std::pair<std::string, int> FSTWindow::parseCustomExp(const std::string& expression, int value) {
+    std::pair<std::string, int> res = std::pair("", 16);
 
     // Converting value to Binary
     std::string binaryVal;
     binaryVal = std::bitset<16>(value).to_string();
 
     char current = '0';
-    std::string number = "";
+    std::string number;
     int numberInt = 0;
     std::stringstream stream;
-    std::string buffer = "";
+    std::string buffer;
 
     //ToDo : regex
 
     // Parsing the expression and generating res
-    for (char &c: expression) {
+    for (char c: expression) {
         switch (c) {
             case 'b': // binary
             case 'd': // signed decimal
             case 'u': // unsigned decimal
             case 'x': // hex
-                if (current != '0') return "";
+                if (current != '0') return std::pair("", -1);
                 current = c;
                 break;
             case ';':
-                if (current == '0') return "";
+                if (current == '0' || number.empty()) return std::pair("", -1);
                 numberInt = stoi(number);
-                if (numberInt > binaryVal.length()) return "";
+                if (numberInt > binaryVal.length()) return std::pair("", -1);
+
+                res.second -= numberInt;
+                if (res.second < 0) // no bit left to print (max 16)
+                {
+                    return std::pair("", -1);
+                }
 
                 for (int i = 0; i < numberInt; i++) {
                     buffer += binaryVal[0]; // putting the first bit in the buffer
@@ -201,22 +210,22 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
                 switch (current) {
                     case 'b':
                         if (buffer.empty()) buffer = "0";
-                        res += "b(" + buffer + ")";
+                        res.first += "b(" + buffer + ")";
                         break;
                     case 'u':
-                        res += "u(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                        res.first += "u(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                         break;
                     case 'd':
                         if (buffer[0] == '1') {
                             buffer.erase(buffer.begin()); // removing the first bit
-                            res += "d(-" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                            res.first += "d(-" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                             break;
                         }
-                        res += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
+                        res.first += "d(" + std::to_string(this->binaryToDecimal(buffer)) + ")";
                         break;
                     case 'x':
                         stream << std::hex << this->binaryToDecimal(buffer);
-                        res += "x(" + stream.str() + ")";
+                        res.first += "x(" + stream.str() + ")";
                         break;
                     default:
                         break;
@@ -225,8 +234,15 @@ std::string FSTWindow::parseCustomExp(std::string expression, int value) {
                 number = "";
                 break;
             default:  // number
-                if (current == '0') return "";
-                number += c;
+                if (current == '0') return std::pair("", -1);
+                if (isdigit(c)) //checking if the char is a digit value
+                {
+                    number += c;
+                }
+                else
+                {
+                    return std::pair("", -1);
+                }
                 break;
         }
     }
@@ -319,8 +335,7 @@ void FSTWindow::showPlots() {
                     //Arrows to move to values change
                     ImGui::SetKeyboardFocusHere();
                     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
-                        for (int ii = 0; ii < item->x_data.size(); ii++) {
-                            int x = item->x_data[ii];
+                        for (int x : item->x_data) {
                             if (markerX < x) {
                                 markerX = x;
                                 if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
@@ -371,8 +386,11 @@ void FSTWindow::showPlots() {
                             value = stream.str();
                             break;
                         case CUSTOM:
-                            value = parseCustomExp(item->customtype_string, item->y_data[i]);
-                            if (value == "") {
+                            std::pair<std::string, int> pair = parseCustomExp(item->customtype_string, item->y_data[i]);
+                            value = pair.first;
+                            this->bit_left_custom = pair.second;
+                            if (value.empty())
+                            {
                                 value = std::to_string(item->y_data[i]); // Using Decimal if the expression is bad
                             }
                             break;
@@ -461,7 +479,7 @@ void FSTWindow::render() {
 
     for (int ii = 1; ii < qindexValues.size(); ii++) {
         if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
-            index = tmp - 1;
+            index = tmp;
             break;
         }
         tmp = ii;
@@ -469,11 +487,8 @@ void FSTWindow::render() {
 
     if (!editor) return;
 
-    if (index != -1) {
-        editor->FSMframeAtIndex(editor->openedFile, index);
-    } else {
-        editor->FSMunframe();
-    }
+    (index != -1) ? editor->FSMframeAtIndex(index)
+        : editor->FSMunframe();
 }
 
 //-------------------------------------------------------
@@ -528,6 +543,8 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     for (const auto &item : valuesList) {
         qindexValues.emplace_back(item.first, item.second);
     }
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
 void FSTWindow::load(json data, TextEditor &editors) {
@@ -555,4 +572,6 @@ void FSTWindow::load(json data, TextEditor &editors) {
         g_Plots[i].type = data["displayedTypes"][i];
     }
     std::cout << g_Plots[0].x_data.size() << std::endl;
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
 }

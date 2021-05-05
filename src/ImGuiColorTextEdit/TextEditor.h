@@ -46,7 +46,9 @@ public:
 		FF,
 		Temp,
 
-		LineSelectedIndex,
+        SelectedIndexLine,
+        IndexLineA,
+        IndexLineB,
 
 		Max,
 	
@@ -282,15 +284,19 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
+	bool p_open_editor;
 	std::string pathToLogFile;
 	std::string openedFile;
+	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
 	std::pair<int, int> linesSelectedIndex;
 	LogParser lp;
 
 	void setPathToLogFile(std::string path);
+	void setIndexPairs(std::list<int> indexes);
 	bool writeFromFile(std::string filepath);
-	void FSMframeAtIndex(std::string fsm_file, int index);
+	void FSMframeAtIndex(int index);
 	void FSMunframe();
+	void ScaleFont(bool make_bigger);
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;

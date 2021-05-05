@@ -94,7 +94,6 @@ void LogParser::parseFSM(std::string fsm_filename)
 
 	std::string element;
 	fsm_line fsml;
-	std::pair<int, int> lines;
 	while (file >> element) {
 		fsml.algo = element;
 		file >> element;
@@ -126,10 +125,12 @@ std::pair<int, int> LogParser::getLines(std::string filename, int index)
 {
 	std::pair<int, int> pair = std::make_pair(-1, -2); // -2 = inf
 	bool found = false;
-	for (auto const& [key, val] : fsm_lines)
+	for (auto const& [key, val] : this->fsm_lines)
 	{
 		if (found)
-		{ 
+		{
+            if (val.filename != filename)
+                break;
 			pair.second = val.line;
 			return pair;
 		}
@@ -140,9 +141,7 @@ std::pair<int, int> LogParser::getLines(std::string filename, int index)
 		}
 	}
 	if (found)
-	{
-		pair.second = pair.first;
-		return pair;
-	}
+	    pair.second = pair.first;
+
 	return pair;
 }
