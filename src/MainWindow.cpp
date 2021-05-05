@@ -23,6 +23,7 @@ ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDo
                                 | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
                                 | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 bool p_open_dockspace = true;
+bool p_open_editor = true;
 
 LogParser lp;
 
@@ -187,7 +188,6 @@ void MainWindow::ShowDockSpace() {
 
 void MainWindow::ShowCodeEditor() {
     auto cpos = editor.GetCursorPosition();
-
     ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
@@ -285,6 +285,7 @@ void MainWindow::ShowCodeEditor() {
                 editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath.string()).c_str());
 
     ImGui::PushFont(font_code);
+    p_open_editor = ImGui::IsWindowFocused();
     editor.Render("TextEditor");
     this->ZoomMouseWheel();
     ImGui::PopFont();
@@ -296,7 +297,7 @@ void MainWindow::ShowCodeEditor() {
 
 void MainWindow::ZoomMouseWheel()
 {
-    if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL])
+    if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor))
     {
         if (ImGui::GetIO().MouseWheel > 0)
         {

@@ -50,6 +50,7 @@ TextEditor::TextEditor()
 	, mShowWhitespaces(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
+	this->p_open_editor = false;
 	// Setting paths on startup,
 	// ToDo : change path w/ an argument
 	this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
@@ -1199,6 +1200,7 @@ void TextEditor::Render(const char* aTitle, const ImVec2& aSize, bool aBorder)
 	if (mHandleMouseInputs)
 		HandleMouseInputs();
 
+    this->p_open_editor = ImGui::IsWindowFocused();
 	ColorizeInternal();
 	Render();
 
@@ -2660,7 +2662,7 @@ void TextEditor::setIndexPairs(std::list<int> indexes)
 void TextEditor::ScaleFont(bool make_bigger)
 {
     static float scale = 1;
-    make_bigger ? scale += .1 : scale -= .1;
+    make_bigger ? scale += .05 : scale -= .05;
     ImGui::GetFont()->Scale=scale;
 }
 

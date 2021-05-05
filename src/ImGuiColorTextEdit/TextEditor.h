@@ -284,6 +284,7 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
+	bool p_open_editor;
 	std::string pathToLogFile;
 	std::string openedFile;
 	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
