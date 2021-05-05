@@ -480,7 +480,6 @@ void FSTWindow::render() {
     for (int ii = 1; ii < qindexValues.size(); ii++) {
         if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
             index = tmp;
-            std::cout << index << std::endl;
             break;
         }
         tmp = ii;
@@ -488,8 +487,8 @@ void FSTWindow::render() {
 
     if (!editor) return;
 
-    (index != -1) ? editor->FSMframeAtIndex(index)
-        : editor->FSMunframe();
+    (index != -1) ? editor->setSelectedIndex(index)
+        : editor->unsetSelectedIndex();
 }
 
 //-------------------------------------------------------

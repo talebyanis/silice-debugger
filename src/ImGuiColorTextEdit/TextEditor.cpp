@@ -2614,14 +2614,14 @@ void TextEditor::UndoRecord::Redo(TextEditor* aEditor)
 	aEditor->EnsureCursorVisible();
 }
 
-void TextEditor::setPathToLogFile(std::string path)
+void TextEditor::setPathToLogFile(const std::string& path)
 {
 	assert(path != "");
 	assert(path.find(".v.vio.log"));
 	this->pathToLogFile = path;
 }
 
-bool TextEditor::writeFromFile(std::string filepath)
+bool TextEditor::writeFromFile(const std::string& filepath)
 {
 	std::fstream file;
 	file.open(filepath, std::ios::in);
@@ -2634,18 +2634,18 @@ bool TextEditor::writeFromFile(std::string filepath)
 		}
 		file.close();
 		this->mReadOnly = true;
-		return 1;
+		return true;
 	}
 	std::cout << "File to write in Text Editor was not found" << std::endl;
-	return 0;
+	return false;
 }
 
-void TextEditor::FSMframeAtIndex(int index)
+void TextEditor::setSelectedIndex(int index)
 {
 	this->linesSelectedIndex = lp.getLines(this->openedFile, index);
 }
 
-void TextEditor::FSMunframe()
+void TextEditor::unsetSelectedIndex()
 {
 	this->linesSelectedIndex = std::pair(-1, -1);
 }
@@ -2654,10 +2654,8 @@ void TextEditor::setIndexPairs(std::list<int> indexes)
 {
 	for (int& index : indexes)
 	{
-		std::cout << index << std::endl;
 		this->linesIndexes.emplace_back(index, this->lp.getLines(this->openedFile, index));
 	}
-	std::cout << "index received" << std::endl;
 }
 
 void TextEditor::ScaleFont(bool make_bigger)

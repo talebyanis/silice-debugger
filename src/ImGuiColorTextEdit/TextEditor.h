@@ -291,11 +291,11 @@ public:
 	std::pair<int, int> linesSelectedIndex;
 	LogParser lp;
 
-	void setPathToLogFile(std::string path);
+	void setPathToLogFile(const std::string& path);
 	void setIndexPairs(std::list<int> indexes);
-	bool writeFromFile(std::string filepath);
-	void FSMframeAtIndex(int index);
-	void FSMunframe();
+	bool writeFromFile(const std::string& filepath);
+	void setSelectedIndex(int index);
+	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
 
 private:
