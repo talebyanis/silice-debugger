@@ -534,7 +534,6 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == "__main")
         {
-            std::cout << "here" << std::endl;
             for (const auto &signal : scope->signals) {
                 if (signal.second.name.find("_q_index") != std::string::npos) {
                     qindex = signal.second.id;
@@ -561,7 +560,6 @@ void FSTWindow::load(json data, TextEditor &editors) {
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == "__main")
         {
-            std::cout << "here" << std::endl;
             for (const auto &signal : scope->signals) {
                 if (signal.second.name.find("_q_index") != std::string::npos) {
                     qindex = signal.second.id;

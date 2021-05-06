@@ -16,6 +16,7 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
+// Todo : set fileFullPath when doing "make debug" to show the file name in the editor
 static fs::path fileFullPath;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;

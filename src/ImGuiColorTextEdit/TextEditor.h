@@ -196,7 +196,7 @@ public:
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
 		static const LanguageDefinition& Silice();
-		static const LanguageDefinition& SiliceReadOnly(std::string logfilename);
+		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
 	};
 
 	TextEditor();
@@ -294,7 +294,7 @@ public:
 
 	bool hasIndexColorization();
 	void setPathToLogFile(const std::string& path);
-	void setIndexPairs(std::list<int> indexes);
+	void setIndexPairs(const std::list<int>& indexes);
 	bool writeFromFile(const std::string& filepath);
 	void setSelectedIndex(int index);
 	void unsetSelectedIndex();
@@ -302,6 +302,25 @@ public:
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
+
+	// Addition
+
+	struct SiliceFile
+    {
+	    std::string file_path;
+	    std::string viofile_path;
+	    std::string fsmfile_path;
+	    std::list<std::string> algos;
+	    LogParser lp;
+
+	    void parse()
+        {
+            this->lp.parseVio(viofile_path);
+            this->lp.parseFSM(fsmfile_path);
+        }
+    };
+
+	SiliceFile siliceFile;
 
 	struct EditorState
 	{
