@@ -981,7 +981,7 @@ void TextEditor::Render()
 
             // Draw selected (and others) Index (Silice)
 
-            if (mReadOnly)
+            if (this->mIndexColorization)
             {
                 if (!this->linesIndexes.empty())
                 {
@@ -2637,6 +2637,7 @@ bool TextEditor::writeFromFile(const std::string& filepath)
 		}
 		file.close();
 		this->mReadOnly = true;
+		this->mIndexColorization = true;
 		return true;
 	}
 	std::cout << "File to write in Text Editor was not found" << std::endl;
@@ -2666,6 +2667,11 @@ void TextEditor::ScaleFont(bool make_bigger)
     static float scale = 1;
     make_bigger ? scale += .05 : scale -= .05;
     ImGui::GetFont()->Scale=scale;
+}
+
+bool TextEditor::hasIndexColorization()
+{
+    return this->mIndexColorization;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)

@@ -274,6 +274,10 @@ void MainWindow::ShowCodeEditor() {
             if (ImGui::MenuItem("Retro blue palette")) {
                 editor.SetPalette(TextEditor::GetRetroBluePalette());
             }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Toggle index colorization", nullptr, editor.hasIndexColorization())) {
+                editor.mIndexColorization = !editor.mIndexColorization;
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
