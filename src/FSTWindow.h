@@ -51,9 +51,9 @@ private:
     TextEditor* editor;
 
     void clean();
-    void addPlot(fstHandle signal);
-    void removePlot(fstHandle signal);
-    bool isDisplayed(fstHandle signal);
+    void addPlot(std::vector<fstHandle> signals);
+    void removePlot(std::vector<fstHandle> signals);
+    bool isDisplayed(std::vector<fstHandle> signals);
     void showPlots();
     void showPlotMenu();
     std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
@@ -62,6 +62,7 @@ private:
 
     void showSignalsMenu(Scope scope, int &hiddenCount);
     void showPairsMenu(Scope scope, int &hiddenCount);
+    void loadQindex();
 };
 
 
