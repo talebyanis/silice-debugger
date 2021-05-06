@@ -154,7 +154,21 @@ void FSTWindow::addPlot(std::vector<fstHandle> signals) {
         std::string signalName = g_Reader->getSignal(signal)->name;
         plot.name = signalName;
         plot.type = DECIMALS;
-        plot.fold = false;
+        if(signalName[1] == 'd') {
+            if(signalName.find("index") == std::string::npos) {
+                plot.fold = false;
+            } else {
+                plot.fold = true;
+            }
+        } else if(signalName[1] == 'q') {
+            if(signalName.find("index") == std::string::npos) {
+                plot.fold = true;
+            } else {
+                plot.fold = false;
+            }
+        } else {
+            plot.fold = false;
+        }
         plot.color = ImVec4(1, 1, 1, 1);
         valuesList values = g_Reader->getValues(signal);
         for (const auto &item : values) {
