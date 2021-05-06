@@ -62,6 +62,7 @@ private:
 
     void showSignalsMenu(Scope scope, int &hiddenCount);
     void showPairsMenu(Scope scope, int &hiddenCount);
+    void loadQindex();
 };
 
 

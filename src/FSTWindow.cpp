@@ -564,17 +564,7 @@ void FSTWindow::clean() {
 
 //-------------------------------------------------------
 
-void FSTWindow::load(std::string file, TextEditor &editors) {
-    this->clean();
-    this->fstFilePath = file;
-    g_Reader = new FSTReader(file.c_str());
-    if (plotXLimits == nullptr) {
-        plotXLimits = &range;
-        double maxTime = g_Reader->getMaxTime();
-        plotXLimits->Min = 0 - (maxTime / 20);
-        plotXLimits->Max = maxTime + (maxTime / 20);
-    }
-    this->editor = &editors;
+void FSTWindow::loadQindex() {
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == "__main") {
             std::cout << "here" << std::endl;
@@ -590,6 +580,22 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     for (const auto &item : valuesList) {
         qindexValues.emplace_back(item.first, item.second);
     }
+}
+
+void FSTWindow::load(std::string file, TextEditor &editors) {
+    this->clean();
+    this->fstFilePath = file;
+    g_Reader = new FSTReader(file.c_str());
+    if (plotXLimits == nullptr) {
+        plotXLimits = &range;
+        double maxTime = g_Reader->getMaxTime();
+        plotXLimits->Min = 0 - (maxTime / 20);
+        plotXLimits->Max = maxTime + (maxTime / 20);
+    }
+    this->editor = &editors;
+
+    this->loadQindex();
+
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
@@ -602,21 +608,7 @@ void FSTWindow::load(json data, TextEditor &editors) {
     this->editor = &editors;
     markerX = data["markerX"];
 
-    for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main") {
-            std::cout << "here" << std::endl;
-            for (const auto &pair : scope->pairs) {
-                std::cout << pair.second->name << std::endl;
-                if (pair.second->name.find("index") != std::string::npos) {
-                    qindex = pair.second->q->id;
-                }
-            }
-        }
-    }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
-    }
+    this->loadQindex();
 
     editor->setIndexPairs(g_Reader->get_q_index_values());
 }
