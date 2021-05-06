@@ -59,6 +59,9 @@ private:
     std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
     int binaryToDecimal(std::string n);
     void showRightClickPlotSettings(fstHandle signal);
+
+    void showSignalsMenu(Scope scope, int &hiddenCount);
+    void showPairsMenu(Scope scope, int &hiddenCount);
 };
 
 

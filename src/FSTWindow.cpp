@@ -12,6 +12,70 @@ using json = nlohmann::json;
 
 //-------------------------------------------------------
 
+inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
+    for (const auto &signal : scope.signals) {
+        std::string name = signal.second.name;
+        if (name.find(filterBuffer) != std::string::npos) {
+            if (hoverHighLight == signal.second.id) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
+            }
+            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                "",
+                                FSTWindow::isDisplayed(signal.second.id))) {
+                if (!FSTWindow::isDisplayed(signal.second.id)) {
+                    this->addPlot(signal.second.id);
+                } else {
+                    this->removePlot(signal.second.id);
+                }
+            }
+            if (ImGui::IsItemHovered()) {
+                hoverRightClickMenu = signal.second.id;
+                ImGui::BeginTooltip();
+                ImGui::Text("%s", name.c_str());
+                ImGui::EndTooltip();
+            }
+            if (hoverHighLight == signal.second.id) {
+                ImGui::PopStyleColor();
+            }
+        } else {
+            hiddenCount++;
+        }
+    }
+}
+
+inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
+    for (const auto &signal : scope.pairs) {
+        std::string name = signal.second->name;
+        if (name.find(filterBuffer) != std::string::npos) {
+            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
+            }
+            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                "",
+                                FSTWindow::isDisplayed(signal.second->d->id))) {
+                if (!FSTWindow::isDisplayed(signal.second->d->id)) {
+                    this->addPlot(signal.second->d->id);
+                    this->addPlot(signal.second->q->id);
+                } else {
+                    this->removePlot(signal.second->d->id);
+                    this->removePlot(signal.second->q->id);
+                }
+            }
+            if (ImGui::IsItemHovered()) {
+                hoverRightClickMenu = signal.second->d->id;
+                ImGui::BeginTooltip();
+                ImGui::Text("%s", name.c_str());
+                ImGui::EndTooltip();
+            }
+            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
+                ImGui::PopStyleColor();
+            }
+        } else {
+            hiddenCount++;
+        }
+    }
+}
+
 //Shows the plots' names on the right to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
     if (g_Reader != nullptr) {
@@ -20,39 +84,15 @@ void FSTWindow::showPlotMenu() {
         for (const auto &scope : g_Reader->scopes) {
             //count for hidden signals
             int hiddenCount = 0;
+
             if (ImGui::TreeNode(scope->name.c_str())) {
-                int count = 0;
-                for (const auto &signal : scope->signals) {
-                    std::string name = signal.second.name;
-                    if (name.find(filterBuffer) != std::string::npos) {
-                        if (hoverHighLight == signal.second.id) {
-                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-                        }
-                        ImGui::PushID(count);
-                        if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
-                                            "",
-                                            FSTWindow::isDisplayed(signal.second.id))) {
-                            if (!FSTWindow::isDisplayed(signal.second.id)) {
-                                this->addPlot(signal.second.id);
-                            } else {
-                                this->removePlot(signal.second.id);
-                            }
-                        }
-                        if (ImGui::IsItemHovered()) {
-                            hoverRightClickMenu = signal.second.id;
-                            ImGui::BeginTooltip();
-                            ImGui::Text("%s", name.c_str());
-                            ImGui::EndTooltip();
-                        }
-                        ImGui::PopID();
-                        if (hoverHighLight == signal.second.id) {
-                            ImGui::PopStyleColor();
-                        }
-                        count++;
-                    } else {
-                        hiddenCount++;
-                    }
-                }
+
+                this->showSignalsMenu(*scope, hiddenCount);
+
+                ImGui::Separator();
+
+                this->showPairsMenu(*scope, hiddenCount);
+
                 if (hiddenCount != 0) {
                     ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
                 }
@@ -62,6 +102,7 @@ void FSTWindow::showPlotMenu() {
         showRightClickPlotSettings(hoverRightClickMenu);
     }
 }
+
 
 //-------------------------------------------------------
 
@@ -89,7 +130,7 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
                 plot->customtype_string = customFilterBuffer;
                 plot->type = CUSTOM;
             }
-            (this->bit_left_custom==-1)
+            (this->bit_left_custom == -1)
             ? ImGui::Text("Bad custom expression")
             : ImGui::Text("Bit left for custom printing : %d", this->bit_left_custom);
             ImGui::Separator();
@@ -166,7 +207,7 @@ int FSTWindow::binaryToDecimal(std::string n) {
 
 //-------------------------------------------------------
 
-std::pair<std::string, int> FSTWindow::parseCustomExp(const std::string& expression, int value) {
+std::pair<std::string, int> FSTWindow::parseCustomExp(const std::string &expression, int value) {
     std::pair<std::string, int> res = std::pair("", 16);
 
     // Converting value to Binary
@@ -238,9 +279,7 @@ std::pair<std::string, int> FSTWindow::parseCustomExp(const std::string& express
                 if (isdigit(c)) //checking if the char is a digit value
                 {
                     number += c;
-                }
-                else
-                {
+                } else {
                     return std::pair("", -1);
                 }
                 break;
@@ -389,8 +428,7 @@ void FSTWindow::showPlots() {
                             std::pair<std::string, int> pair = parseCustomExp(item->customtype_string, item->y_data[i]);
                             value = pair.first;
                             this->bit_left_custom = pair.second;
-                            if (value.empty())
-                            {
+                            if (value.empty()) {
                                 value = std::to_string(item->y_data[i]); // Using Decimal if the expression is bad
                             }
                             break;
@@ -456,7 +494,7 @@ void FSTWindow::render() {
         ImVec2 wPos = ImGui::GetCursorScreenPos();
         ImVec2 wSize = ImGui::GetWindowSize();
         ImGui::SetNextWindowPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y));
-        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y-25), true,
+        ImGui::BeginChild("Tree", ImVec2(treeWidth, wSize.y - 25), true,
                           ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlotMenu();
@@ -464,7 +502,7 @@ void FSTWindow::render() {
         ImGui::EndChild();
 
         ImGui::SetNextWindowPos(ImVec2(wPos.x + treeWidth, wPos.y));
-        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y-25), true,
+        ImGui::BeginChild("Graph", ImVec2(wSize.x - treeWidth, wSize.y - 25), true,
                           ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysVerticalScrollbar);
         {
             this->showPlots();
@@ -488,7 +526,7 @@ void FSTWindow::render() {
     if (!editor) return;
 
     (index != -1) ? editor->setSelectedIndex(index)
-        : editor->unsetSelectedIndex();
+                  : editor->unsetSelectedIndex();
 }
 
 //-------------------------------------------------------
@@ -532,11 +570,10 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     }
     this->editor = &editors;
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main")
-        {
-            for (const auto &signal : scope->signals) {
-                if (signal.second.name.find("_q_index") != std::string::npos) {
-                    qindex = signal.second.id;
+        if (scope->name == "__main") {
+            for (const auto &pair : scope->pairs) {
+                if (pair.second->name.find("index") != std::string::npos) {
+                    qindex = pair.second->q->id;
                 }
             }
         }
@@ -558,11 +595,10 @@ void FSTWindow::load(json data, TextEditor &editors) {
     markerX = data["markerX"];
 
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main")
-        {
-            for (const auto &signal : scope->signals) {
-                if (signal.second.name.find("_q_index") != std::string::npos) {
-                    qindex = signal.second.id;
+        if (scope->name == "__main") {
+            for (const auto &pair : scope->pairs) {
+                if (pair.second->name.find("index") != std::string::npos) {
+                    qindex = pair.second->q->id;
                 }
             }
         }

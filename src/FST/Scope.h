@@ -17,12 +17,12 @@ private:
 public:
     std::string name;
     std::unordered_map<fstHandle, Signal> signals;
-    std::unordered_map<std::string, DQPair> pairs;
+    std::unordered_map<std::string, DQPair*> pairs;
 
     Scope(fstHier hier);
 
     void addSignal(Signal signal);
-    void addPair(DQPair pair);
+    void addPair(DQPair *pair);
     void add(fstHier hier);
 
     Signal* getSignal(fstHandle handle);

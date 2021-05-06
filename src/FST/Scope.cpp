@@ -13,23 +13,28 @@ void Scope::addSignal(Signal signal) {
     this->signals.insert(std::pair<fstHandle,Signal>(signal.id,signal));
 }
 
-void Scope::addPair(DQPair pair) {
-    this->pairs.at(pair.name) = pair;
+void Scope::addPair(DQPair *pair) {
+    this->pairs.insert(std::pair<std::string, DQPair*>(pair->name, pair));
 }
 
 void Scope::add(fstHier hier) {
     std::string name = hier.u.var.name;
-    //FIXME
-    if(false/*name[0] == '_' && (name[1] == 'q' || name[1] == 'd') && name[2] == '_'*/) {
+    if(name[0] == '_' && (name[1] == 'q' || name[1] == 'd') && name[2] == '_') {
         DQPair* current;
-        if(this->pairs.find(name) == this->pairs.end()) {
-            current = new DQPair(name.substr(3));
-            this->addPair(*current);
+        std::string subName = name.substr(3);
+        if(this->pairs.find(subName) == this->pairs.end()) {
+            current = new DQPair(subName);
+            this->addPair(current);
         } else {
-            current = &this->pairs.at(name.substr(3));
+            current = this->pairs.at(subName);
         }
-        if(name[1] == 'd') current->d = new Signal(hier);
-        else current->q = new Signal(hier);
+        if(name[1] == 'd') {
+            Signal* d = new Signal(hier);
+            current->d = d;
+        } else {
+            Signal* q = new Signal(hier);
+            current->q = q;
+        }
     } else {
         Signal signal = Signal(hier);
         this->addSignal(signal);
@@ -44,8 +49,15 @@ Signal* Scope::getSignal(fstHandle handle) {
         signal = &this->signals.at(handle);
     } else {
         for (const auto &item : this->pairs) {
-            if(item.second.q->id == handle) signal = item.second.q;
-            else if(item.second.d->id == handle) signal = item.second.d;
+            if(item.second->q) {
+                if(item.second->q->id == handle) {
+                    signal = item.second->q;
+                } else if(item.second->d) {
+                    if (item.second->d->id == handle) {
+                        signal = item.second->d;
+                    }
+                }
+            }
         }
     }
     return signal;
