@@ -599,6 +599,7 @@ void FSTWindow::load(json data, TextEditor &editors) {
             for (const auto &pair : scope->pairs) {
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
+                    std::cout << qindex << std::endl;
                 }
             }
         }

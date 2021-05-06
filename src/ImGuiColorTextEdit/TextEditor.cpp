@@ -58,6 +58,7 @@ TextEditor::TextEditor()
     this->siliceFile.viofile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
     this->siliceFile.fsmfile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log";
     this->siliceFile.parse();
+    this->siliceFile.parseAlgos();
 
 	//this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 	//this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
@@ -2637,6 +2638,8 @@ bool TextEditor::writeFromFile(const std::string& filepath)
 		file.close();
 		this->mReadOnly = true;
 		this->mIndexColorization = true;
+		this->siliceFile.file_path = filepath;
+		this->siliceFile.parseAlgos();
 		return true;
 	}
 	std::cout << "File to write in Text Editor was not found" << std::endl;
@@ -2664,6 +2667,7 @@ void TextEditor::setIndexPairs(const std::list<int>& indexes)
 {
 	for (int index : indexes)
 	{
+	    std::cout << index << std::endl;
 		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
 	}
 }

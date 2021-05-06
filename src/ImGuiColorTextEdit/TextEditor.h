@@ -318,6 +318,39 @@ private:
             this->lp.parseVio(viofile_path);
             this->lp.parseFSM(fsmfile_path);
         }
+
+        void parseAlgos()
+        {
+	        this->algos.clear();
+
+            std::fstream file;
+
+            file.open(this->file_path, std::ios::in);
+            if (!file)
+            {
+                std::cout << "File was not found";
+                exit(1);
+            }
+
+            std::string element;
+            bool found = false;
+            while (file >> element)
+            {
+                if (found)
+                {
+                    if (element.find('(') != std::string::npos)
+                    {
+                        element = element.substr(0, element.find('('));
+                    }
+                    this->algos.push_back(element);
+                    found = false;
+                }
+                if (element == "algorithm")
+                {
+                    found = true;
+                }
+            }
+        }
     };
 
 	SiliceFile siliceFile;
