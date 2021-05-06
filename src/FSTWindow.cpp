@@ -15,17 +15,18 @@ using json = nlohmann::json;
 inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
     for (const auto &signal : scope.signals) {
         std::string name = signal.second.name;
+        std::vector<fstHandle> sig = {signal.second.id};
         if (name.find(filterBuffer) != std::string::npos) {
             if (hoverHighLight == signal.second.id) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
             }
             if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                 "",
-                                FSTWindow::isDisplayed(signal.second.id))) {
-                if (!FSTWindow::isDisplayed(signal.second.id)) {
-                    this->addPlot(signal.second.id);
+                                FSTWindow::isDisplayed(sig))) {
+                if (!FSTWindow::isDisplayed(sig)) {
+                    this->addPlot(sig);
                 } else {
-                    this->removePlot(signal.second.id);
+                    this->removePlot(sig);
                 }
             }
             if (ImGui::IsItemHovered()) {
@@ -46,19 +47,18 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
 inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
     for (const auto &signal : scope.pairs) {
         std::string name = signal.second->name;
+        std::vector<fstHandle> pair = {signal.second->d->id,signal.second->q->id};
         if (name.find(filterBuffer) != std::string::npos) {
             if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
             }
             if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                 "",
-                                FSTWindow::isDisplayed(signal.second->d->id))) {
-                if (!FSTWindow::isDisplayed(signal.second->d->id)) {
-                    this->addPlot(signal.second->d->id);
-                    this->addPlot(signal.second->q->id);
+                                FSTWindow::isDisplayed(pair))) {
+                if (!FSTWindow::isDisplayed(pair)) {
+                    this->addPlot(pair);
                 } else {
-                    this->removePlot(signal.second->d->id);
-                    this->removePlot(signal.second->q->id);
+                    this->removePlot(pair);
                 }
             }
             if (ImGui::IsItemHovered()) {
@@ -76,7 +76,7 @@ inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
     }
 }
 
-//Shows the plots' names on the right to click on them and display matching plots
+//Shows the plots' names on the left to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
     if (g_Reader != nullptr) {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
@@ -102,7 +102,6 @@ void FSTWindow::showPlotMenu() {
         showRightClickPlotSettings(hoverRightClickMenu);
     }
 }
-
 
 //-------------------------------------------------------
 
@@ -145,45 +144,52 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
 //-------------------------------------------------------
 
 //Adds a plot to the list
-void FSTWindow::addPlot(fstHandle signal) {
+void FSTWindow::addPlot(std::vector<fstHandle> signals) {
     if (!g_Reader) {
         return;
     }
-    Plot plot;
-    plot.signalId = signal;
-    std::string signalName = g_Reader->getSignal(signal)->name;
-    plot.name = signalName;
-    plot.type = DECIMALS;
-    plot.fold = false;
-    plot.color = ImVec4(1, 1, 1, 1);
-    valuesList values = g_Reader->getValues(signal);
-    for (const auto &item : values) {
-        plot.x_data.push_back(item.first);
-        plot.y_data.push_back(item.second);
+    for (const auto &signal : signals) {
+        Plot plot;
+        plot.signalId = signal;
+        std::string signalName = g_Reader->getSignal(signal)->name;
+        plot.name = signalName;
+        plot.type = DECIMALS;
+        plot.fold = false;
+        plot.color = ImVec4(1, 1, 1, 1);
+        valuesList values = g_Reader->getValues(signal);
+        for (const auto &item : values) {
+            plot.x_data.push_back(item.first);
+            plot.y_data.push_back(item.second);
+        }
+        g_Plots.push_back(plot);
     }
-
-    g_Plots.push_back(plot);
 }
 
 //-------------------------------------------------------
 
 //Removes a plot from the list
-void FSTWindow::removePlot(fstHandle signal) {
-    g_Plots.erase(remove_if(
-            g_Plots.begin(),
-            g_Plots.end(),
-            [signal](Plot plot) {
-                return plot.signalId == signal;
-            }), g_Plots.end());
+void FSTWindow::removePlot(std::vector<fstHandle> signals) {
+    for (const auto &signal : signals) {
+        g_Plots.erase(remove_if(
+                g_Plots.begin(),
+                g_Plots.end(),
+                [signal](Plot plot) {
+                    return plot.signalId == signal;
+                }), g_Plots.end());
+    }
 }
 
 //-------------------------------------------------------
 
-bool FSTWindow::isDisplayed(fstHandle signal) {
-    auto res = std::find_if(g_Plots.begin(), g_Plots.end(), [signal](Plot plot) {
-        return plot.signalId == signal;
-    });
-    return res != g_Plots.end();
+bool FSTWindow::isDisplayed(std::vector<fstHandle> signals) {
+    bool ret = true;
+    for (const auto &signal : signals) {
+        auto res = std::find_if(g_Plots.begin(), g_Plots.end(), [signal](Plot plot) {
+            return plot.signalId == signal;
+        });
+        ret &= res != g_Plots.end();
+    }
+    return ret;
 }
 
 //-------------------------------------------------------
