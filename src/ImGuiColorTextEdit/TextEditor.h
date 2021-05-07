@@ -196,7 +196,7 @@ public:
 		static const LanguageDefinition& AngelScript();
 		static const LanguageDefinition& Lua();
 		static const LanguageDefinition& Silice();
-		static const LanguageDefinition& SiliceReadOnly(std::string logfilename);
+		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
 	};
 
 	TextEditor();
@@ -285,14 +285,16 @@ public:
 
 	// Addition
 	bool p_open_editor;
+    bool mIndexColorization;
 	std::string pathToLogFile;
 	std::string openedFile;
 	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
 	std::pair<int, int> linesSelectedIndex;
 	LogParser lp;
 
+	bool hasIndexColorization();
 	void setPathToLogFile(const std::string& path);
-	void setIndexPairs(std::list<int> indexes);
+	void setIndexPairs(const std::list<int>& indexes);
 	bool writeFromFile(const std::string& filepath);
 	void setSelectedIndex(int index);
 	void unsetSelectedIndex();
@@ -300,6 +302,58 @@ public:
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
+
+	// Addition
+
+	struct SiliceFile
+    {
+	    std::string file_path;
+	    std::string viofile_path;
+	    std::string fsmfile_path;
+	    std::list<std::string> algos;
+	    LogParser lp;
+
+	    void parse()
+        {
+            this->lp.parseVio(viofile_path);
+            this->lp.parseFSM(fsmfile_path);
+        }
+
+        void parseAlgos()
+        {
+	        this->algos.clear();
+
+            std::fstream file;
+
+            file.open(this->file_path, std::ios::in);
+            if (!file)
+            {
+                std::cout << "File was not found";
+                exit(1);
+            }
+
+            std::string element;
+            bool found = false;
+            while (file >> element)
+            {
+                if (found)
+                {
+                    if (element.find('(') != std::string::npos)
+                    {
+                        element = element.substr(0, element.find('('));
+                    }
+                    this->algos.push_back(element);
+                    found = false;
+                }
+                if (element == "algorithm")
+                {
+                    found = true;
+                }
+            }
+        }
+    };
+
+	SiliceFile siliceFile;
 
 	struct EditorState
 	{

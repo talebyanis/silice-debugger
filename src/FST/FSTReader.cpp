@@ -160,16 +160,15 @@ std::list<int> FSTReader::get_q_index_values()
     for (const auto &scope : scopes) {
         if (scope->name == "__main")
         {
-            for (const auto &signal : scope->signals) {
-                if(signal.second.name.find("_q_index") != std::string::npos) {
-                    for (const auto &item : signal.second.values) {
+            for (const auto &signal : scope->pairs) {
+                if (signal.second->q->name.find("_q_index") != std::string::npos) {
+                    for (const auto &item : signal.second->q->values) {
                         values.emplace_back(item.second);
                     }
                     return values;
                 }
             }
         }
-
     }
 
     return values;

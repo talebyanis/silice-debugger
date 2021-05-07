@@ -53,18 +53,25 @@ TextEditor::TextEditor()
 	this->p_open_editor = false;
 	// Setting paths on startup,
 	// ToDo : change path w/ an argument
-	this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
-	this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
-	this->openedFile = SRC_PATH "/examples/divstd_bare/main.ice";
+
+    this->siliceFile.file_path = SRC_PATH "/examples/divstd_bare/main.ice";
+    this->siliceFile.viofile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
+    this->siliceFile.fsmfile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log";
+    this->siliceFile.parse();
+    this->siliceFile.parseAlgos();
+
+	//this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
+	//this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
+	//this->openedFile = SRC_PATH "/examples/divstd_bare/main.ice";
 	//this->pathToLogFile = "./build.v.vio.log";
 
 	SetPalette(GetDarkPalette());
-	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->pathToLogFile));
+	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
 	mLines.push_back(Line());
 
 	// Opening a file (raw path here) on startup,
 	// ToDo : change path w/ an argument
-	this->writeFromFile(this->openedFile);
+	this->writeFromFile(this->siliceFile.file_path);
 	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
@@ -981,7 +988,7 @@ void TextEditor::Render()
 
             // Draw selected (and others) Index (Silice)
 
-            if (mReadOnly)
+            if (this->mIndexColorization)
             {
                 if (!this->linesIndexes.empty())
                 {
@@ -1454,7 +1461,7 @@ void TextEditor::SetReadOnly(bool aValue)
 {
 	mReadOnly = aValue;
 	aValue ?
-		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->pathToLogFile)) :
+		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp)) :
 		SetLanguageDefinition(LanguageDefinition::Silice());
 }
 
@@ -2617,13 +2624,6 @@ void TextEditor::UndoRecord::Redo(TextEditor* aEditor)
 	aEditor->EnsureCursorVisible();
 }
 
-void TextEditor::setPathToLogFile(const std::string& path)
-{
-	assert(path != "");
-	assert(path.find(".v.vio.log"));
-	this->pathToLogFile = path;
-}
-
 bool TextEditor::writeFromFile(const std::string& filepath)
 {
 	std::fstream file;
@@ -2637,15 +2637,25 @@ bool TextEditor::writeFromFile(const std::string& filepath)
 		}
 		file.close();
 		this->mReadOnly = true;
+		this->mIndexColorization = true;
+		this->siliceFile.file_path = filepath;
+		this->siliceFile.parseAlgos();
 		return true;
 	}
 	std::cout << "File to write in Text Editor was not found" << std::endl;
 	return false;
 }
 
+void TextEditor::setPathToLogFile(const std::string& path)
+{
+    assert(!path.empty());
+    assert(path.find(".v.vio.log"));
+    this->siliceFile.viofile_path = path;
+}
+
 void TextEditor::setSelectedIndex(int index)
 {
-	this->linesSelectedIndex = lp.getLines(this->openedFile, index);
+	this->linesSelectedIndex = this->siliceFile.lp.getLines(this->siliceFile.file_path, index);
 }
 
 void TextEditor::unsetSelectedIndex()
@@ -2653,11 +2663,12 @@ void TextEditor::unsetSelectedIndex()
 	this->linesSelectedIndex = std::pair(-1, -1);
 }
 
-void TextEditor::setIndexPairs(std::list<int> indexes)
+void TextEditor::setIndexPairs(const std::list<int>& indexes)
 {
-	for (int& index : indexes)
+	for (int index : indexes)
 	{
-		this->linesIndexes.emplace_back(index, this->lp.getLines(this->openedFile, index));
+	    std::cout << index << std::endl;
+		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
 	}
 }
 
@@ -2666,6 +2677,11 @@ void TextEditor::ScaleFont(bool make_bigger)
     static float scale = 1;
     make_bigger ? scale += .05 : scale -= .05;
     ImGui::GetFont()->Scale=scale;
+}
+
+bool TextEditor::hasIndexColorization()
+{
+    return this->mIndexColorization;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
@@ -3371,7 +3387,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
 	return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceReadOnly(std::string logfilename)
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceReadOnly(LogParser &lp)
 {
 	static bool inited = false;
 	static LanguageDefinition langDef;
@@ -3398,9 +3414,6 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::SiliceRead
 
 		// Types (WIP)
 		langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
-
-		LogParser lp;
-		lp.parseVio(logfilename);
 
 		// Const
 		std::list<std::pair<std::string, std::string>> list = lp.getMatch("const");

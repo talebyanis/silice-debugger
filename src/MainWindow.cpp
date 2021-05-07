@@ -16,6 +16,7 @@ using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
+// Todo : set fileFullPath when doing "make debug" to show the file name in the editor
 static fs::path fileFullPath;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
@@ -273,6 +274,10 @@ void MainWindow::ShowCodeEditor() {
             }
             if (ImGui::MenuItem("Retro blue palette")) {
                 editor.SetPalette(TextEditor::GetRetroBluePalette());
+            }
+            ImGui::Separator();
+            if (ImGui::MenuItem("Toggle index colorization", nullptr, editor.hasIndexColorization())) {
+                editor.mIndexColorization = !editor.mIndexColorization;
             }
             ImGui::EndMenu();
         }

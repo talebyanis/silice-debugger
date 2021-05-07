@@ -584,9 +584,7 @@ void FSTWindow::clean() {
 void FSTWindow::loadQindex() {
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == "__main") {
-            std::cout << "here" << std::endl;
             for (const auto &pair : scope->pairs) {
-                std::cout << pair.second->name << std::endl;
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
                 }
@@ -629,6 +627,20 @@ void FSTWindow::load(json data, TextEditor &editors) {
     this->editor = &editors;
     markerX = data["markerX"];
 
+    for (const auto &scope : g_Reader->scopes) {
+        if (scope->name == "__main") {
+            for (const auto &pair : scope->pairs) {
+                if (pair.second->name.find("index") != std::string::npos) {
+                    qindex = pair.second->q->id;
+                    std::cout << qindex << std::endl;
+                }
+            }
+        }
+    }
+    valuesList valuesList = g_Reader->getValues(qindex);
+    for (const auto &item : valuesList) {
+        qindexValues.emplace_back(item.first, item.second);
+    }
     this->loadQindex();
 
     editor->setIndexPairs(g_Reader->get_q_index_values());
