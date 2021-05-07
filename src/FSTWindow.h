@@ -37,6 +37,7 @@ public:
     json save();
 private:
     std::vector<Plot> g_Plots;
+    std::map<std::string, ImVec4> g_ScopeColors;
     FSTReader *g_Reader = nullptr;
     ImPlotRange range = ImPlotRange(-1, -1);
     ImPlotRange *plotXLimits = nullptr;

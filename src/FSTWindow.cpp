@@ -86,6 +86,14 @@ void FSTWindow::showPlotMenu() {
             int hiddenCount = 0;
 
             if (ImGui::TreeNode(scope->name.c_str())) {
+                //if(ImGui::IsItemHovered()) {
+                    if(ImGui::BeginPopupContextWindow(scope->name.c_str())) {
+                        ImGui::Text("%s", scope->name.c_str());
+                        ImGui::Separator();
+                        ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(scope->name));
+                        ImGui::EndPopup();
+                    }
+               // }
 
                 this->showSignalsMenu(*scope, hiddenCount);
 
@@ -99,7 +107,6 @@ void FSTWindow::showPlotMenu() {
                 ImGui::TreePop();
             }
         }
-        showRightClickPlotSettings(hoverRightClickMenu);
     }
 }
 
@@ -132,10 +139,6 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
             (this->bit_left_custom == -1)
             ? ImGui::Text("Bad custom expression")
             : ImGui::Text("Bit left for custom printing : %d", this->bit_left_custom);
-            ImGui::Separator();
-            ImGui::Text("   Plot Color Picker : ");
-            ImGui::Separator();
-            ImGui::ColorPicker4("Color Picker", (float *) &plot->color);
             ImGui::EndPopup();
         }
     }
@@ -338,7 +341,7 @@ void FSTWindow::showPlots() {
         if (!item->fold) {
             ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
             //Coloring the line
-            ImPlot::PushStyleColor(ImPlotCol_Line, item->color);
+            ImPlot::PushStyleColor(ImPlotCol_Line, g_ScopeColors.at(g_Reader->getSignal(item->signalId)->scopeName));
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
@@ -611,6 +614,10 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     this->loadQindex();
 
     editor->setIndexPairs(g_Reader->get_q_index_values());
+
+    for (const auto &item : g_Reader->scopes) {
+        g_ScopeColors.insert({item->name,ImVec4(1,1,1,1)});
+    }
 }
 
 void FSTWindow::load(json data, TextEditor &editors) {
@@ -625,4 +632,8 @@ void FSTWindow::load(json data, TextEditor &editors) {
     this->loadQindex();
 
     editor->setIndexPairs(g_Reader->get_q_index_values());
+
+    for (const auto &item : g_Reader->scopes) {
+        g_ScopeColors.insert({item->name,ImVec4(1,1,1,1)});
+    }
 }
