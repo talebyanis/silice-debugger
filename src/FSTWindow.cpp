@@ -625,20 +625,11 @@ void FSTWindow::load(json data, TextEditor &editors) {
     plotXLimits = &range;
     this->editor = &editors;
     markerX = data["markerX"];
-
-    for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main") {
-            for (const auto &pair : scope->pairs) {
-                if (pair.second->name.find("index") != std::string::npos) {
-                    qindex = pair.second->q->id;
-                    std::cout << qindex << std::endl;
-                }
-            }
-        }
-    }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
+    for (int i = 0; i < data["displayedSignals"].size(); ++i) {
+        fstHandle signal = data["displayedSignals"][i];
+        std::vector<fstHandle> vec = std::vector<fstHandle>({signal});
+        this->addPlot(vec);
+        g_Plots[i].type = data["displayedTypes"][i];
     }
     this->loadQindex();
 
