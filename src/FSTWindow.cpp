@@ -567,6 +567,10 @@ json FSTWindow::save() {
     }
     j["displayedSignals"] = displayedPlots;
     j["displayedTypes"] = displayedTypes;
+    for (const auto &item : g_ScopeColors) {
+        ImVec4 col = item.second;
+        j["color"][item.first] = {col.x, col.y, col.z, col.w};
+    }
     return j;
 }
 
@@ -631,6 +635,12 @@ void FSTWindow::load(json data, TextEditor &editors) {
         this->addPlot(vec);
         g_Plots[i].type = data["displayedTypes"][i];
     }
+
+    for (int i = 0; i < g_Reader->scopes.size(); i++) {
+        auto vals = data["color"][g_Reader->scopes[i]->name];
+        g_ScopeColors.insert({g_Reader->scopes[i]->name, ImVec4(vals[0],vals[1],vals[2],vals[3])});
+    }
+
     this->loadQindex();
 
     editor->setIndexPairs(g_Reader->get_q_index_values());
