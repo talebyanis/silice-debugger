@@ -47,7 +47,7 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
 inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
     for (const auto &signal : scope.pairs) {
         std::string name = signal.second->name;
-        std::vector<fstHandle> pair = {signal.second->d->id,signal.second->q->id};
+        std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
         if (name.find(filterBuffer) != std::string::npos) {
             if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
@@ -82,19 +82,17 @@ void FSTWindow::showPlotMenu() {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
         for (const auto &scope : g_Reader->scopes) {
+            std::string name = scope->name;
             //count for hidden signals
             int hiddenCount = 0;
 
-            if (ImGui::TreeNode(scope->name.c_str())) {
-                //if(ImGui::IsItemHovered()) {
-                    if(ImGui::BeginPopupContextWindow(scope->name.c_str())) {
-                        ImGui::Text("%s", scope->name.c_str());
-                        ImGui::Separator();
-                        ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(scope->name));
-                        ImGui::EndPopup();
-                    }
-               // }
-
+            bool open = ImGui::TreeNode(name.c_str());
+            if (ImGui::BeginPopupContextItem(name.c_str())) {
+                ImGui::Text("%s", name.c_str());
+                ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
+                ImGui::EndPopup();
+            }
+            if (open) {
                 this->showSignalsMenu(*scope, hiddenCount);
 
                 ImGui::Separator();
@@ -104,6 +102,7 @@ void FSTWindow::showPlotMenu() {
                 if (hiddenCount != 0) {
                     ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
                 }
+
                 ImGui::TreePop();
             }
         }
@@ -157,14 +156,14 @@ void FSTWindow::addPlot(std::vector<fstHandle> signals) {
         std::string signalName = g_Reader->getSignal(signal)->name;
         plot.name = signalName;
         plot.type = DECIMALS;
-        if(signalName[1] == 'd') {
-            if(signalName.find("index") == std::string::npos) {
+        if (signalName[1] == 'd') {
+            if (signalName.find("index") == std::string::npos) {
                 plot.fold = false;
             } else {
                 plot.fold = true;
             }
-        } else if(signalName[1] == 'q') {
-            if(signalName.find("index") == std::string::npos) {
+        } else if (signalName[1] == 'q') {
+            if (signalName.find("index") == std::string::npos) {
                 plot.fold = true;
             } else {
                 plot.fold = false;
@@ -614,7 +613,7 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     editor->setIndexPairs(g_Reader->get_q_index_values());
 
     for (const auto &item : g_Reader->scopes) {
-        g_ScopeColors.insert({item->name,ImVec4(1,1,1,1)});
+        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
     }
 }
 
@@ -646,6 +645,6 @@ void FSTWindow::load(json data, TextEditor &editors) {
     editor->setIndexPairs(g_Reader->get_q_index_values());
 
     for (const auto &item : g_Reader->scopes) {
-        g_ScopeColors.insert({item->name,ImVec4(1,1,1,1)});
+        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
     }
 }
