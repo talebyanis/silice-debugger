@@ -152,33 +152,35 @@ void FSTWindow::addPlot(std::vector<fstHandle> signals) {
         return;
     }
     for (const auto &signal : signals) {
-        Plot plot;
-        plot.signalId = signal;
-        std::string signalName = g_Reader->getSignal(signal)->name;
-        plot.name = signalName;
-        plot.type = DECIMALS;
-        if (signalName[1] == 'd') {
-            if (signalName.find("index") == std::string::npos) {
-                plot.fold = false;
+        if (!this->isDisplayed(std::vector<fstHandle>({signal}))) {
+            Plot plot;
+            plot.signalId = signal;
+            std::string signalName = g_Reader->getSignal(signal)->name;
+            plot.name = signalName;
+            plot.type = DECIMALS;
+            if (signalName[1] == 'd') {
+                if (signalName.find("index") == std::string::npos) {
+                    plot.fold = false;
+                } else {
+                    plot.fold = true;
+                }
+            } else if (signalName[1] == 'q') {
+                if (signalName.find("index") == std::string::npos) {
+                    plot.fold = true;
+                } else {
+                    plot.fold = false;
+                }
             } else {
-                plot.fold = true;
-            }
-        } else if (signalName[1] == 'q') {
-            if (signalName.find("index") == std::string::npos) {
-                plot.fold = true;
-            } else {
                 plot.fold = false;
             }
-        } else {
-            plot.fold = false;
+            plot.color = ImVec4(1, 1, 1, 1);
+            valuesList values = g_Reader->getValues(signal);
+            for (const auto &item : values) {
+                plot.x_data.push_back(item.first);
+                plot.y_data.push_back(item.second);
+            }
+            g_Plots.push_back(plot);
         }
-        plot.color = ImVec4(1, 1, 1, 1);
-        valuesList values = g_Reader->getValues(signal);
-        for (const auto &item : values) {
-            plot.x_data.push_back(item.first);
-            plot.y_data.push_back(item.second);
-        }
-        g_Plots.push_back(plot);
     }
 }
 
@@ -187,12 +189,12 @@ void FSTWindow::addPlot(std::vector<fstHandle> signals) {
 //Removes a plot from the list
 void FSTWindow::removePlot(std::vector<fstHandle> signals) {
     for (const auto &signal : signals) {
-        g_Plots.erase(remove_if(
+        g_Plots.erase(std::find_if(
                 g_Plots.begin(),
                 g_Plots.end(),
                 [signal](Plot plot) {
                     return plot.signalId == signal;
-                }), g_Plots.end());
+                }));
     }
 }
 
