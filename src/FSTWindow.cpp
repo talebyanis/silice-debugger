@@ -580,7 +580,8 @@ void FSTWindow::clean() {
 
 void FSTWindow::loadQindex() {
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main") {
+        //this->editor->containsAlgo(scope->name)
+        if (scope->name.find("__main") != std::string::npos) {
             for (const auto &pair : scope->pairs) {
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
@@ -608,7 +609,7 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
 
     this->loadQindex();
 
-    editor->setIndexPairs(g_Reader->get_q_index_values());
+    //editor->setIndexPairs(g_Reader->get_q_index_values());
 }
 
 void FSTWindow::load(json data, TextEditor &editors) {
@@ -621,11 +622,10 @@ void FSTWindow::load(json data, TextEditor &editors) {
     markerX = data["markerX"];
 
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == "__main") {
+        if (this->editor->containsAlgo(scope->name)) {
             for (const auto &pair : scope->pairs) {
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
-                    std::cout << qindex << std::endl;
                 }
             }
         }
@@ -636,5 +636,5 @@ void FSTWindow::load(json data, TextEditor &editors) {
     }
     this->loadQindex();
 
-    editor->setIndexPairs(g_Reader->get_q_index_values());
+    //editor->setIndexPairs(g_Reader->get_q_index_values());
 }

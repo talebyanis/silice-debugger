@@ -54,25 +54,22 @@ TextEditor::TextEditor()
 	// Setting paths on startup,
 	// ToDo : change path w/ an argument
 
-    this->siliceFile.file_path = SRC_PATH "/examples/divstd_bare/main.ice";
-    this->siliceFile.viofile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
+    this->setPathToLogFile(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log");
     this->siliceFile.fsmfile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log";
-    this->siliceFile.parse();
-    this->siliceFile.parseAlgos();
 
 	//this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 	//this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
 	//this->openedFile = SRC_PATH "/examples/divstd_bare/main.ice";
 	//this->pathToLogFile = "./build.v.vio.log";
 
+    //this->writeFromFile("../main.ice");
+    // Opening a file (raw path here) on startup,
+    // ToDo : change path w/ an argument
+    this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
+
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
 	mLines.push_back(Line());
-
-	// Opening a file (raw path here) on startup,
-	// ToDo : change path w/ an argument
-	this->writeFromFile(this->siliceFile.file_path);
-	//this->writeFromFile("../main.ice");
 
 	this->mReadOnly = true;
 
@@ -1000,9 +997,14 @@ void TextEditor::Render()
                                 (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
                             {
                                 auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                                (indexes.first %2)
-                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
-                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
+                                if (indexes.first % 2 == 0)
+                                {
+                                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA]);
+                                }
+                                else
+                                {
+                                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
+                                }
                                 break;
                             }
                         }
@@ -1021,7 +1023,7 @@ void TextEditor::Render()
                         {
                             // Draw a ToolBox
                             ImGui::BeginTooltip();
-                            ImGui::Text(" This set is selected by ");
+                            ImGui::Text(" This state is selected by ");
                             ImGui::Text(" the marker in FSMWindows ");
                             ImGui::EndTooltip();
 
@@ -2639,7 +2641,8 @@ bool TextEditor::writeFromFile(const std::string& filepath)
 		this->mReadOnly = true;
 		this->mIndexColorization = true;
 		this->siliceFile.file_path = filepath;
-		this->siliceFile.parseAlgos();
+		this->siliceFile.parse();
+        this->setIndexPairs();
 		return true;
 	}
 	std::cout << "File to write in Text Editor was not found" << std::endl;
@@ -2663,11 +2666,10 @@ void TextEditor::unsetSelectedIndex()
 	this->linesSelectedIndex = std::pair(-1, -1);
 }
 
-void TextEditor::setIndexPairs(const std::list<int>& indexes)
+void TextEditor::setIndexPairs()
 {
-	for (int index : indexes)
+	for (int index : this->siliceFile.lp.getIndexes(siliceFile.file_path))
 	{
-	    std::cout << index << std::endl;
 		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
 	}
 }
@@ -2682,6 +2684,20 @@ void TextEditor::ScaleFont(bool make_bigger)
 bool TextEditor::hasIndexColorization()
 {
     return this->mIndexColorization;
+}
+
+bool TextEditor::containsAlgo(const std::string& algoname)
+{
+    bool found = false;
+    for (const auto &algo : this->siliceFile.algos)
+    {
+        if (algoname.find(algo) != std::string::npos)
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)

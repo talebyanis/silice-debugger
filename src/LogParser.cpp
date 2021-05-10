@@ -7,6 +7,7 @@ LogParser::LogParser() = default;
 
 void LogParser::parseVio(std::string vio_filename)
 {
+    this->report_lines.clear();
 	std::fstream file;
 
 	file.open(vio_filename, std::ios::in);
@@ -83,6 +84,7 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string m
 
 void LogParser::parseFSM(std::string fsm_filename)
 {
+    this->fsm_lines.clear();
 	std::fstream file;
 
 	file.open(fsm_filename, std::ios::in);
@@ -112,7 +114,7 @@ void LogParser::parseFSM(std::string fsm_filename)
 	}
 
 	// uncomment to print fsm_lines
-	//for (auto i : this->fsm_lines)
+	//for (const auto& i : this->fsm_lines)
 	//{
 	//	std::cout << i.second.filename << " " << i.second.line << " " << i.second.index << std::endl;
 	//}
@@ -144,4 +146,47 @@ std::pair<int, int> LogParser::getLines(std::string filename, int index)
 	    pair.second = pair.first;
 
 	return pair;
+}
+
+// ---------------------------------------------------------------------
+
+std::list<int> LogParser::getIndexes(const std::string& filename)
+{
+    std::list<int> res;
+    for (const auto &line : this->fsm_lines)
+    {
+        if (line.second.filename == filename)
+        {
+            res.push_back(line.second.index);
+        }
+    }
+    return res;
+}
+
+
+// ---------------------------------------------------------------------
+
+std::list<std::string> LogParser::getAlgos(std::string filename)
+{
+    std::list<std::string> res;
+    bool found = false;
+    for (const auto &line : this->fsm_lines)
+    {
+        if (filename == line.second.filename)
+        {
+            for (const auto &item : res)
+            {
+                if (item == line.second.algo)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                res.push_back(line.second.algo);
+            }
+        }
+    }
+    return res;
 }

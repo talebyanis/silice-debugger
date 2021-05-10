@@ -294,11 +294,12 @@ public:
 
 	bool hasIndexColorization();
 	void setPathToLogFile(const std::string& path);
-	void setIndexPairs(const std::list<int>& indexes);
+	void setIndexPairs();
 	bool writeFromFile(const std::string& filepath);
 	void setSelectedIndex(int index);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
+	bool containsAlgo(const std::string& algoname);
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
@@ -317,39 +318,7 @@ private:
         {
             this->lp.parseVio(viofile_path);
             this->lp.parseFSM(fsmfile_path);
-        }
-
-        void parseAlgos()
-        {
-	        this->algos.clear();
-
-            std::fstream file;
-
-            file.open(this->file_path, std::ios::in);
-            if (!file)
-            {
-                std::cout << "File was not found";
-                exit(1);
-            }
-
-            std::string element;
-            bool found = false;
-            while (file >> element)
-            {
-                if (found)
-                {
-                    if (element.find('(') != std::string::npos)
-                    {
-                        element = element.substr(0, element.find('('));
-                    }
-                    this->algos.push_back(element);
-                    found = false;
-                }
-                if (element == "algorithm")
-                {
-                    found = true;
-                }
-            }
+            this->algos = this->lp.getAlgos(this->file_path);
         }
     };
 
