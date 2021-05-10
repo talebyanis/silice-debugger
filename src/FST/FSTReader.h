@@ -10,6 +10,9 @@
 
 #include "Scope.h"
 
+/**
+ * This class is used to read .fst files and store informations in Scopes
+ */
 class FSTReader {
 private :
     void initMaps();
