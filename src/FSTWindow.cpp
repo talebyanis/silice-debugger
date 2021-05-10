@@ -96,7 +96,7 @@ void FSTWindow::showPlotMenu() {
             if (open) {
                 this->showSignalsMenu(*scope, hiddenCount);
 
-                ImGui::Separator();
+                if (scope->pairs.size() > 0) { ImGui::Separator(); }
 
                 this->showPairsMenu(*scope, hiddenCount);
 
