@@ -54,7 +54,8 @@ inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
             }
             if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                 "",
-                                FSTWindow::isDisplayed(pair))) {
+                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[0]})) ||
+                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[1]})))) {
                 if (!FSTWindow::isDisplayed(pair)) {
                     this->addPlot(pair);
                 } else {
@@ -330,9 +331,13 @@ void FSTWindow::showPlots() {
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
-                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 23, cursor.y));
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
         if (ImGui::Button("Folding")) {
             item->fold = !item->fold;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("x")) {
+            this->removePlot(std::vector<fstHandle>({item->signalId}));
         }
         ImGui::PopStyleVar(2);
 
@@ -638,7 +643,7 @@ void FSTWindow::load(json data, TextEditor &editors) {
 
     for (int i = 0; i < g_Reader->scopes.size(); i++) {
         auto vals = data["color"][g_Reader->scopes[i]->name];
-        g_ScopeColors.insert({g_Reader->scopes[i]->name, ImVec4(vals[0],vals[1],vals[2],vals[3])});
+        g_ScopeColors.insert({g_Reader->scopes[i]->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
     }
 
     this->loadQindex();
