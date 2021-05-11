@@ -286,25 +286,26 @@ void MainWindow::ShowCodeEditor() {
         ImGui::EndMenuBar();
     }
 
-    if (ImGui::BeginCombo("Algo to colorize", current_algo.c_str()))
+    if (editor.hasIndexColorization())
     {
-        for (const auto &item : this->editor.siliceFile.algos)
+        if (ImGui::BeginCombo("Algo to colorize", current_algo.c_str()))
         {
-            bool is_selected = (current_algo == item);
-            if (ImGui::Selectable(item.c_str(), is_selected))
+            for (const auto &item : this->editor.siliceFile.algos)
             {
-                current_algo = item;
-                fstWindow.setAlgoToColorize(current_algo);
+                bool is_selected = (current_algo == item);
+                if (ImGui::Selectable(item.c_str(), is_selected))
+                {
+                    current_algo = item;
+                    fstWindow.setAlgoToColorize(current_algo);
+                }
+                if (is_selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
             }
-            if (is_selected)
-            {
-                ImGui::SetItemDefaultFocus();
-            }
+            ImGui::EndCombo();
         }
-        ImGui::EndCombo();
     }
-
-
 
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                 editor.IsOverwrite() ? "Ovr" : "Ins",
