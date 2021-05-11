@@ -30,16 +30,16 @@ LogParser lp;
 
 static GLuint g_FontTexture;
 
-static ImFont* font_general;
-static ImFont* font_code; // font used for the TextEditor's code
+static ImFont *font_general;
+static ImFont *font_code; // font used for the TextEditor's code
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, std::string general_font_name, std::string code_font_name)
-{
+static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, std::string general_font_name,
+                                          std::string code_font_name) {
     // Build texture atlas
-    ImGuiIO& io = ::ImGui::GetIO();
-    unsigned char* pixels;
+    ImGuiIO &io = ::ImGui::GetIO();
+    unsigned char *pixels;
     int width, height;
 #if 0
     ImFontConfig font_cfg = ImFontConfig();
@@ -52,7 +52,8 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), general_font_size, &cfg, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), general_font_size, &cfg,
+                                                    io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "General Font '" << font_path << "' not found" << std::endl;
     }
@@ -62,13 +63,15 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), code_font_size, &cfg, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), code_font_size, &cfg,
+                                                 io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "Code Font '" << font_path << "' not found" << std::endl;
     }
 
 
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
+    io.Fonts->GetTexDataAsRGBA32(&pixels, &width,
+                                 &height);   // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
 
     // Upload texture to graphics system
     GLint last_texture;
@@ -80,7 +83,7 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     // Store our identifier
-    io.Fonts->TexID = (void *)(intptr_t)g_FontTexture;
+    io.Fonts->TexID = (void *) (intptr_t) g_FontTexture;
 
     // Restore state
     glBindTexture(GL_TEXTURE_2D, last_texture);
@@ -121,6 +124,8 @@ void MainWindow::ShowDockSpace() {
     ImGuiID dockspace_id = ImGui::GetID("DockSpace");
     ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 
+    bool error = false;
+
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Open fst")) {
@@ -132,11 +137,15 @@ void MainWindow::ShowDockSpace() {
             }
             ImGui::Separator();
             if (ImGui::MenuItem("Load debug")) {
-                std::ifstream stream(SRC_PATH "/.save/save.dat");
-                json data;
-                stream >> data;
-                fstWindow.load(data, editor);
-                std::cout << "debug opened with file " << data["filePath"] << std::endl;
+                if (exists(SRC_PATH "/.save/save.dat")) {
+                    std::ifstream stream(SRC_PATH "/.save/save.dat");
+                    json data;
+                    stream >> data;
+                    fstWindow.load(data, editor);
+                    std::cout << "debug opened with file " << data["filePath"] << std::endl;
+                } else {
+                    error = true;
+                }
             }
             if (ImGui::MenuItem("Save debug", NULL, false, fstWindow.g_Reader)) {
                 if (fstWindow.g_Reader) {
@@ -179,6 +188,14 @@ void MainWindow::ShowDockSpace() {
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
+    }
+
+    if(error) ImGui::OpenPopup("errorLoadSave");
+    if (ImGui::BeginPopup("errorLoadSave")) {
+        ImGui::OpenPopup("error in");
+        ImGui::Text("Error loading save file");
+        ImGui::Text("Try to save your debug session before loading a save file");
+        ImGui::EndPopup();
     }
 
     ImGui::End();
@@ -300,18 +317,13 @@ void MainWindow::ShowCodeEditor() {
 
 //-------------------------------------------------------
 
-void MainWindow::ZoomMouseWheel()
-{
-    if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor))
-    {
-        if (ImGui::GetIO().MouseWheel > 0)
-        {
+void MainWindow::ZoomMouseWheel() {
+    if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor)) {
+        if (ImGui::GetIO().MouseWheel > 0) {
             if (ImGui::GetFontSize() < 28) {
                 editor.ScaleFont(true);
             }
-        }
-        else if (ImGui::GetIO().MouseWheel < 0)
-        {
+        } else if (ImGui::GetIO().MouseWheel < 0) {
             if (ImGui::GetFontSize() > 13) {
                 editor.ScaleFont(false);
             }
