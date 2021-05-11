@@ -284,6 +284,25 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
+    struct SiliceFile
+    {
+        std::string file_path;
+        std::string viofile_path;
+        std::string fsmfile_path;
+        std::list<std::string> algos;
+        std::string algo_to_colorize;
+        LogParser lp;
+
+        void parse()
+        {
+            this->lp.parseVio(viofile_path);
+            this->lp.parseFSM(fsmfile_path);
+            this->algos = this->lp.getAlgos(this->file_path);
+        }
+    };
+
+    SiliceFile siliceFile;
+
 	bool p_open_editor;
     bool mIndexColorization;
 	std::string pathToLogFile;
@@ -303,26 +322,6 @@ public:
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
-
-	// Addition
-
-	struct SiliceFile
-    {
-	    std::string file_path;
-	    std::string viofile_path;
-	    std::string fsmfile_path;
-	    std::list<std::string> algos;
-	    LogParser lp;
-
-	    void parse()
-        {
-            this->lp.parseVio(viofile_path);
-            this->lp.parseFSM(fsmfile_path);
-            this->algos = this->lp.getAlgos(this->file_path);
-        }
-    };
-
-	SiliceFile siliceFile;
 
 	struct EditorState
 	{

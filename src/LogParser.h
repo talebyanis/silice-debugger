@@ -64,7 +64,7 @@ public:
 	void parseFSM(std::string fsm_filename);
 	std::pair<int, int> getLines(std::string filename, int index);
     std::list<int> getIndexes(const std::string& filename);
-	std::list<std::string> getAlgos(std::string filename);
+	std::list<std::string> getAlgos(const std::string& filename);
 private:
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;

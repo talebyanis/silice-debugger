@@ -31,8 +31,9 @@ class FSTWindow {
 public:
     std::string fstFilePath;
     FSTWindow() = default;
-    void load(std::string file, TextEditor& editor);
+    void load(const std::string& file, TextEditor& editor);
     void load(json data, TextEditor &editors);
+    void setAlgoToColorize(std::string algo);
     void render();
     json save();
 private:
@@ -49,9 +50,10 @@ private:
     char customFilterBuffer[256] = {};
     int bit_left_custom = 16;
     TextEditor* editor;
+    std::string algo_to_colorize;
 
     void clean();
-    void addPlot(std::vector<fstHandle> signals);
+    void addPlot(const std::vector<fstHandle>& signals);
     void removePlot(std::vector<fstHandle> signals);
     bool isDisplayed(std::vector<fstHandle> signals);
     void showPlots();

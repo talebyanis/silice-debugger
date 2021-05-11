@@ -166,7 +166,7 @@ std::list<int> LogParser::getIndexes(const std::string& filename)
 
 // ---------------------------------------------------------------------
 
-std::list<std::string> LogParser::getAlgos(std::string filename)
+std::list<std::string> LogParser::getAlgos(const std::string& filename)
 {
     std::list<std::string> res;
     bool found = false;
@@ -186,6 +186,7 @@ std::list<std::string> LogParser::getAlgos(std::string filename)
             {
                 res.push_back(line.second.algo);
             }
+            found = false;
         }
     }
     return res;

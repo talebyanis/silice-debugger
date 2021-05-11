@@ -144,7 +144,7 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
 //-------------------------------------------------------
 
 //Adds a plot to the list
-void FSTWindow::addPlot(std::vector<fstHandle> signals) {
+void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
     if (!g_Reader) {
         return;
     }
@@ -580,8 +580,8 @@ void FSTWindow::clean() {
 
 void FSTWindow::loadQindex() {
     for (const auto &scope : g_Reader->scopes) {
-        //this->editor->containsAlgo(scope->name)
-        if (scope->name.find("__main") != std::string::npos) {
+        if (scope->name.find(this->algo_to_colorize) != std::string::npos) {
+            std::cout << scope->name << std::endl;
             for (const auto &pair : scope->pairs) {
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
@@ -595,7 +595,18 @@ void FSTWindow::loadQindex() {
     }
 }
 
-void FSTWindow::load(std::string file, TextEditor &editors) {
+//-------------------------------------------------------
+
+void FSTWindow::setAlgoToColorize(std::string algo)
+{
+    this->algo_to_colorize = std::move(algo);
+    this->qindexValues.clear();
+    this->loadQindex();
+}
+
+//-------------------------------------------------------
+
+void FSTWindow::load(const std::string& file, TextEditor &editors) {
     this->clean();
     this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str());
@@ -608,9 +619,9 @@ void FSTWindow::load(std::string file, TextEditor &editors) {
     this->editor = &editors;
 
     this->loadQindex();
-
-    //editor->setIndexPairs(g_Reader->get_q_index_values());
 }
+
+//-------------------------------------------------------
 
 void FSTWindow::load(json data, TextEditor &editors) {
     this->clean();
@@ -622,7 +633,7 @@ void FSTWindow::load(json data, TextEditor &editors) {
     markerX = data["markerX"];
 
     for (const auto &scope : g_Reader->scopes) {
-        if (this->editor->containsAlgo(scope->name)) {
+        if (scope->name == this->algo_to_colorize) {
             for (const auto &pair : scope->pairs) {
                 if (pair.second->name.find("index") != std::string::npos) {
                     qindex = pair.second->q->id;
@@ -635,6 +646,4 @@ void FSTWindow::load(json data, TextEditor &editors) {
         qindexValues.emplace_back(item.first, item.second);
     }
     this->loadQindex();
-
-    //editor->setIndexPairs(g_Reader->get_q_index_values());
 }
