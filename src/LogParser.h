@@ -61,7 +61,7 @@ public:
 	std::list<std::pair<std::string, std::string>> getMatch(std::string match);
 
 	// FSM methods
-	void parseFSM(std::string fsm_filename);
+	void parseFSM(const std::string& fsm_filename);
 	std::pair<int, int> getLines(std::string filename, int index);
     std::list<int> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);

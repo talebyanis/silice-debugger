@@ -78,7 +78,7 @@ int main() {
     ImGui::GetIO().SetClipboardTextFn = SetClipboard;*/
 
     mainWindow = MainWindow();
-    mainWindow.ChangeStyle();
+    mainWindow.Init();
 
     SimpleUI::loop();
 

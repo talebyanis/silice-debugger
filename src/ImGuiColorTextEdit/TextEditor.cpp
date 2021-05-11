@@ -54,8 +54,8 @@ TextEditor::TextEditor()
 	// Setting paths on startup,
 	// ToDo : change path w/ an argument
 
-    this->setPathToLogFile(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log");
-    this->siliceFile.fsmfile_path = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log";
+    this->setPathToLogFile(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
+    this->siliceFile.fsmfile_path = PROJECT_DIR "BUILD_icarus/build.v.fsm.log";
 
 	//this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
 	//this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
@@ -65,7 +65,7 @@ TextEditor::TextEditor()
     //this->writeFromFile("../main.ice");
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
-    this->writeFromFile(SRC_PATH "/examples/divstd_bare/main.ice");
+    this->writeFromFile(PROJECT_DIR "main.ice");
 
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));

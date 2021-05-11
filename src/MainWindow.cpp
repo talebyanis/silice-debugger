@@ -356,8 +356,11 @@ void MainWindow::ZoomMouseWheel() {
 
 //-------------------------------------------------------
 
-void MainWindow::ChangeStyle() {
+void MainWindow::Init() {
     ImGui_Impl_CreateFontsTexture(18, 22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
+
+    const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
+    fstWindow.load(str, editor);
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;

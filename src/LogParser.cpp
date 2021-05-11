@@ -82,7 +82,7 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string m
 
 // FSM methods -------------------------------------------------------
 
-void LogParser::parseFSM(std::string fsm_filename)
+void LogParser::parseFSM(const std::string& fsm_filename)
 {
     this->fsm_lines.clear();
 	std::fstream file;
