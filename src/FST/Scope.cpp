@@ -29,14 +29,14 @@ void Scope::add(fstHier hier) {
             current = this->pairs.at(subName);
         }
         if(name[1] == 'd') {
-            Signal* d = new Signal(hier);
+            Signal* d = new Signal(hier,this->name);
             current->d = d;
         } else {
-            Signal* q = new Signal(hier);
+            Signal* q = new Signal(hier,this->name);
             current->q = q;
         }
     } else {
-        Signal signal = Signal(hier);
+        Signal signal = Signal(hier, this->name);
         this->addSignal(signal);
     }
 }

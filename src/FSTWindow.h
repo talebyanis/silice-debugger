@@ -36,9 +36,11 @@ public:
     void setAlgoToColorize(std::string algo);
     void render();
     json save();
+    FSTReader *g_Reader = nullptr;
+
 private:
     std::vector<Plot> g_Plots;
-    FSTReader *g_Reader = nullptr;
+    std::map<std::string, ImVec4> g_ScopeColors;
     ImPlotRange range = ImPlotRange(-1, -1);
     ImPlotRange *plotXLimits = nullptr;
     fstHandle hoverHighLight = 0;

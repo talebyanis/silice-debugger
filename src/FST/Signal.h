@@ -16,12 +16,13 @@ private:
 public:
     fstHandle id;
     std::string name;
+    std::string scopeName;
     valuesList values;
     errorsList errors;
 
     Signal() = default;
-    Signal(std::string name, fstHandle id);
-    Signal(fstHier hier);
+    Signal(std::string name, fstHandle id, std::string scopeName);
+    Signal(fstHier hier, std::string scopeName);
 };
 
 

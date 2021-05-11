@@ -47,14 +47,15 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
 inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
     for (const auto &signal : scope.pairs) {
         std::string name = signal.second->name;
-        std::vector<fstHandle> pair = {signal.second->d->id,signal.second->q->id};
+        std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
         if (name.find(filterBuffer) != std::string::npos) {
             if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
             }
             if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                 "",
-                                FSTWindow::isDisplayed(pair))) {
+                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[0]})) ||
+                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[1]})))) {
                 if (!FSTWindow::isDisplayed(pair)) {
                     this->addPlot(pair);
                 } else {
@@ -82,24 +83,30 @@ void FSTWindow::showPlotMenu() {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
         for (const auto &scope : g_Reader->scopes) {
+            std::string name = scope->name;
             //count for hidden signals
             int hiddenCount = 0;
 
-            if (ImGui::TreeNode(scope->name.c_str())) {
-
+            bool open = ImGui::TreeNode(name.c_str());
+            if (ImGui::BeginPopupContextItem(name.c_str())) {
+                ImGui::Text("%s", name.c_str());
+                ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
+                ImGui::EndPopup();
+            }
+            if (open) {
                 this->showSignalsMenu(*scope, hiddenCount);
 
-                ImGui::Separator();
+                if (scope->pairs.size() > 0) { ImGui::Separator(); }
 
                 this->showPairsMenu(*scope, hiddenCount);
 
                 if (hiddenCount != 0) {
                     ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
                 }
+
                 ImGui::TreePop();
             }
         }
-        showRightClickPlotSettings(hoverRightClickMenu);
     }
 }
 
@@ -132,10 +139,6 @@ void FSTWindow::showRightClickPlotSettings(fstHandle signal) {
             (this->bit_left_custom == -1)
             ? ImGui::Text("Bad custom expression")
             : ImGui::Text("Bit left for custom printing : %d", this->bit_left_custom);
-            ImGui::Separator();
-            ImGui::Text("   Plot Color Picker : ");
-            ImGui::Separator();
-            ImGui::ColorPicker4("Color Picker", (float *) &plot->color);
             ImGui::EndPopup();
         }
     }
@@ -149,33 +152,35 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
         return;
     }
     for (const auto &signal : signals) {
-        Plot plot;
-        plot.signalId = signal;
-        std::string signalName = g_Reader->getSignal(signal)->name;
-        plot.name = signalName;
-        plot.type = DECIMALS;
-        if(signalName[1] == 'd') {
-            if(signalName.find("index") == std::string::npos) {
-                plot.fold = false;
+        if (!this->isDisplayed(std::vector<fstHandle>({signal}))) {
+            Plot plot;
+            plot.signalId = signal;
+            std::string signalName = g_Reader->getSignal(signal)->name;
+            plot.name = signalName;
+            plot.type = DECIMALS;
+            if (signalName[1] == 'd') {
+                if (signalName.find("index") == std::string::npos) {
+                    plot.fold = false;
+                } else {
+                    plot.fold = true;
+                }
+            } else if (signalName[1] == 'q') {
+                if (signalName.find("index") == std::string::npos) {
+                    plot.fold = true;
+                } else {
+                    plot.fold = false;
+                }
             } else {
-                plot.fold = true;
-            }
-        } else if(signalName[1] == 'q') {
-            if(signalName.find("index") == std::string::npos) {
-                plot.fold = true;
-            } else {
                 plot.fold = false;
             }
-        } else {
-            plot.fold = false;
+            plot.color = ImVec4(1, 1, 1, 1);
+            valuesList values = g_Reader->getValues(signal);
+            for (const auto &item : values) {
+                plot.x_data.push_back(item.first);
+                plot.y_data.push_back(item.second);
+            }
+            g_Plots.push_back(plot);
         }
-        plot.color = ImVec4(1, 1, 1, 1);
-        valuesList values = g_Reader->getValues(signal);
-        for (const auto &item : values) {
-            plot.x_data.push_back(item.first);
-            plot.y_data.push_back(item.second);
-        }
-        g_Plots.push_back(plot);
     }
 }
 
@@ -184,12 +189,12 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
 //Removes a plot from the list
 void FSTWindow::removePlot(std::vector<fstHandle> signals) {
     for (const auto &signal : signals) {
-        g_Plots.erase(remove_if(
+        g_Plots.erase(std::find_if(
                 g_Plots.begin(),
                 g_Plots.end(),
                 [signal](Plot plot) {
                     return plot.signalId == signal;
-                }), g_Plots.end());
+                }));
     }
 }
 
@@ -328,9 +333,13 @@ void FSTWindow::showPlots() {
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
-                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 23, cursor.y));
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
         if (ImGui::Button("Folding")) {
             item->fold = !item->fold;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("x")) {
+            this->removePlot(std::vector<fstHandle>({item->signalId}));
         }
         ImGui::PopStyleVar(2);
 
@@ -338,7 +347,7 @@ void FSTWindow::showPlots() {
         if (!item->fold) {
             ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
             //Coloring the line
-            ImPlot::PushStyleColor(ImPlotCol_Line, item->color);
+            ImPlot::PushStyleColor(ImPlotCol_Line, g_ScopeColors.at(g_Reader->getSignal(item->signalId)->scopeName));
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
@@ -565,6 +574,10 @@ json FSTWindow::save() {
     }
     j["displayedSignals"] = displayedPlots;
     j["displayedTypes"] = displayedTypes;
+    for (const auto &item : g_ScopeColors) {
+        ImVec4 col = item.second;
+        j["color"][item.first] = {col.x, col.y, col.z, col.w};
+    }
     return j;
 }
 
@@ -618,6 +631,12 @@ void FSTWindow::load(const std::string& file, TextEditor &editors) {
     this->editor = &editors;
 
     this->loadQindex();
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
+
+    for (const auto &item : g_Reader->scopes) {
+        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
+    }
 }
 
 //-------------------------------------------------------
@@ -630,7 +649,16 @@ void FSTWindow::load(json data, TextEditor &editors) {
     plotXLimits = &range;
     this->editor = &editors;
     markerX = data["markerX"];
+    for (int i = 0; i < data["displayedSignals"].size(); ++i) {
+        fstHandle signal = data["displayedSignals"][i];
+        std::vector<fstHandle> vec = std::vector<fstHandle>({signal});
+        this->addPlot(vec);
+        g_Plots[i].type = data["displayedTypes"][i];
+    }
 
+    for (int i = 0; i < g_Reader->scopes.size(); i++) {
+        auto vals = data["color"][g_Reader->scopes[i]->name];
+        g_ScopeColors.insert({g_Reader->scopes[i]->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == this->algo_to_colorize) {
             for (const auto &pair : scope->pairs) {
@@ -640,9 +668,12 @@ void FSTWindow::load(json data, TextEditor &editors) {
             }
         }
     }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
-    }
+
     this->loadQindex();
+
+    editor->setIndexPairs(g_Reader->get_q_index_values());
+
+    for (const auto &item : g_Reader->scopes) {
+        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
+    }
 }

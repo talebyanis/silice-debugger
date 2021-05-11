@@ -2,8 +2,6 @@ add_subdirectory(ImGuiColorTextEdit)
 add_subdirectory(tinyfiledialogs)
 
 add_executable(silice-text-editor
-        tests/test-fstapi.h
-        tests/test-fstapi.cpp
         LogParser.h
         LogParser.cpp
         FileDialog.h

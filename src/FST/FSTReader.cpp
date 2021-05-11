@@ -15,6 +15,10 @@ std::mutex g_Mutex;
 
 // ---------------------------------------------------------------------
 
+/**
+ * Transforms raw values from fstapi into decimal (or -1 if it's error)
+ * @author sylefeb
+ */
 int decodeValue(const char *str) {
     int val = 0;
     if (*str == 'x') { return -1; }
@@ -27,12 +31,16 @@ int decodeValue(const char *str) {
 
 // ---------------------------------------------------------------------
 
+/**
+ * Generating all the scopes and signals, filling them with the values
+ */
 void FSTReader::initMaps() {
     //Generate all scopes and their's signals
     Scope *currentScope = nullptr;
     fstHier *hier = fstReaderIterateHier(g_Wave);
     do {
         switch (hier->htyp) {
+            //Scope
             case FST_HT_SCOPE:
                 //std::cerr << "scope " << hier->u.scope.name << std::endl;
                 currentScope = new Scope(*hier);
@@ -41,6 +49,7 @@ void FSTReader::initMaps() {
             case FST_HT_ATTRBEGIN:
 //                std::cerr << "FST HT ATTRBEGIN" << hier->u.attr.arg << std::endl;
                 break;
+            //Signal
             case FST_HT_VAR:
                 if (currentScope == nullptr) {
                     std::cerr << "current scope null" << std::endl;
@@ -63,9 +72,9 @@ void FSTReader::initMaps() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
             std::unique_lock<std::mutex> lock(g_Mutex);
             int dvalue = decodeValue(reinterpret_cast<const char *>(value));
-            if (dvalue != -1) {
+            if (dvalue != -1) { //error
                 g_Values[facidx].push_back(std::make_pair((int) time, dvalue));
-            } else {
+            } else { //value
                 g_Errors[facidx].push_back((int) time);
             }
             std::this_thread::yield();
