@@ -35,10 +35,11 @@ public:
     void load(json data, TextEditor &editors);
     void render();
     json save();
+    FSTReader *g_Reader = nullptr;
+
 private:
     std::vector<Plot> g_Plots;
     std::map<std::string, ImVec4> g_ScopeColors;
-    FSTReader *g_Reader = nullptr;
     ImPlotRange range = ImPlotRange(-1, -1);
     ImPlotRange *plotXLimits = nullptr;
     fstHandle hoverHighLight = 0;

@@ -138,8 +138,8 @@ void MainWindow::ShowDockSpace() {
                 fstWindow.load(data, editor);
                 std::cout << "debug opened with file " << data["filePath"] << std::endl;
             }
-            if (ImGui::MenuItem("Save debug", NULL, false)) {
-                //if (fstWindow != NULL) {
+            if (ImGui::MenuItem("Save debug", NULL, false, fstWindow.g_Reader)) {
+                if (fstWindow.g_Reader) {
                     if (!exists(SRC_PATH "/.save")) {
                         createDirectory(SRC_PATH "/.save");
                     }
@@ -148,7 +148,7 @@ void MainWindow::ShowDockSpace() {
                     //std::cout << std::setw(4) << fstWindowJSON << std::endl;
                     save << std::setw(4) << fstWindowJSON << std::endl;
                 }
-            //}
+            }
 
             ImGui::Separator();
 
