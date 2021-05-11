@@ -632,8 +632,6 @@ void FSTWindow::load(const std::string& file, TextEditor &editors) {
 
     this->loadQindex();
 
-    editor->setIndexPairs(g_Reader->get_q_index_values());
-
     for (const auto &item : g_Reader->scopes) {
         g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
     }
@@ -656,9 +654,12 @@ void FSTWindow::load(json data, TextEditor &editors) {
         g_Plots[i].type = data["displayedTypes"][i];
     }
 
-    for (int i = 0; i < g_Reader->scopes.size(); i++) {
-        auto vals = data["color"][g_Reader->scopes[i]->name];
-        g_ScopeColors.insert({g_Reader->scopes[i]->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
+    for (auto & i : g_Reader->scopes) {
+        auto vals = data["color"][i->name];
+        g_ScopeColors.insert({i->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
+
+    }
+
     for (const auto &scope : g_Reader->scopes) {
         if (scope->name == this->algo_to_colorize) {
             for (const auto &pair : scope->pairs) {
@@ -670,10 +671,4 @@ void FSTWindow::load(json data, TextEditor &editors) {
     }
 
     this->loadQindex();
-
-    editor->setIndexPairs(g_Reader->get_q_index_values());
-
-    for (const auto &item : g_Reader->scopes) {
-        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
-    }
 }
