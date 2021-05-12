@@ -334,15 +334,19 @@ void FSTWindow::showPlots() {
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
                 ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
+
+        //Folding button
         if (ImGui::Button("Folding")) {
             item->fold = !item->fold;
         }
+
         ImGui::SameLine();
+
+        //Button to close plot
         if (ImGui::Button("x")) {
             this->removePlot(std::vector<fstHandle>({item->signalId}));
         }
         ImGui::PopStyleVar(2);
-
 
         if (!item->fold) {
             ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
@@ -390,10 +394,7 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-
-                //displaying values on the plot
                 this->drawValues(item);
-
                 ImPlot::PopStyleColor(2);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
@@ -519,8 +520,6 @@ inline void FSTWindow::drawValues(Plot *item) {
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
     }
 }
-
-
 
 //-------------------------------------------------------
 
