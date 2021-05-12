@@ -401,30 +401,30 @@ void FSTWindow::showPlots() {
             }
         }
         ImGui::EndGroup();
-/*
+
        //Drag&drop source
         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
             ImGui::SetDragDropPayload("PlotPayload", &i, sizeof(fstHandle));
-            ImGui::Text("%s", g_Reader->getSignalName(g_Plots[i].signalId).c_str());
+            ImGui::Text("%s", item->name.c_str());
             ImGui::EndDragDropSource();
         }
         ImGui::PopID();
         //Drag&drop target
         if (ImGui::BeginDragDropTarget()) {
-            if (const ImGuiPayload *pload = ImGui::AcceptDragDropPayload("PlotPayload")) {
-                int data = reinterpret_cast<int>(pload->Data);
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("PlotPayload")) {
+                int data = *(const int*) payload->Data;
                 if (data > i) {
-                    for (int k = payload; k > i; k--) {
+                    for (int k = data; k > i; k--) {
                         std::swap(g_Plots[k], g_Plots[k - 1]);
                     }
-                } else if (i > payload) {
-                    for (int k = payload; k < i; k++) {
+                } else if (i > data) {
+                    for (int k = data; k < i; k++) {
                         std::swap(g_Plots[k], g_Plots[k + 1]);
                     }
                 }
             }
             ImGui::EndDragDropTarget();
-        }*/
+        }
     }
     this->showRightClickPlotSettings(hoverRightClickMenu);
 }
