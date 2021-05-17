@@ -66,6 +66,8 @@ TextEditor::TextEditor()
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
     this->writeFromFile(PROJECT_DIR "main.ice");
+    this->current_index_colorization = this->linesIndexes.begin()->first;
+    this->colorA = true;
 
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
@@ -984,7 +986,6 @@ void TextEditor::Render()
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
             // Draw selected (and others) Index (Silice)
-
             if (this->mIndexColorization)
             {
                 if (!this->linesIndexes.empty())
@@ -994,17 +995,18 @@ void TextEditor::Render()
                         if (indexes.first != -1)
                         {
                             if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
-                                (indexes.second.first == indexes.second.second && lineNo + 1 >= indexes.second.first && lineNo + 1 <= indexes.second.second))
+                                (indexes.second.first == indexes.second.second && lineNo + 1 == indexes.second.first))
                             {
                                 auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                                if (indexes.first % 2 == 0)
+                                if (indexes.first != this->current_index_colorization)
                                 {
-                                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA]);
+                                    this->current_index_colorization = indexes.first;
+                                    colorA = !colorA;
                                 }
-                                else
-                                {
-                                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
-                                }
+
+                                (colorA)
+                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
+                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
                                 break;
                             }
                         }
@@ -1014,7 +1016,7 @@ void TextEditor::Render()
                 if (this->linesSelectedIndex.first != -1)
                 {
                     if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
-                        (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 <= this->linesSelectedIndex.second))
+                        (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first))
                     {
                         auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
                         drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
@@ -1024,7 +1026,7 @@ void TextEditor::Render()
                             // Draw a ToolBox
                             ImGui::BeginTooltip();
                             ImGui::Text(" This state is selected by ");
-                            ImGui::Text(" the marker in FSMWindows ");
+                            ImGui::Text(" the marker in the Plot Window ");
                             ImGui::EndTooltip();
 
                         }

@@ -305,11 +305,10 @@ public:
 
 	bool p_open_editor;
     bool mIndexColorization;
-	std::string pathToLogFile;
-	std::string openedFile;
 	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
 	std::pair<int, int> linesSelectedIndex;
-	LogParser lp;
+	int current_index_colorization;
+	bool colorA;
 
 	bool hasIndexColorization();
 	void setPathToLogFile(const std::string& path);
