@@ -985,7 +985,7 @@ void TextEditor::Render()
 
 			auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
 
-            // Draw selected (and others) Index (Silice)
+            // Draw indexes (Silice)
             if (this->mIndexColorization)
             {
                 if (!this->linesIndexes.empty())
@@ -1015,22 +1015,19 @@ void TextEditor::Render()
 
                 for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
                 {
-                    if (linesSelectedIndex.first != -1)
+                    if (linesSelectedIndex.second.first != -1)
                     {
-                        if (lineNo + 1 >= linesSelectedIndex.first && lineNo + 1 < linesSelectedIndex.second ||
-                            (linesSelectedIndex.first == linesSelectedIndex.second && lineNo + 1 >= linesSelectedIndex.first))
+                        if (lineNo + 1 >= linesSelectedIndex.second.first && lineNo + 1 < linesSelectedIndex.second.second ||
+                            (linesSelectedIndex.second.first == linesSelectedIndex.second.second && lineNo + 1 >= linesSelectedIndex.second.first))
                         {
                             auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
                             drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
                             if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
                             {
-                                // Draw a ToolBox
                                 ImGui::BeginTooltip();
-                                ImGui::Text(" This state is selected by ");
-                                ImGui::Text(" the marker in the Plot Window ");
+                                ImGui::Text(" %s ", linesSelectedIndex.first.c_str());
                                 ImGui::EndTooltip();
-
                             }
                         }
                     }
@@ -2661,12 +2658,12 @@ void TextEditor::setPathToLogFile(const std::string& path)
     this->siliceFile.viofile_path = path;
 }
 
-void TextEditor::setSelectedIndex(const std::list<int>& indexes)
+void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes)
 {
     this->linesSelectedIndexes.clear();
     for (const auto &index : indexes)
     {
-        this->linesSelectedIndexes.push_back(this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
+        this->linesSelectedIndexes.emplace_back(index.first, this->siliceFile.lp.getLines(this->siliceFile.file_path, index.second));
     }
 }
 

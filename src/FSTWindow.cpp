@@ -551,14 +551,14 @@ void FSTWindow::render() {
     ImGui::End();
     ImGui::PopStyleVar(); // Padding
 
-    std::list<int> indexes;
+    std::list<std::pair<std::string, int>> indexes;
 
     for (const auto &item : this->qindexValues)
     {
         int tmp = 0;
         for (int ii = 1; ii < item.second.size(); ii++) {
             if (markerX < item.second[ii].first && markerX >= item.second[tmp].first) {
-                indexes.push_back(tmp);
+                indexes.emplace_back(item.first, tmp);
                 break;
             }
             tmp = ii;
@@ -626,18 +626,13 @@ void FSTWindow::loadQindex() {
 
 void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
 {
-    bool clear = true;
+    this->algos_to_colorize.clear();
     for (const auto &item : algos)
     {
         if (item.second)
         {
             this->algos_to_colorize.push_back(item.first);
-            clear = false;
         }
-    }
-    if (clear)
-    {
-        this->algos_to_colorize.clear();
     }
     this->qindexValues.clear();
     this->loadQindex();
