@@ -306,7 +306,7 @@ public:
 	bool p_open_editor;
     bool mIndexColorization;
 	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
-	std::pair<int, int> linesSelectedIndex;
+	std::list<std::pair<int, int>> linesSelectedIndexes;
 	int current_index_colorization;
 	bool colorA;
 
@@ -314,7 +314,7 @@ public:
 	void setPathToLogFile(const std::string& path);
 	void setIndexPairs();
 	bool writeFromFile(const std::string& filepath);
-	void setSelectedIndex(int index);
+    void setSelectedIndex(const std::list<int>& indexes);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
 	bool containsAlgo(const std::string& algoname);

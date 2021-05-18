@@ -1013,22 +1013,25 @@ void TextEditor::Render()
                     }
                 }
 
-                if (this->linesSelectedIndex.first != -1)
+                for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
                 {
-                    if (lineNo + 1 >= this->linesSelectedIndex.first && lineNo + 1 < this->linesSelectedIndex.second ||
-                        (this->linesSelectedIndex.first == this->linesSelectedIndex.second && lineNo + 1 >= this->linesSelectedIndex.first))
+                    if (linesSelectedIndex.first != -1)
                     {
-                        auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                        drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
-
-                        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                        if (lineNo + 1 >= linesSelectedIndex.first && lineNo + 1 < linesSelectedIndex.second ||
+                            (linesSelectedIndex.first == linesSelectedIndex.second && lineNo + 1 >= linesSelectedIndex.first))
                         {
-                            // Draw a ToolBox
-                            ImGui::BeginTooltip();
-                            ImGui::Text(" This state is selected by ");
-                            ImGui::Text(" the marker in the Plot Window ");
-                            ImGui::EndTooltip();
+                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                            drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
+                            if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                            {
+                                // Draw a ToolBox
+                                ImGui::BeginTooltip();
+                                ImGui::Text(" This state is selected by ");
+                                ImGui::Text(" the marker in the Plot Window ");
+                                ImGui::EndTooltip();
+
+                            }
                         }
                     }
                 }
@@ -2658,14 +2661,18 @@ void TextEditor::setPathToLogFile(const std::string& path)
     this->siliceFile.viofile_path = path;
 }
 
-void TextEditor::setSelectedIndex(int index)
+void TextEditor::setSelectedIndex(const std::list<int>& indexes)
 {
-	this->linesSelectedIndex = this->siliceFile.lp.getLines(this->siliceFile.file_path, index);
+    this->linesSelectedIndexes.clear();
+    for (const auto &index : indexes)
+    {
+        this->linesSelectedIndexes.push_back(this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
+    }
 }
 
 void TextEditor::unsetSelectedIndex()
 {
-	this->linesSelectedIndex = std::pair(-1, -1);
+	this->linesSelectedIndexes.clear();
 }
 
 void TextEditor::setIndexPairs()
