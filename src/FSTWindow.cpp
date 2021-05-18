@@ -554,12 +554,23 @@ void FSTWindow::render() {
     int index = -1;
     int tmp = 0;
 
-    for (int ii = 1; ii < qindexValues.size(); ii++) {
+    /*for (int ii = 1; ii < qindexValues.size(); ii++) {
         if (markerX < qindexValues[ii].first && markerX >= qindexValues[tmp].first) {
             index = tmp;
             break;
         }
         tmp = ii;
+    }*/
+
+    for (const auto &item : this->qindexValues)
+    {
+        for (int ii = 1; ii < item.second.size(); ii++) {
+            if (markerX < item.second[ii].first && markerX >= item.second[tmp].first) {
+                index = tmp;
+                break;
+            }
+            tmp = ii;
+        }
     }
 
     if (!editor) return;
@@ -602,26 +613,46 @@ void FSTWindow::clean() {
 //-------------------------------------------------------
 
 void FSTWindow::loadQindex() {
+    std::list<valuesList> valuesLists;
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name.find(this->algo_to_colorize) != std::string::npos) {
-            for (const auto &pair : scope->pairs) {
-                if (pair.second->name.find("index") != std::string::npos) {
-                    qindex = pair.second->q->id;
+        for (const auto &item : this->algos_to_colorize)
+        {
+            if (scope->name.find(item) != std::string::npos) {
+                for (const auto &pair : scope->pairs) {
+                    if (pair.second->name.find("index") != std::string::npos) {
+                        this->qindexes.push_back(pair.second->q->id);
+                        valuesList v = g_Reader->getValues(pair.second->q->id);
+                        valuesLists.push_back(v);
+                        for (const auto &value : v)
+                        {
+                            qindexValues[pair.second->q->id].emplace_back(value.first, value.second);
+                        }
+                    }
                 }
             }
         }
-    }
-    valuesList valuesList = g_Reader->getValues(qindex);
-    for (const auto &item : valuesList) {
-        qindexValues.emplace_back(item.first, item.second);
     }
 }
 
 //-------------------------------------------------------
 
-void FSTWindow::setAlgoToColorize(std::string algo)
+/*void FSTWindow::setAlgoToColorize(std::string algo)
 {
     this->algo_to_colorize = std::move(algo);
+    this->qindexValues.clear();
+    this->loadQindex();
+}*/
+
+void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
+{
+    for (const auto &item : algos)
+    {
+        if (item.second)
+        {
+            std::cout << item.first << std::endl;
+            this->algos_to_colorize.push_back(item.first);
+        }
+    }
     this->qindexValues.clear();
     this->loadQindex();
 }
@@ -671,10 +702,13 @@ void FSTWindow::load(json data, TextEditor &editors) {
     }
 
     for (const auto &scope : g_Reader->scopes) {
-        if (scope->name == this->algo_to_colorize) {
-            for (const auto &pair : scope->pairs) {
-                if (pair.second->name.find("index") != std::string::npos) {
-                    qindex = pair.second->q->id;
+        for (const auto &item : this->algos_to_colorize)
+        {
+            if (scope->name == item) {
+                for (const auto &pair : scope->pairs) {
+                    if (pair.second->name.find("index") != std::string::npos) {
+                        qindexes.push_back(pair.second->q->id);
+                    }
                 }
             }
         }

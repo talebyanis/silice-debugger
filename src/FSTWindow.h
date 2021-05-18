@@ -37,7 +37,7 @@ public:
     void load(const std::string& file, TextEditor& editor);
     void load(json data, TextEditor &editors);
 
-    void setAlgoToColorize(std::string algo);
+    void setAlgoToColorize(std::map<std::string, bool>& algo);
     void render();
     json save();
 
@@ -51,8 +51,8 @@ private:
     fstHandle hoverHighLight = 0;
     fstHandle hoverRightClickMenu = 0;
 
-    fstHandle qindex = 0;
-    std::vector<std::pair<int, int>> qindexValues;
+    std::list<fstHandle> qindexes;
+    std::map<fstHandle, std::vector<std::pair<int, int>>> qindexValues;
 
     double markerX = 0;
 
@@ -61,7 +61,7 @@ private:
     int bit_left_custom = 16;
 
     TextEditor* editor;
-    std::string algo_to_colorize;
+    std::list<std::string> algos_to_colorize;
 
     void clean();
 

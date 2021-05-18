@@ -34,6 +34,7 @@ static ImFont *font_general;
 static ImFont *font_code; // font used for the TextEditor's code
 
 std::string current_algo;
+std::map<std::string, bool> checked_algos;
 
 //-------------------------------------------------------
 
@@ -303,9 +304,10 @@ void MainWindow::ShowCodeEditor() {
         ImGui::EndMenuBar();
     }
 
-    if (editor.hasIndexColorization())
-    {
-        if (ImGui::BeginCombo("Algo to colorize", current_algo.c_str()))
+    if (editor.hasIndexColorization()) {
+        ImGui::Separator();
+        bool checked;
+        /*if (ImGui::BeginCombo("Algo to colorize", current_algo.c_str()))
         {
             for (const auto &item : this->editor.siliceFile.algos)
             {
@@ -322,6 +324,15 @@ void MainWindow::ShowCodeEditor() {
             }
             ImGui::EndCombo();
         }
+         */
+        for (const auto &item : this->editor.siliceFile.algos)
+        {
+            if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
+            {
+                fstWindow.setAlgoToColorize(checked_algos);
+            }
+        }
+        ImGui::Separator();
     }
 
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
