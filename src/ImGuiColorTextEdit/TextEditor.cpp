@@ -57,12 +57,6 @@ TextEditor::TextEditor()
     this->setPathToLogFile(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
     this->siliceFile.fsmfile_path = PROJECT_DIR "BUILD_icarus/build.v.fsm.log";
 
-	//this->lp.parseFSM(SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.fsm.log");
-	//this->pathToLogFile = SRC_PATH "/examples/divstd_bare/BUILD_icarus/build.v.vio.log";
-	//this->openedFile = SRC_PATH "/examples/divstd_bare/main.ice";
-	//this->pathToLogFile = "./build.v.vio.log";
-
-    //this->writeFromFile("../main.ice");
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
     this->writeFromFile(PROJECT_DIR "main.ice");

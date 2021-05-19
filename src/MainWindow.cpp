@@ -26,8 +26,6 @@ ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDo
 bool p_open_dockspace = true;
 bool p_open_editor = true;
 
-LogParser lp;
-
 static GLuint g_FontTexture;
 
 static ImFont *font_general;
@@ -38,8 +36,8 @@ std::map<std::string, bool> checked_algos;
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, std::string general_font_name,
-                                          std::string code_font_name) {
+static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, const std::string& general_font_name,
+                                          const std::string& code_font_name) {
     // Build texture atlas
     ImGuiIO &io = ::ImGui::GetIO();
     unsigned char *pixels;
@@ -150,7 +148,7 @@ void MainWindow::ShowDockSpace() {
                     error = true;
                 }
             }
-            if (ImGui::MenuItem("Save debug", NULL, false, fstWindow.g_Reader)) {
+            if (ImGui::MenuItem("Save debug", nullptr, false, fstWindow.g_Reader)) {
                 if (fstWindow.g_Reader) {
                     if (!exists(SRC_PATH "/.save")) {
                         createDirectory(SRC_PATH "/.save");
@@ -306,25 +304,6 @@ void MainWindow::ShowCodeEditor() {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        bool checked;
-        /*if (ImGui::BeginCombo("Algo to colorize", current_algo.c_str()))
-        {
-            for (const auto &item : this->editor.siliceFile.algos)
-            {
-                bool is_selected = (current_algo == item);
-                if (ImGui::Selectable(item.c_str(), is_selected))
-                {
-                    current_algo = item;
-                    fstWindow.setAlgoToColorize(current_algo);
-                }
-                if (is_selected)
-                {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
-         */
         for (const auto &item : this->editor.siliceFile.algos)
         {
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
@@ -372,6 +351,8 @@ void MainWindow::Init() {
 
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
     fstWindow.load(str, editor);
+
+    fileFullPath = fs::path(PROJECT_DIR "main.ice");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
