@@ -8,8 +8,8 @@
 #include "FSTReader.h"
 
 void *g_Wave = nullptr;
-std::map<fstHandle, valuesList> g_Values;
-std::map<fstHandle, std::vector<int>> g_Errors;
+std::vector<valuesList> g_Values;
+std::vector<std::vector<int>> g_Errors;
 
 std::mutex g_Mutex;
 
@@ -70,11 +70,18 @@ void FSTReader::initMaps() {
     //Get all values in g_Values & g_Errors
     std::thread th([this]() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
-            std::unique_lock<std::mutex> lock(g_Mutex);
+//            std::unique_lock<std::mutex> lock(g_Mutex);
+            std::cout << "loading fst " << facidx << " " << time << std::endl;
             int dvalue = decodeValue(reinterpret_cast<const char *>(value));
             if (dvalue != -1) { //error
-                g_Values[facidx].push_back(std::make_pair((int) time, dvalue));
+                if(g_Values.size() <= facidx) {
+                    g_Values.resize(facidx + 1);
+                }
+                g_Values[facidx].push_back({time, (ImU64) dvalue});
             } else { //value
+                if(g_Errors.size() <= facidx) {
+                    g_Errors.resize(facidx + 1);
+                }
                 g_Errors[facidx].push_back((int) time);
             }
             std::this_thread::yield();
@@ -87,36 +94,37 @@ void FSTReader::initMaps() {
     //Find max time to add a point on the plots to the end
     ImU64 maxTime = getMaxTime();
     for (auto &item : g_Values) {
-        valuesList *values = &item.second;
-        auto res = std::find_if(values->begin(), values->end(), [maxTime](std::pair<ImU64, ImU64> pair) {
-            return pair.first == maxTime;
+        valuesList *values = &item;
+        auto res = std::find_if(values->begin(), values->end(), [maxTime](std::array<ImU64, 2> pair) {
+            return pair[0] == maxTime;
         });
         if (res == values->end()) {
             ImU64 lastValue = 0;
             ImU64 lastTime = 0;
             for (const auto &value : *values) {
-                lastTime = value.first;
-                lastValue = value.second;
+                lastTime = value[0];
+                lastValue = value[1];
             }
-            values->push_back(std::make_pair(maxTime, lastValue));
+            values->push_back({maxTime, lastValue});
         }
     }
 
     //Fill values & errors
-    for (auto item : g_Values) {
-        fstHandle currentHandle = item.first;
+    for (size_t i = 0; i < g_Values.size(); ++i) {
+        fstHandle currentHandle = i;
         for (auto scope : this->scopes) {
             Signal *current = scope->getSignal(currentHandle);
             if (current)
-                current->values = item.second;
+                current->values = g_Values[i];
         }
     }
-    for (const auto item : g_Errors) {
-        fstHandle currentHandle = item.first;
+
+    for (size_t i = 0; i < g_Errors.size(); ++i) {
+        fstHandle currentHandle = i;
         for (Scope *scope : this->scopes) {
             Signal *current = scope->getSignal(currentHandle);
             if (current)
-                current->errors = item.second;
+                current->errors = g_Errors[i];
         }
     }
 }
@@ -148,10 +156,10 @@ std::vector<int> FSTReader::getErrors(fstHandle signal) {
 ImU64 FSTReader::getMaxTime() {
     ImU64 max = 0;
     for (const auto &item : g_Values) {
-        valuesList values = item.second;
+        valuesList values = item;
         for (const auto &value : values) {
-            if (value.first > max) {
-                max = value.first;
+            if (value[0] > max) {
+                max = value[0];
             }
         }
     }
@@ -172,7 +180,7 @@ std::list<int> FSTReader::get_q_index_values()
             for (const auto &signal : scope->pairs) {
                 if (signal.second->q->name.find("_q_index") != std::string::npos) {
                     for (const auto &item : signal.second->q->values) {
-                        values.emplace_back(item.second);
+                        values.emplace_back(item[1]);
                     }
                     return values;
                 }
