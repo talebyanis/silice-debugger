@@ -78,8 +78,8 @@ private:
     void showRightClickPlotSettings(fstHandle signal);
 
     void showPlotMenu();
-    void showSignalsMenu(Scope scope, int &hiddenCount);
-    void showPairsMenu(Scope scope, int &hiddenCount);
+    void showSignalsMenu(Scope &scope, int &hiddenCount);
+    void showPairsMenu(Scope &scope, int &hiddenCount);
 
     void loadQindex();
 };

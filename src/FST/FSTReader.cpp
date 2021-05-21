@@ -65,13 +65,18 @@ void FSTReader::initMaps() {
         hier = fstReaderIterateHier(g_Wave);
     } while (hier != NULL);
 
+    //std::cout << this->scopes.front()->name << "\n";
+    //std::cout << this->scopes.front()->signals[12].name << "\n";
+
+    //fstReaderSetFacProcessMask(g_Wave, this->scopes.front()->signals[12].id);
+
     fstReaderSetFacProcessMaskAll(g_Wave);
 
     //Get all values in g_Values & g_Errors
-    std::thread th([this]() {
+    std::thread th([]() {
         auto l = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
-//            std::unique_lock<std::mutex> lock(g_Mutex);
-            std::cout << "loading fst " << facidx << " " << time << std::endl;
+            std::unique_lock<std::mutex> lock(g_Mutex);
+            //std::cout << "loading fst " << facidx << " " << time << "\n";
             int dvalue = decodeValue(reinterpret_cast<const char *>(value));
             if (dvalue != -1) { //error
                 if(g_Values.size() <= facidx) {

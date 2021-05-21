@@ -12,7 +12,7 @@ using json = nlohmann::json;
 
 //-------------------------------------------------------
 
-inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
+inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount) {
     for (const auto &signal : scope.signals) {
         std::string name = signal.second.name;
         std::vector<fstHandle> sig = {signal.second.id};
@@ -44,7 +44,7 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
     }
 }
 
-inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
+inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount) {
     for (const auto &signal : scope.pairs) {
         std::string name = signal.second->name;
         std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
