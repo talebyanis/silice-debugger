@@ -23,6 +23,8 @@ public:
 
     Signal* getSignal(fstHandle signal);
 
+    void loadData();
+
     ImU64 getMaxTime();
     valuesList getValues(fstHandle signal);
     errorsList getErrors(fstHandle signal);

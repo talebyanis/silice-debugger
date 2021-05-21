@@ -13,6 +13,8 @@ std::vector<std::vector<int>> g_Errors;
 
 std::mutex g_Mutex;
 
+Signal* currentSignal;
+
 // ---------------------------------------------------------------------
 
 /**
@@ -65,11 +67,19 @@ void FSTReader::initMaps() {
         hier = fstReaderIterateHier(g_Wave);
     } while (hier != NULL);
 
+    for (size_t i = 0; i < scopes.front()->signals.size(); ++i) {
+        Signal s = scopes.front()->signals[i];
+        if(s.name.find("clk") != std::string::npos) {
+            currentSignal = &s;
+            this->loadData();
+        }
+    }
+
     //std::cout << this->scopes.front()->name << "\n";
     //std::cout << this->scopes.front()->signals[12].name << "\n";
 
     //fstReaderSetFacProcessMask(g_Wave, this->scopes.front()->signals[12].id);
-
+/*
     fstReaderSetFacProcessMaskAll(g_Wave);
 
     //Get all values in g_Values & g_Errors
@@ -131,7 +141,7 @@ void FSTReader::initMaps() {
             if (current)
                 current->errors = g_Errors[i];
         }
-    }
+    }*/
 }
 
 // ---------------------------------------------------------------------
@@ -147,13 +157,32 @@ Signal *FSTReader::getSignal(fstHandle signal) {
 // ---------------------------------------------------------------------
 
 valuesList FSTReader::getValues(fstHandle signal) {
-    return this->getSignal(signal)->values;
+    currentSignal = this->getSignal(signal);
+    if(currentSignal->errors.empty() && currentSignal->values.empty()) this->loadData();
+    return currentSignal->values;
+}
+
+std::vector<int> FSTReader::getErrors(fstHandle signal) {
+    currentSignal = this->getSignal(signal);
+    if(currentSignal->errors.empty() && currentSignal->values.empty()) this->loadData();
+    return currentSignal->errors;
 }
 
 // ---------------------------------------------------------------------
 
-std::vector<int> FSTReader::getErrors(fstHandle signal) {
-    return this->getSignal(signal)->errors;
+void FSTReader::loadData() {
+    std::cout << "loading " << currentSignal->name << "\n";
+    fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
+
+    auto callback = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
+        int dvalue = decodeValue(reinterpret_cast<const char *>(value));
+        if (dvalue != -1) { //value
+            currentSignal->values.push_back({time, (ImU64) dvalue});
+        } else {  //error
+            currentSignal->errors.push_back(time);
+        }
+    };
+    fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
 }
 
 // ---------------------------------------------------------------------
