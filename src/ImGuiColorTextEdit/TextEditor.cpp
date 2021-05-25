@@ -5,7 +5,8 @@
 #include <string>
 #include <regex>
 #include <cmath>
-
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h" // for imGui::GetCurrentWindow()
@@ -59,7 +60,8 @@ TextEditor::TextEditor()
 
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
-    this->writeFromFile(PROJECT_DIR "main.ice");
+
+    this->writeFromFile(fs::canonical(PROJECT_DIR "main.ice").string());
     this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 

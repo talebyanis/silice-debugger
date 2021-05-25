@@ -79,7 +79,7 @@ private:
 
     void showPlotMenu();
     void showSignalsMenu(Scope scope, int &hiddenCount);
-    void showPairsMenu(Scope scope, int &hiddenCount);
+    void showPairsMenu(const Scope& scope, int &hiddenCount);
 
     void loadQindex();
 };

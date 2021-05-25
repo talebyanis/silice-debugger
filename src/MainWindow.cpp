@@ -304,8 +304,10 @@ void MainWindow::ShowCodeEditor() {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
+        ImGui::Text("Algorithm(s) ");
         for (const auto &item : this->editor.siliceFile.algos)
         {
+            ImGui::SameLine();
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
             {
                 fstWindow.setAlgoToColorize(checked_algos);

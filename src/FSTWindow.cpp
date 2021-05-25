@@ -32,7 +32,7 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
             if (ImGui::IsItemHovered()) {
                 hoverRightClickMenu = signal.second.id;
                 ImGui::BeginTooltip();
-                ImGui::Text("%s", name.c_str());
+                ImGui::Text(" %s ", name.c_str());
                 ImGui::EndTooltip();
             }
             if (hoverHighLight == signal.second.id) {
@@ -44,7 +44,7 @@ inline void FSTWindow::showSignalsMenu(Scope scope, int &hiddenCount) {
     }
 }
 
-inline void FSTWindow::showPairsMenu(Scope scope, int &hiddenCount) {
+inline void FSTWindow::showPairsMenu(const Scope& scope, int &hiddenCount) {
     for (const auto &signal : scope.pairs) {
         std::string name = signal.second->name;
         std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
