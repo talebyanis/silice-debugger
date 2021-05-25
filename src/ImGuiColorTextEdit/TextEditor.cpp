@@ -60,12 +60,11 @@ TextEditor::TextEditor()
 
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
-<<<<<<< HEAD
 
     this->writeFromFile(fs::canonical(PROJECT_DIR "main.ice").string());
-=======
+
     this->writeFromFile(PROJECT_DIR "main.ice");
->>>>>>> master
+
     this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 
