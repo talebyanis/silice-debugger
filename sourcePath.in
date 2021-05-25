@@ -4,7 +4,7 @@
 #define test_env
 
 #ifdef test_env
-#define PROJECT_DIR "D:/Work/VisualStudio/silice-text-editor/examples/wolfpga/"
+#define PROJECT_DIR "@CMAKE_SOURCE_DIR@/examples/wolfpga/"
 #else
 #define PROJECT_DIR "./"
 #endif

@@ -52,10 +52,12 @@ inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount) {
             if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
             }
+            std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
+            std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
             if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                 "",
-                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[0]})) ||
-                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[1]})))) {
+                                FSTWindow::isDisplayed(vectorA) ||
+                                FSTWindow::isDisplayed(vectorB))) {
                 if (!FSTWindow::isDisplayed(pair)) {
                     this->addPlot(pair);
                 } else {
@@ -152,7 +154,8 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
         return;
     }
     for (const auto &signal : signals) {
-        if (!this->isDisplayed(std::vector<fstHandle>({signal}))) {
+        std::vector<fstHandle> vector = std::vector<fstHandle>({signal});
+        if (!this->isDisplayed(vector)) {
             Plot plot;
             plot.signalId = signal;
             std::string signalName = g_Reader->getSignal(signal)->name;
