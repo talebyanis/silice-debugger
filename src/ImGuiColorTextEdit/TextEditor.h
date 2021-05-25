@@ -316,7 +316,6 @@ public:
     void setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
-	bool containsAlgo(const std::string& algoname);
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;

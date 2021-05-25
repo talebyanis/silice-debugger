@@ -334,11 +334,11 @@ void MainWindow::ShowCodeEditor() {
 
 void MainWindow::ZoomMouseWheel() {
     if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor)) {
-        if (ImGui::GetIO().MouseWheel > 0) {
+        if (ImGui::GetIO().MouseWheel > 0 || ImGui::GetIO().KeysDown[LIBSL_KEY_UP]) {
             if (ImGui::GetFontSize() < 28) {
                 editor.ScaleFont(true);
             }
-        } else if (ImGui::GetIO().MouseWheel < 0) {
+        } else if (ImGui::GetIO().MouseWheel < 0 || ImGui::GetIO().KeysDown[LIBSL_KEY_DOWN]) {
             if (ImGui::GetFontSize() > 13) {
                 editor.ScaleFont(false);
             }
@@ -354,7 +354,8 @@ void MainWindow::Init() {
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
     fstWindow.load(str, editor);
 
-    fileFullPath = fs::path(PROJECT_DIR "wolfpga.ice");
+    // Todo : dynamically replace with the correct path
+    fileFullPath = fs::path(PROJECT_DIR "main.ice");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;

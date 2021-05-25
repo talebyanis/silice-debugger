@@ -2688,23 +2688,8 @@ void TextEditor::ScaleFont(bool make_bigger)
     ImGui::GetFont()->Scale=scale;
 }
 
-bool TextEditor::hasIndexColorization()
-{
+bool TextEditor::hasIndexColorization() {
     return this->mIndexColorization;
-}
-
-bool TextEditor::containsAlgo(const std::string& algoname)
-{
-    bool found = false;
-    for (const auto &algo : this->siliceFile.algos)
-    {
-        if (algoname.find(algo) != std::string::npos)
-        {
-            found = true;
-            break;
-        }
-    }
-    return found;
 }
 
 static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
