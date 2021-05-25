@@ -176,8 +176,8 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             plot.color = ImVec4(1, 1, 1, 1);
             valuesList values = g_Reader->getValues(signal);
             for (const auto &item : values) {
-                plot.x_data.push_back(item.first);
-                plot.y_data.push_back(item.second);
+                plot.x_data.push_back(item[0]);
+                plot.y_data.push_back(item[1]);
             }
             g_Plots.push_back(plot);
         }
@@ -613,7 +613,7 @@ void FSTWindow::loadQindex() {
                     if (pair.second->name.find("index") != std::string::npos) {
                         for (const auto &value : g_Reader->getValues(pair.second->q->id))
                         {
-                            qindexValues[item].emplace_back(value.first, value.second);
+                            qindexValues[item].emplace_back(value[0], value[1]);
                         }
                     }
                 }

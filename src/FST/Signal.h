@@ -3,11 +3,12 @@
 #include <string>
 #include <vector>
 #include <imgui.h>
+#include <array>
 
 #include "../../libs/fstapi/fstapi.h"
 
 
-typedef std::vector<std::pair<ImU64, ImU64>> valuesList;
+typedef std::vector<std::array<ImU64, 2>> valuesList;
 typedef std::vector<int> errorsList;
 
 class Signal {

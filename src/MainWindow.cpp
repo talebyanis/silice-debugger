@@ -354,7 +354,7 @@ void MainWindow::Init() {
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
     fstWindow.load(str, editor);
 
-    fileFullPath = fs::path(PROJECT_DIR "main.ice");
+    fileFullPath = fs::path(PROJECT_DIR "wolfpga.ice");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
