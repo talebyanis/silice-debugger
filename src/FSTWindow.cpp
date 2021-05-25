@@ -175,10 +175,15 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             }
             plot.color = ImVec4(1, 1, 1, 1);
             valuesList values = g_Reader->getValues(signal);
+
+            plot.maxY = 0;
+
             for (const auto &item : values) {
                 plot.x_data.push_back(item[0]);
                 plot.y_data.push_back(item[1]);
+                if (item[1] > plot.maxY) plot.maxY = item[1];
             }
+           
             g_Plots.push_back(plot);
         }
     }
@@ -200,15 +205,13 @@ void FSTWindow::removePlot(std::vector<fstHandle> signals) {
 
 //-------------------------------------------------------
 
-bool FSTWindow::isDisplayed(std::vector<fstHandle> signals) {
-    bool ret = true;
+bool FSTWindow::isDisplayed(std::vector<fstHandle> &signals) {
     for (const auto &signal : signals) {
-        auto res = std::find_if(g_Plots.begin(), g_Plots.end(), [signal](Plot plot) {
-            return plot.signalId == signal;
-        });
-        ret &= res != g_Plots.end();
+        for (size_t i = 0; i < g_Plots.size(); i++) {
+            if (g_Plots[i].signalId == signal) return true;
+        }
     }
-    return ret;
+    return false;
 }
 
 //-------------------------------------------------------
@@ -355,13 +358,32 @@ void FSTWindow::showPlots() {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
-            double max = *std::max_element(item->y_data.begin(), item->y_data.end());
-            ImPlot::SetNextPlotLimitsY(0.0 - max / 3, max + max / 3);
+            ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0, (float)item->maxY + (float)item->maxY / 3.0);
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
             double xMin = plotXLimits->Min;
             double xMax = plotXLimits->Max;
             ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
+
+            int leftIndex = 0;
+            int midIndex;
+            int rightIndex = item->x_data.size() - 1;
+
+            auto dicho = [item](int leftIndex, int rightIndex, int toFind) {
+                int midIndex;
+                while (leftIndex < rightIndex - 1) {
+                    midIndex = (leftIndex + rightIndex) / 2;
+                    if (item->x_data[midIndex] < toFind) leftIndex = midIndex;
+                    else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
+                }
+                return midIndex;
+            };
+
+            leftIndex = dicho(leftIndex, rightIndex, xMin);
+            rightIndex = dicho(leftIndex, rightIndex, xMax);
+
+            leftIndex = std::max(0, leftIndex - 1);
+            rightIndex = std::min((int)item->x_data.size()-1, rightIndex + 1);
 
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
@@ -371,8 +393,8 @@ void FSTWindow::showPlots() {
                 //Marker
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
-                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[0], (int *) &item->y_data[0],
-                                   item->x_data.size());
+                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[leftIndex], (int *) &item->y_data[leftIndex],
+                                   rightIndex-leftIndex);
 
                 this->drawErrors(item);
 
@@ -394,8 +416,8 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                this->drawValues(item);
-                ImPlot::PopStyleColor(2);
+                //this->drawValues(item);
+                ImPlot::PopStyleColor();
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
             }
@@ -431,10 +453,6 @@ void FSTWindow::showPlots() {
 
 inline void FSTWindow::drawErrors(Plot *item) {
     std::vector<int> errors = g_Reader->getErrors(item->signalId);
-    int maxY = -1;
-    for (const auto &y : item->y_data) {
-        if (y > maxY) maxY = y;
-    }
     for (const auto &error : errors) {
         int next = -1;
         for (const auto &x : item->x_data) {
@@ -444,8 +462,8 @@ inline void FSTWindow::drawErrors(Plot *item) {
             }
         }
         ImPlot::PushPlotClipRect();
-        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - maxY));
-        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * maxY));
+        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - item->maxY));
+        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * item->maxY));
         ImPlot::GetPlotDrawList()->AddRectFilled(min, max, IM_COL32(255, 0, 0, 100));
         ImPlot::PopPlotClipRect();
     }
@@ -483,9 +501,10 @@ inline void FSTWindow::listenArrows(Plot* item) {
 }
 
 inline void FSTWindow::drawValues(Plot *item) {
+    std::basic_string<char> value;
+    std::stringstream stream;
     for (int i = 0; i < item->x_data.size(); i++) {
-        std::basic_string<char> value;
-        std::stringstream stream;
+        if (item->x_data[i] < plotXLimits->Min || item->x_data[i] > plotXLimits->Max) continue;
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
@@ -518,6 +537,7 @@ inline void FSTWindow::drawValues(Plot *item) {
             }
         }
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+        ImGui::PopStyleColor();
     }
 }
 

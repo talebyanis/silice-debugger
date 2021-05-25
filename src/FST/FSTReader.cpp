@@ -171,18 +171,20 @@ std::vector<int> FSTReader::getErrors(fstHandle signal) {
 // ---------------------------------------------------------------------
 
 void FSTReader::loadData() {
-    std::cout << "loading " << currentSignal->name << "\n";
-    fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
+    if (currentSignal->errors.empty() && currentSignal->values.empty()) {
+        std::cout << "loading " << currentSignal->name << "\n";
 
-    auto callback = [](void *user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char *value) {
-        int dvalue = decodeValue(reinterpret_cast<const char *>(value));
-        if (dvalue != -1) { //value
-            currentSignal->values.push_back({time, (ImU64) dvalue});
-        } else {  //error
-            currentSignal->errors.push_back(time);
-        }
-    };
-    fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
+        fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
+        auto callback = [](void* user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char* value) {
+            int dvalue = decodeValue(reinterpret_cast<const char*>(value));
+            if (dvalue != -1) { //value
+                currentSignal->values.push_back({ time, (ImU64)dvalue });
+            } else {  //error
+                currentSignal->errors.push_back(time);
+            }
+        };
+        fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
+    }
 }
 
 // ---------------------------------------------------------------------

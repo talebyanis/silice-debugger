@@ -60,7 +60,7 @@ TextEditor::TextEditor()
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
     this->writeFromFile(PROJECT_DIR "wolfpga.ice");
-    this->current_index_colorization = this->linesIndexes.begin()->first;
+    //this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 
 	SetPalette(GetDarkPalette());

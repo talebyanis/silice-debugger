@@ -25,6 +25,7 @@ typedef struct {
     std::string customtype_string;
     ImVec4 color;
     bool fold;
+    int maxY;
 } Plot;
 
 class FSTWindow {
@@ -66,7 +67,7 @@ private:
 
     void addPlot(const std::vector<fstHandle>& signals);
     void removePlot(std::vector<fstHandle> signals);
-    bool isDisplayed(std::vector<fstHandle> signals);
+    bool isDisplayed(std::vector<fstHandle> &signals);
 
     void showPlots();
     inline void drawErrors(Plot* item);
