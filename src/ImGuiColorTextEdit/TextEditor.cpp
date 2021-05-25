@@ -76,8 +76,7 @@ TextEditor::TextEditor()
 }
 
 TextEditor::~TextEditor()
-{
-}
+= default;
 
 void TextEditor::SetLanguageDefinition(const LanguageDefinition& aLanguageDef)
 {
@@ -1009,21 +1008,24 @@ void TextEditor::Render()
                     }
                 }
 
-                for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
+                if (!this->linesSelectedIndexes.empty())
                 {
-                    if (linesSelectedIndex.second.first != -1)
+                    for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
                     {
-                        if (lineNo + 1 >= linesSelectedIndex.second.first && lineNo + 1 < linesSelectedIndex.second.second ||
-                            (linesSelectedIndex.second.first == linesSelectedIndex.second.second && lineNo + 1 >= linesSelectedIndex.second.first))
+                        if (linesSelectedIndex.second.first != -1)
                         {
-                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                            drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
-
-                            if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                            if (lineNo + 1 >= linesSelectedIndex.second.first && lineNo + 1 < linesSelectedIndex.second.second ||
+                                (linesSelectedIndex.second.first == linesSelectedIndex.second.second && lineNo + 1 >= linesSelectedIndex.second.first))
                             {
-                                ImGui::BeginTooltip();
-                                ImGui::Text(" %s ", linesSelectedIndex.first.c_str());
-                                ImGui::EndTooltip();
+                                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                                drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
+
+                                if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                                {
+                                    ImGui::BeginTooltip();
+                                    ImGui::Text(" %s ", linesSelectedIndex.first.c_str());
+                                    ImGui::EndTooltip();
+                                }
                             }
                         }
                     }

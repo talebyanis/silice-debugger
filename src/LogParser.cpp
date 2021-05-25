@@ -90,7 +90,7 @@ void LogParser::parseFSM(const std::string& fsm_filename)
 	file.open(fsm_filename, std::ios::in);
 	if (!file)
 	{
-		std::cout << "FSM Log file was not found";
+		std::cerr << "FSM Log file was not found";
 		exit(1);
 	}
 
@@ -123,9 +123,9 @@ void LogParser::parseFSM(const std::string& fsm_filename)
 // ---------------------------------------------------------------------
 
 // Return lines associated with "index" from "filename"
-std::pair<int, int> LogParser::getLines(std::string filename, int index)
+std::pair<int, int> LogParser::getLines(const std::string& filename, int index)
 {
-	std::pair<int, int> pair = std::make_pair(-1, -2); // -2 = inf
+	std::pair<int, int> pair = std::make_pair(-1, -2);
 	bool found = false;
 	for (auto const& [key, val] : this->fsm_lines)
 	{
