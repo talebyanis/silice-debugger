@@ -63,8 +63,6 @@ TextEditor::TextEditor()
 
     this->writeFromFile(fs::canonical(PROJECT_DIR "main.ice").string());
 
-    this->writeFromFile(PROJECT_DIR "main.ice");
-
     this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 
