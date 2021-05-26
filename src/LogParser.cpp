@@ -67,9 +67,9 @@ std::string LogParser::getCol(std::string file_name, std::string var_name, int c
 // ---------------------------------------------------------------------
 
 // Returns a list of key (file_name, var_name) having their value's usage matching with the parameter (const, temp...)
-std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string match)
+std::list<std::pair<std::string, std::string>> LogParser::getMatch(const std::string& match)
 {
-	std::list<std::pair<std::string, std::string>>* list = new std::list<std::pair<std::string, std::string>>();
+	auto* list = new std::list<std::pair<std::string, std::string>>();
 	for (auto const& [key, val] : report_lines)
 	{
 		if (val.usage == match)
