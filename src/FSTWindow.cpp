@@ -189,7 +189,6 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
            
             g_Plots.push_back(plot);
             //for (int i = 0; i < plot.x_data.size(); i++) std::cout << plot.x_data[i] << " " << plot.y_data[i] << "\n";
-            std::cout << "endAddPlot\n";
         }
     }
 }
@@ -375,12 +374,12 @@ void FSTWindow::showPlots() {
             int rightIndex = item->x_data.size() - 1;
 
             auto dicho = [item](int leftIndex, int rightIndex, int toFind) {
-                int midIndex;
+                int midIndex = (leftIndex + rightIndex) / 2;
                 while (leftIndex < rightIndex - 1) {
                     midIndex = (leftIndex + rightIndex) / 2;
                     if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
-                    else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
-                    //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
+                    else if (item->x_data[midIndex] >= toFind) rightIndex = midIndex;
+                    std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
                 }
                 return midIndex;
             };
@@ -400,7 +399,7 @@ void FSTWindow::showPlots() {
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
                 ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[leftIndex], (int *) &item->y_data[leftIndex],
-                                   rightIndex-leftIndex);
+                                   rightIndex-leftIndex+1);
 
                 this->drawErrors(item);
 
@@ -422,8 +421,8 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                //this->drawValues(item);
-                ImPlot::PopStyleColor();
+                this->drawValues(item);
+                ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
             }
@@ -532,7 +531,7 @@ inline void FSTWindow::drawValues(Plot *item) {
                 break;
         }
 
-        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+        //ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
         //Offset to place the value correctly
         ImVec2 offset = ImVec2(0, 0);
         if (i > 0) {
@@ -543,7 +542,7 @@ inline void FSTWindow::drawValues(Plot *item) {
             }
         }
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
-        ImGui::PopStyleColor();
+       //ImGui::PopStyleColor();
     }
 }
 
