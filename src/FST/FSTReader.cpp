@@ -67,14 +67,6 @@ void FSTReader::initMaps() {
         hier = fstReaderIterateHier(g_Wave);
     } while (hier != NULL);
 
-    for (size_t i = 0; i < scopes.front()->signals.size(); ++i) {
-        Signal s = scopes.front()->signals[i];
-        if(s.name.find("clk") != std::string::npos) {
-            currentSignal = &s;
-            this->loadData();
-        }
-    }
-
     //std::cout << this->scopes.front()->name << "\n";
     //std::cout << this->scopes.front()->signals[12].name << "\n";
 
@@ -172,8 +164,7 @@ std::vector<int> FSTReader::getErrors(fstHandle signal) {
 
 void FSTReader::loadData() {
     if (currentSignal->errors.empty() && currentSignal->values.empty()) {
-        std::cout << "loading " << currentSignal->name << "\n";
-
+        std::cout << "loading " << currentSignal->name << "\n";    
         fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
         auto callback = [](void* user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char* value) {
             int dvalue = decodeValue(reinterpret_cast<const char*>(value));
@@ -182,8 +173,10 @@ void FSTReader::loadData() {
             } else {  //error
                 currentSignal->errors.push_back(time);
             }
+            //std::cout << facidx << " " << time << " " << dvalue << "\n";
         };
         fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
+        fstReaderClrFacProcessMask(g_Wave, currentSignal->id);
     }
 }
 

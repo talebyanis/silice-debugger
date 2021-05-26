@@ -188,6 +188,8 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             }
            
             g_Plots.push_back(plot);
+            //for (int i = 0; i < plot.x_data.size(); i++) std::cout << plot.x_data[i] << " " << plot.y_data[i] << "\n";
+            std::cout << "endAddPlot\n";
         }
     }
 }
@@ -376,8 +378,9 @@ void FSTWindow::showPlots() {
                 int midIndex;
                 while (leftIndex < rightIndex - 1) {
                     midIndex = (leftIndex + rightIndex) / 2;
-                    if (item->x_data[midIndex] < toFind) leftIndex = midIndex;
+                    if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
                     else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
+                    //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
                 }
                 return midIndex;
             };
