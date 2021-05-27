@@ -333,19 +333,26 @@ void FSTWindow::showPlots() {
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursor.x, cursor.y),
-                                                  ImVec2(cursor.x + 1000, cursor.y + 25),
+                                                  ImVec2(cursor.x + 3000, cursor.y + 25),
                                                   IM_COL32(51, 64, 74, 255));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
-                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - 50, cursor.y));
 
         //Folding button
-        if (ImGui::Button("Folding")) {
-            item->fold = !item->fold;
+        if (item->fold) {
+            if (ImGui::Button("^")) {
+                item->fold = !item->fold;
+            }
+        } else {
+            if (ImGui::Button("v")) {
+                item->fold = !item->fold;
+            }
         }
+
 
         ImGui::SameLine();
 
@@ -412,7 +419,6 @@ void FSTWindow::showPlots() {
                     for (size_t i = 0; i < pixels; i++) {
                         //there is (x = dataSize/pixels) times more data than pixels
                         //so we take one sample out of x 
-                        //leftIndex will remain the same (leftIndex + 0 * x = leftIndex) 
                         size_t index = leftIndex + i * (dataSize / pixels);  
                         x_data.push_back(item->x_data[index]);
                         y_data.push_back(item->y_data[index]);
