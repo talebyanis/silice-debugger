@@ -377,7 +377,7 @@ void FSTWindow::showPlots() {
                 size_t midIndex = (leftIndex + rightIndex) / 2;
                 while (leftIndex < rightIndex - 1) {
                     midIndex = (leftIndex + rightIndex) / 2;
-                    if (item->x_data[midIndex] < toFind) leftIndex = midIndex;
+                    if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
                     else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
                     //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
                 }
