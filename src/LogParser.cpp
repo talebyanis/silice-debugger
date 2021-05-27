@@ -21,6 +21,7 @@ void LogParser::parseVio(std::string vio_filename)
 	report_line rl;
 	while (file >> element) {
 		rl.filename = element;
+		std::cout << rl.filename << std::endl;
 		file >> element;
 		rl.token = element;
 		file >> element;
@@ -37,26 +38,22 @@ void LogParser::parseVio(std::string vio_filename)
 // ---------------------------------------------------------------------
 
 // Returns a specific column for a line
-// col_nb : 1=filename, 2=token, 3=varname, 4=line, 5=usage
+// col_nb : 0=filename, 1=token, 2=varname, 3=line, 4=usage
 std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb)
 {
 	switch (col_nb)
 	{
 	case 0:
 		return report_lines[std::make_pair(file_name, var_name)].filename;
-		break;
 	case 1:
 		return report_lines[std::make_pair(file_name, var_name)].token;
-		break;
 	case 2:
 		return report_lines[std::make_pair(file_name, var_name)].varname;
-		break;
 	case 3:
 		return report_lines[std::make_pair(file_name, var_name)].line;
-		break;
 	case 4:
+	    //std::cout << report_lines.empty() << " here " << std::endl;
 		return report_lines[std::make_pair(file_name, var_name)].usage;
-		break;
 	default:
 		break;
 	}

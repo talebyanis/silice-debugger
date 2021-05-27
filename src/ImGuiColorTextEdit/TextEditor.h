@@ -176,6 +176,7 @@ public:
 		std::string mCommentStart, mCommentEnd, mSingleLineComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
+		std::string file_path;
 
 		TokenizeCallback mTokenize;
 
@@ -192,7 +193,7 @@ public:
 		static const LanguageDefinition& C();
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
-        static const LanguageDefinition& TokenizedSilice(LogParser &lp);
+        static const LanguageDefinition& TokenizedSilice(std::string file_path);
     };
 
 	TextEditor();

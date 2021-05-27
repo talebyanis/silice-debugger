@@ -5,6 +5,7 @@
 #include <string>
 #include <regex>
 #include <cmath>
+#include <utility>
 
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -67,7 +68,7 @@ TextEditor::TextEditor()
 
 	SetPalette(GetDarkPalette());
 	//SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
-    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(TextEditor::siliceFile.lp));
+    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path));
 	mLines.push_back(Line());
 
 	this->mReadOnly = false;
@@ -2759,7 +2760,7 @@ static bool TokenizeCStyleCharacterLiteral(const char* in_begin, const char* in_
 	return false;
 }
 
-static bool TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, std::string file_path)
 {
 	const char* p = in_begin;
 	std::string buffer;
@@ -2775,15 +2776,18 @@ static bool TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, c
             p++;
         }
 
-		//LogParser here
-        //TextEditor::siliceFile.lp.getCol()
+		// Looking for variable's usage in the .v.fsm.log file
+        std::string usage = TextEditor::siliceFile.lp.getCol(file_path, buffer, 4);
 
 		out_begin = in_begin;
 		out_end = p;
-		return true;
-	}
 
-	return false;
+        if(usage.empty())
+            return "none";
+        else
+            return usage;
+	}
+	return "";
 }
 
 static bool TokenizeCStyleNumber(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
@@ -3104,8 +3108,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
 				paletteIndex = PaletteIndex::String;
 			else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end))
 				paletteIndex = PaletteIndex::CharLiteral;
-			else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::Identifier;
+			//else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
+			//	paletteIndex = PaletteIndex::Identifier;
 			else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
 				paletteIndex = PaletteIndex::Number;
 			else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
@@ -3128,7 +3132,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
 	return langDef;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(LogParser& lp)
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(std::string file_path)
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -3151,9 +3155,11 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
         }
 
         // Using tokens for the colorization because it is way faster than std::regex
+        langDef.file_path = std::move(file_path);
         langDef.mTokenize = [](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
         {
             paletteIndex = PaletteIndex::Max;
+            std::string id_res;
 
             while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
                 in_begin++;
@@ -3174,8 +3180,19 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 paletteIndex = PaletteIndex::CharLiteral;
             else if (TokenizeCStyleType(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Type;
-            else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
-                paletteIndex = PaletteIndex::Identifier;
+            else if (!(id_res = TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path)).empty())
+            {
+                if (id_res == "none")
+                    paletteIndex = PaletteIndex::Identifier;
+                else if (id_res == "const")
+                    paletteIndex = PaletteIndex::Const;
+                else if (id_res == "wire")
+                    paletteIndex = PaletteIndex::Wire;
+                else if (id_res == "ff")
+                    paletteIndex = PaletteIndex::FF;
+                else if (id_res == "temp")
+                    paletteIndex = PaletteIndex::Temp;
+            }
             else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Number;
             else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
