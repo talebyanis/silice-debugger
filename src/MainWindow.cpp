@@ -304,7 +304,7 @@ void MainWindow::ShowCodeEditor() {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        for (const auto &item : this->editor.siliceFile.algos)
+        for (const auto &item : TextEditor::siliceFile.algos)
         {
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
             {

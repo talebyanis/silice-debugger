@@ -25,6 +25,8 @@ bool equals(InputIt1 first1, InputIt1 last1,
 	return first1 == last1 && first2 == last2;
 }
 
+TextEditor::SiliceFile TextEditor::siliceFile;
+
 TextEditor::TextEditor()
 	: mLineSpacing(1.0f)
 	, mUndoIndex(0)
@@ -51,11 +53,12 @@ TextEditor::TextEditor()
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
 {
 	this->p_open_editor = false;
-	// Setting paths on startup,
-	// ToDo : change path w/ an argument
 
-    this->setPathToLogFile(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
-    this->siliceFile.fsmfile_path = PROJECT_DIR "BUILD_icarus/build.v.fsm.log";
+	// SiliceFile is static
+    if (TextEditor::siliceFile.viofile_path.empty())
+        TextEditor::siliceFile.viofile_path = PROJECT_DIR "BUILD_icarus/build.v.vio.log";
+    if (TextEditor::siliceFile.fsmfile_path.empty())
+        TextEditor::siliceFile.fsmfile_path = PROJECT_DIR "BUILD_icarus/build.v.fsm.log";
 
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
@@ -64,7 +67,7 @@ TextEditor::TextEditor()
 
 	SetPalette(GetDarkPalette());
 	//SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
-    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->siliceFile.lp));
+    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(TextEditor::siliceFile.lp));
 	mLines.push_back(Line());
 
 	this->mReadOnly = false;
@@ -1459,7 +1462,7 @@ void TextEditor::SetReadOnly(bool aValue)
 {
 	mReadOnly = aValue;
 	aValue ?
-		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp)) :
+		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(TextEditor::siliceFile.lp)) :
 		SetLanguageDefinition(LanguageDefinition::Silice());
 }
 
@@ -2636,8 +2639,8 @@ bool TextEditor::writeFromFile(const std::string& filepath)
 		file.close();
 		this->mReadOnly = true;
 		this->mIndexColorization = true;
-		this->siliceFile.file_path = filepath;
-		this->siliceFile.parse();
+		this->file_path = filepath;
+		TextEditor::siliceFile.parse(this->file_path);
         this->setIndexPairs();
 		return true;
 	}
@@ -2649,7 +2652,7 @@ void TextEditor::setPathToLogFile(const std::string& path)
 {
     assert(!path.empty());
     assert(path.find(".v.vio.log"));
-    this->siliceFile.viofile_path = path;
+    TextEditor::siliceFile.viofile_path = path;
 }
 
 void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes)
@@ -2657,7 +2660,7 @@ void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& 
     this->linesSelectedIndexes.clear();
     for (const auto &index : indexes)
     {
-        this->linesSelectedIndexes.emplace_back(index.first, this->siliceFile.lp.getLines(this->siliceFile.file_path, index.second));
+        this->linesSelectedIndexes.emplace_back(index.first, this->siliceFile.lp.getLines(this->file_path, index.second));
     }
 }
 
@@ -2668,9 +2671,9 @@ void TextEditor::unsetSelectedIndex()
 
 void TextEditor::setIndexPairs()
 {
-	for (int index : this->siliceFile.lp.getIndexes(siliceFile.file_path))
+	for (int index : this->siliceFile.lp.getIndexes(this->file_path))
 	{
-		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->siliceFile.file_path, index));
+		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->file_path, index));
 	}
 }
 
@@ -2772,8 +2775,8 @@ static bool TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, c
             p++;
         }
 
-		std::cout << buffer << std::endl;
 		//LogParser here
+        //TextEditor::siliceFile.lp.getCol()
 
 		out_begin = in_begin;
 		out_end = p;

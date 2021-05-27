@@ -282,27 +282,34 @@ public:
 	// Addition
     struct SiliceFile
     {
-        std::string file_path;
         std::string viofile_path;
         std::string fsmfile_path;
-        std::list<std::string> algos;
+        std::vector<std::string> algos;
         LogParser lp;
 
-        void parse()
+        SiliceFile(): lp(), algos() { }
+
+        void parse(const std::string& filepath)
         {
             this->lp.parseVio(viofile_path);
             this->lp.parseFSM(fsmfile_path);
-            this->algos = this->lp.getAlgos(this->file_path);
+            std::list<std::string> list = this->lp.getAlgos(filepath);
+            this->algos.reserve(list.size());
+            for (const auto &item : list)
+            {
+                this->algos.push_back(item);
+            }
         }
     };
 
-    SiliceFile siliceFile;
+    static SiliceFile siliceFile;
 
+    std::string file_path;
 	bool p_open_editor;
-    bool mIndexColorization;
+    bool mIndexColorization{};
 	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
 	std::list<std::pair<std::string, std::pair<int, int>>> linesSelectedIndexes;
-	int current_index_colorization;
+	int current_index_colorization{};
 	bool colorA;
 
 	bool hasIndexColorization();
@@ -420,8 +427,8 @@ private:
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
 
-	Palette mPaletteBase;
-	Palette mPalette;
+	Palette mPaletteBase{};
+	Palette mPalette{};
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
 
