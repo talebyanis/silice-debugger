@@ -169,7 +169,7 @@ void FSTReader::loadData() {
         auto callback = [](void* user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char* value) {
             int dvalue = decodeValue(reinterpret_cast<const char*>(value));
             if (dvalue != -1) { //value
-                currentSignal->values.push_back({ time, (ImU64)dvalue });
+                currentSignal->values.push_back({ (ImU64)time, (ImU64)dvalue });
             } else {  //error
                 currentSignal->errors.push_back(time);
             }

@@ -411,7 +411,7 @@ void MainWindow::Init() {
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
-    this->ShowCodeEditor();
+    //this->ShowCodeEditor();
     fstWindow.render();
     ImGui::PopFont();
 }

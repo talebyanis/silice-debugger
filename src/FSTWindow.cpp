@@ -365,21 +365,21 @@ void FSTWindow::showPlots() {
             ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0, (float)item->maxY + (float)item->maxY / 3.0);
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
-            double xMin = plotXLimits->Min;
+            double xMin = std::max(0.0,plotXLimits->Min);
             double xMax = plotXLimits->Max;
             ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
 
-            int leftIndex = 0;
-            int midIndex;
-            int rightIndex = item->x_data.size() - 1;
+            size_t leftIndex = 0;
+            size_t midIndex;
+            size_t rightIndex = item->x_data.size() - 1;
 
-            auto dicho = [item](int leftIndex, int rightIndex, int toFind) {
-                int midIndex = (leftIndex + rightIndex) / 2;
+            auto dicho = [item](size_t leftIndex, size_t rightIndex, ImU64 toFind) {
+                size_t midIndex = (leftIndex + rightIndex) / 2;
                 while (leftIndex < rightIndex - 1) {
                     midIndex = (leftIndex + rightIndex) / 2;
-                    if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
-                    else if (item->x_data[midIndex] >= toFind) rightIndex = midIndex;
-                    std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
+                    if (item->x_data[midIndex] < toFind) leftIndex = midIndex;
+                    else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
+                    //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
                 }
                 return midIndex;
             };
@@ -387,19 +387,43 @@ void FSTWindow::showPlots() {
             leftIndex = dicho(leftIndex, rightIndex, xMin);
             rightIndex = dicho(leftIndex, rightIndex, xMax);
 
-            leftIndex = std::max(0, leftIndex - 1);
-            rightIndex = std::min((int)item->x_data.size()-1, rightIndex + 1);
+            leftIndex = std::max((size_t)0, leftIndex - 1);
+            rightIndex = std::min(item->x_data.size()-1, rightIndex + 1);
+
+            std::cout << leftIndex << " " << rightIndex << "\n";
 
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
                                   NULL,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
+
                 //Marker
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
-                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[leftIndex], (int *) &item->y_data[leftIndex],
-                                   rightIndex-leftIndex+1);
+                //If there is too much data to display (more samples than pixels)
+                //we remove some data that won't be display anyway
+                size_t pixels = ImPlot::GetPlotSize().x;
+                size_t dataSize = rightIndex - leftIndex + 1;
+                if (dataSize > pixels) {
+                    std::cout << "too much data for " << item->name << "\n";
+                    std::vector<int> x_data;
+                    std::vector<int> y_data;
+                    for (size_t i = 0; i < pixels; i++) {
+                        //there is (x = dataSize/pixels) times more data than pixels
+                        //so we take one sample out of x 
+                        //leftIndex will remain the same (leftIndex + 0 * x = leftIndex) 
+                        size_t index = leftIndex + i * (dataSize / pixels);  
+                        x_data.push_back(item->x_data[index]);
+                        y_data.push_back(item->y_data[index]);
+                    }
+                    ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
+                        pixels);
+                }
+                else {
+                    ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
+                        dataSize);
+                }
 
                 this->drawErrors(item);
 
@@ -410,7 +434,7 @@ void FSTWindow::showPlots() {
 
                     //modifies the range for all plots to be sync
                     ImPlotLimits limits = ImPlot::GetPlotLimits();
-                    plotXLimits->Min = limits.X.Min;
+                    plotXLimits->Min = std::max(0.0,limits.X.Min);
                     plotXLimits->Max = limits.X.Max;
 
                     //Arrows to move to values change
@@ -421,7 +445,7 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                this->drawValues(item);
+                //this->drawValues(item);
                 ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();

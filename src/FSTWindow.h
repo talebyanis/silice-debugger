@@ -17,8 +17,8 @@ enum ConvertType {
 };
 
 typedef struct {
-    std::vector<int> x_data;
-    std::vector<int> y_data;
+    std::vector<ImU64> x_data;
+    std::vector<ImU64> y_data;
     std::string name;
     fstHandle signalId;
     ConvertType type;
