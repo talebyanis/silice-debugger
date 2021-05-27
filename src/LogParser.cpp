@@ -38,7 +38,7 @@ void LogParser::parseVio(std::string vio_filename)
 
 // Returns a specific column for a line
 // col_nb : 1=filename, 2=token, 3=varname, 4=line, 5=usage
-std::string LogParser::getCol(std::string file_name, std::string var_name, int col_nb)
+std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb)
 {
 	switch (col_nb)
 	{

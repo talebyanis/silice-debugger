@@ -184,7 +184,7 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			: mPreprocChar('$'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
@@ -192,7 +192,7 @@ public:
 		static const LanguageDefinition& C();
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
-        static const LanguageDefinition& TokenizedSilice();
+        static const LanguageDefinition& TokenizedSilice(LogParser &lp);
     };
 
 	TextEditor();
