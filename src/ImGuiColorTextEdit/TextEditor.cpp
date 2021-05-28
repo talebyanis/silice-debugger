@@ -2957,20 +2957,16 @@ static bool TokenizeSilicePreprocessor(const char* in_begin, const char* in_end,
 static bool TokenizeSilicePreprocessorIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
     const char* p = in_begin;
-    std::string buffer;
 
     if (*p == '$')
     {
-        buffer += *p;
         p++;
         while (*p != '\0' && *p != '$')
         {
-            buffer += *p;
             p++;
         }
-        if (*p == '$')
+        if (*p == '$') // example : uint$FP32$ [...]
             p++;
-        std::cout << buffer << std::endl;
         out_begin = in_begin;
         out_end = p;
         return true;
@@ -3010,7 +3006,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
     if (!inited)
     {
         static const char* const siliceKeywords[] = {
-                "algorithm", "output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
+                "algorithm", "circuitry","output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
         };
         for (auto& k : siliceKeywords)
             langDef.mKeywords.insert(k);
