@@ -5,7 +5,7 @@ LogParser::LogParser() = default;
 
 // Vio methods ---------------------------------------------------------
 
-void LogParser::parseVio(std::string vio_filename)
+void LogParser::parseVio(const std::string& vio_filename)
 {
     this->report_lines.clear();
 	std::fstream file;
@@ -21,7 +21,6 @@ void LogParser::parseVio(std::string vio_filename)
 	report_line rl;
 	while (file >> element) {
 		rl.filename = element;
-		std::cout << rl.filename << std::endl;
 		file >> element;
 		rl.token = element;
 		file >> element;
@@ -52,7 +51,6 @@ std::string LogParser::getCol(const std::string& file_name, const std::string& v
 	case 3:
 		return report_lines[std::make_pair(file_name, var_name)].line;
 	case 4:
-	    //std::cout << report_lines.empty() << " here " << std::endl;
 		return report_lines[std::make_pair(file_name, var_name)].usage;
 	default:
 		break;

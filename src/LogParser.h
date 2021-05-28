@@ -56,7 +56,7 @@ public:
 	LogParser();
 	
 	// Vio methods
-	void parseVio(std::string vio_filename);
+	void parseVio(const std::string& vio_filename);
 	std::string getCol(const std::string& file_name, const std::string& var_name, int col_nb);
 	std::list<std::pair<std::string, std::string>> getMatch(const std::string& match);
 

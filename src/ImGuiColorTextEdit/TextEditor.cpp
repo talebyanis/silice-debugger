@@ -2293,7 +2293,7 @@ void TextEditor::ColorizeRange(int aFromLine, int aToLine)
 					hasTokenizeResult = true;
 			}
 
-			if (hasTokenizeResult == false)
+			if (!hasTokenizeResult)
 			{
 				// todo : remove
 				//printf("using regex for %.*s\n", first + 10 < last ? 10 : int(last - first), first);
@@ -2313,7 +2313,7 @@ void TextEditor::ColorizeRange(int aFromLine, int aToLine)
 				}
 			}
 
-			if (hasTokenizeResult == false)
+			if (!hasTokenizeResult)
 			{
 				first++;
 			}
@@ -2763,7 +2763,7 @@ static bool TokenizeCStyleCharacterLiteral(const char* in_begin, const char* in_
 static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, std::string file_path)
 {
 	const char* p = in_begin;
-	std::string buffer;
+	std::string buffer = "";
 
 	if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || *p == '_')
 	{
@@ -2782,10 +2782,11 @@ static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in
 		out_begin = in_begin;
 		out_end = p;
 
-        if(usage.empty())
-            return "none";
-        else
-            return usage;
+        std::cout << "here : " << usage << " : " << buffer << std::endl;
+
+        if (usage.empty())
+            return "none"; // none -> we don't have any information from from .v.vio.log file
+        return usage;
 	}
 	return "";
 }
@@ -2998,144 +2999,11 @@ static bool TokenizeCStyleType(const char* in_begin, const char* in_end, const c
         return false;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::CPlusPlus()
-{
-	static bool inited = false;
-	static LanguageDefinition langDef;
-	if (!inited)
-	{
-		static const char* const cppKeywords[] = {
-			"alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char", "char16_t", "char32_t", "class",
-			"compl", "concept", "const", "constexpr", "const_cast", "continue", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float",
-			"for", "friend", "goto", "if", "import", "inline", "int", "long", "module", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public",
-			"register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized", "template", "this", "thread_local",
-			"throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"
-		};
-		for (auto& k : cppKeywords)
-			langDef.mKeywords.insert(k);
-
-		static const char* const identifiers[] = {
-			"abort", "abs", "acos", "asin", "atan", "atexit", "atof", "atoi", "atol", "ceil", "clock", "cosh", "ctime", "div", "exit", "fabs", "floor", "fmod", "getchar", "getenv", "isalnum", "isalpha", "isdigit", "isgraph",
-			"ispunct", "isspace", "isupper", "kbhit", "log10", "log2", "log", "memcmp", "modf", "pow", "printf", "sprintf", "snprintf", "putchar", "putenv", "puts", "rand", "remove", "rename", "sinh", "sqrt", "srand", "strcat", "strcmp", "strerror", "time", "tolower", "toupper",
-			"std", "string", "vector", "map", "unordered_map", "set", "unordered_set", "min", "max"
-		};
-		for (auto& k : identifiers)
-		{
-			Identifier id;
-			id.mDeclaration = "Built-in function";
-			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
-		}
-
-		langDef.mTokenize = [](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
-		{
-			paletteIndex = PaletteIndex::Max;
-
-			while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
-				in_begin++;
-
-			if (in_begin == in_end)
-			{
-				out_begin = in_end;
-				out_end = in_end;
-				paletteIndex = PaletteIndex::Default;
-			}
-			else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::String;
-			else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::CharLiteral;
-			//else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
-			//	paletteIndex = PaletteIndex::Identifier;
-			else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::Number;
-			else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::Punctuation;
-
-			return paletteIndex != PaletteIndex::Max;
-		};
-
-		langDef.mCommentStart = "/*";
-		langDef.mCommentEnd = "*/";
-		langDef.mSingleLineComment = "//";
-
-		langDef.mCaseSensitive = true;
-		langDef.mAutoIndentation = true;
-
-		langDef.mName = "C++";
-
-		inited = true;
-	}
-	return langDef;
-}
-
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::C()
-{
-	static bool inited = false;
-	static LanguageDefinition langDef;
-	if (!inited)
-	{
-		static const char* const keywords[] = {
-			"auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long", "register", "restrict", "return", "short",
-			"signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof", "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary",
-			"_Noreturn", "_Static_assert", "_Thread_local"
-		};
-		for (auto& k : keywords)
-			langDef.mKeywords.insert(k);
-
-		static const char* const identifiers[] = {
-                "__display", "__write", "__signed", "__unsigned"
-		};
-		for (auto& k : identifiers)
-		{
-			Identifier id;
-			id.mDeclaration = "Built-in function";
-			langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
-		}
-
-		langDef.mTokenize = [](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
-		{
-			paletteIndex = PaletteIndex::Max;
-
-			while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
-				in_begin++;
-
-			if (in_begin == in_end)
-			{
-				out_begin = in_end;
-				out_end = in_end;
-				paletteIndex = PaletteIndex::Default;
-			}
-			else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::String;
-			else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::CharLiteral;
-			//else if (TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end))
-			//	paletteIndex = PaletteIndex::Identifier;
-			else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::Number;
-			else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
-				paletteIndex = PaletteIndex::Punctuation;
-
-			return paletteIndex != PaletteIndex::Max;
-		};
-
-		langDef.mCommentStart = "/*";
-		langDef.mCommentEnd = "*/";
-		langDef.mSingleLineComment = "//";
-
-		langDef.mCaseSensitive = true;
-		langDef.mAutoIndentation = true;
-
-		langDef.mName = "C";
-
-		inited = true;
-	}
-	return langDef;
-}
-
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(std::string file_path)
 {
     static bool inited = false;
     static LanguageDefinition langDef;
+    Identifier id;
     if (!inited)
     {
         static const char* const siliceKeywords[] = {
@@ -3149,17 +3017,44 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
         };
         for (auto& k : identifiers)
         {
-            Identifier id;
             id.mDeclaration = "Built-in function";
             langDef.mIdentifiers.insert(std::make_pair(std::string(k), id));
         }
 
         // Using tokens for the colorization because it is way faster than std::regex
         langDef.file_path = std::move(file_path);
+
+        // Filling langDef.mIdentifiers to add a toolbox indicating variables type
+        std::list<std::pair<std::string, std::string>> list;
+        list = TextEditor::siliceFile.lp.getMatch("wire");
+        for (auto const& e : list) {
+            id.mDeclaration = " Wire variable ";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+        }
+
+        list = TextEditor::siliceFile.lp.getMatch("ff");
+        for (auto const& e : list) {
+            id.mDeclaration = " Flip-flop variable ";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+        }
+
+        list = TextEditor::siliceFile.lp.getMatch("const");
+        for (auto const& e : list) {
+            id.mDeclaration = " Constant variable ";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+        }
+
+        list = TextEditor::siliceFile.lp.getMatch("temp");
+        for (auto const& e : list) {
+            id.mDeclaration = " Temporary variable ";
+            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+        }
+
         langDef.mTokenize = [](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
         {
             paletteIndex = PaletteIndex::Max;
             std::string id_res;
+            Identifier id;
 
             while (in_begin < in_end && isascii(*in_begin) && isblank(*in_begin))
                 in_begin++;

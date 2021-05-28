@@ -394,7 +394,7 @@ void FSTWindow::showPlots() {
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
-                                  NULL,
+                                  0,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
                 //Marker
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
