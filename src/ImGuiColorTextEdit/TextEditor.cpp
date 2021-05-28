@@ -72,15 +72,14 @@ TextEditor::TextEditor()
     SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path));
 	mLines.push_back(Line());
 
-	this->mReadOnly = false;
+	this->mReadOnly = true; // opening the text-editor on read-only mode
 
     // Set cursor on top of the code
     SetCursorPosition(Coordinates(0, 0));
 }
 
 TextEditor::~TextEditor()
-{
-}
+= default;
 
 void TextEditor::SetLanguageDefinition(const LanguageDefinition& aLanguageDef)
 {
@@ -2091,7 +2090,7 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xff7070e0,	// String
 			0xff70a0e0, // Char literal
 			0xffffffff, // Punctuation
-			0xff00aaaa,	// Preprocessor
+			0xff009090,	// Preprocessor
 			0xffaaaaaa, // Identifier
 			0xff9bc64d, // Known identifier
 			0xffaa00aa, // Preproc identifier
@@ -2705,7 +2704,7 @@ bool TextEditor::containsAlgo(const std::string& algoname)
     return found;
 }
 
-static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSiliceString(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
 	const char* p = in_begin;
 
@@ -2734,7 +2733,7 @@ static bool TokenizeCStyleString(const char* in_begin, const char* in_end, const
 	return false;
 }
 
-static bool TokenizeCStyleCharacterLiteral(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSiliceCharacterLiteral(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
 	const char* p = in_begin;
 
@@ -2761,10 +2760,10 @@ static bool TokenizeCStyleCharacterLiteral(const char* in_begin, const char* in_
 	return false;
 }
 
-static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, std::string file_path)
+static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, std::string file_path)
 {
 	const char* p = in_begin;
-	std::string buffer = "";
+	std::string buffer;
 
 	if ((*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') || *p == '_')
 	{
@@ -2783,8 +2782,6 @@ static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in
 		out_begin = in_begin;
 		out_end = p;
 
-        std::cout << "here : " << usage << " : " << buffer << std::endl;
-
         if (usage.empty())
             return "none"; // none -> we don't have any information from from .v.vio.log file
         return usage;
@@ -2792,7 +2789,7 @@ static std::string TokenizeCStyleIdentifier(const char* in_begin, const char* in
 	return "";
 }
 
-static bool TokenizeCStyleNumber(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSiliceNumber(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
 	const char* p = in_begin;
 
@@ -2896,7 +2893,7 @@ static bool TokenizeCStyleNumber(const char* in_begin, const char* in_end, const
 	return true;
 }
 
-static bool TokenizeCStylePunctuation(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSilicePunctuation(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
 	(void)in_end;
 
@@ -2934,7 +2931,7 @@ static bool TokenizeCStylePunctuation(const char* in_begin, const char* in_end, 
 	return false;
 }
 
-static bool TokenizeCStylePreprocessor(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSilicePreprocessor(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
     const char* p = in_begin;
 
@@ -2957,18 +2954,23 @@ static bool TokenizeCStylePreprocessor(const char* in_begin, const char* in_end,
     return false;
 }
 
-static bool TokenizeCStylePreprocessorIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSilicePreprocessorIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
     const char* p = in_begin;
+    std::string buffer;
 
     if (*p == '$')
     {
+        buffer += *p;
         p++;
-
-        while (*p != '\0')
+        while (*p != '\0' && *p != '$')
         {
+            buffer += *p;
             p++;
         }
+        if (*p == '$')
+            p++;
+        std::cout << buffer << std::endl;
         out_begin = in_begin;
         out_end = p;
         return true;
@@ -2976,7 +2978,7 @@ static bool TokenizeCStylePreprocessorIdentifier(const char* in_begin, const cha
     return false;
 }
 
-static bool TokenizeCStyleType(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
+static bool TokenizeSiliceType(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end)
 {
     const char* p = in_begin;
     std::string buffer;
@@ -3014,7 +3016,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
             langDef.mKeywords.insert(k);
 
         static const char* const identifiers[] = {
-                "__display", "__write", "__signed", "__unsigned"
+                "__display", "__write", "__signed", "__unsigned", "$display"
         };
         for (auto& k : identifiers)
         {
@@ -3066,17 +3068,17 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 out_end = in_end;
                 paletteIndex = PaletteIndex::Default;
             }
-            else if (TokenizeCStylePreprocessor(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSilicePreprocessor(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Preprocessor;
-            else if (TokenizeCStylePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::PreprocIdentifier;
-            else if (TokenizeCStyleString(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSiliceString(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::String;
-            else if (TokenizeCStyleCharacterLiteral(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSiliceCharacterLiteral(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::CharLiteral;
-            else if (TokenizeCStyleType(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSiliceType(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Type;
-            else if (!(id_res = TokenizeCStyleIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path)).empty())
+            else if (!(id_res = TokenizeSiliceIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path)).empty())
             {
                 if (id_res == "none")
                     paletteIndex = PaletteIndex::Identifier;
@@ -3089,9 +3091,9 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 else if (id_res == "temp")
                     paletteIndex = PaletteIndex::Temp;
             }
-            else if (TokenizeCStyleNumber(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSiliceNumber(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Number;
-            else if (TokenizeCStylePunctuation(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSilicePunctuation(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Punctuation;
 
             return paletteIndex != PaletteIndex::Max;

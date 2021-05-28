@@ -187,12 +187,10 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('$'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			: mPreprocChar('\0'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
-		static const LanguageDefinition& CPlusPlus();
-		static const LanguageDefinition& C();
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
         static const LanguageDefinition& TokenizedSilice(std::string file_path);
