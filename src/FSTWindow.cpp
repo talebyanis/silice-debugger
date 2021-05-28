@@ -189,7 +189,6 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
            
             g_Plots.push_back(plot);
             //for (int i = 0; i < plot.x_data.size(); i++) std::cout << plot.x_data[i] << " " << plot.y_data[i] << "\n";
-            std::cout << "endAddPlot\n";
         }
     }
 }
@@ -334,19 +333,26 @@ void FSTWindow::showPlots() {
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursor.x, cursor.y),
-                                                  ImVec2(cursor.x + 1000, cursor.y + 25),
+                                                  ImVec2(cursor.x + 3000, cursor.y + 25),
                                                   IM_COL32(51, 64, 74, 255));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
-                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - 50, cursor.y));
 
         //Folding button
-        if (ImGui::Button("Folding")) {
-            item->fold = !item->fold;
+        if (item->fold) {
+            if (ImGui::Button("^")) {
+                item->fold = !item->fold;
+            }
+        } else {
+            if (ImGui::Button("v")) {
+                item->fold = !item->fold;
+            }
         }
+
 
         ImGui::SameLine();
 
@@ -366,16 +372,16 @@ void FSTWindow::showPlots() {
             ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0, (float)item->maxY + (float)item->maxY / 3.0);
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
-            double xMin = plotXLimits->Min;
+            double xMin = std::max(0.0,plotXLimits->Min);
             double xMax = plotXLimits->Max;
             ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
 
-            int leftIndex = 0;
-            int midIndex;
-            int rightIndex = item->x_data.size() - 1;
+            size_t leftIndex = 0;
+            size_t midIndex;
+            size_t rightIndex = item->x_data.size() - 1;
 
-            auto dicho = [item](int leftIndex, int rightIndex, int toFind) {
-                int midIndex;
+            auto dicho = [item](size_t leftIndex, size_t rightIndex, ImU64 toFind) {
+                size_t midIndex = (leftIndex + rightIndex) / 2;
                 while (leftIndex < rightIndex - 1) {
                     midIndex = (leftIndex + rightIndex) / 2;
                     if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
@@ -388,19 +394,42 @@ void FSTWindow::showPlots() {
             leftIndex = dicho(leftIndex, rightIndex, xMin);
             rightIndex = dicho(leftIndex, rightIndex, xMax);
 
-            leftIndex = std::max(0, leftIndex - 1);
-            rightIndex = std::min((int)item->x_data.size()-1, rightIndex + 1);
+            leftIndex = std::max((size_t)0, leftIndex - 1);
+            rightIndex = std::min(item->x_data.size()-1, rightIndex + 1);
+
+            std::cout << leftIndex << " " << rightIndex << "\n";
 
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
                                   0,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
+
                 //Marker
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
-                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[leftIndex], (int *) &item->y_data[leftIndex],
-                                   rightIndex-leftIndex);
+                //If there is too much data to display (more samples than pixels)
+                //we remove some data that won't be display anyway
+                size_t pixels = ImPlot::GetPlotSize().x;
+                size_t dataSize = rightIndex - leftIndex + 1;
+                if (dataSize > pixels) {
+                    std::cout << "too much data for " << item->name << "\n";
+                    std::vector<int> x_data;
+                    std::vector<int> y_data;
+                    for (size_t i = 0; i < pixels; i++) {
+                        //there is (x = dataSize/pixels) times more data than pixels
+                        //so we take one sample out of x 
+                        size_t index = leftIndex + i * (dataSize / pixels);  
+                        x_data.push_back(item->x_data[index]);
+                        y_data.push_back(item->y_data[index]);
+                    }
+                    ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
+                        pixels);
+                }
+                else {
+                    ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
+                        dataSize);
+                }
 
                 this->drawErrors(item);
 
@@ -411,7 +440,7 @@ void FSTWindow::showPlots() {
 
                     //modifies the range for all plots to be sync
                     ImPlotLimits limits = ImPlot::GetPlotLimits();
-                    plotXLimits->Min = limits.X.Min;
+                    plotXLimits->Min = std::max(0.0,limits.X.Min);
                     plotXLimits->Max = limits.X.Max;
 
                     //Arrows to move to values change
@@ -423,7 +452,7 @@ void FSTWindow::showPlots() {
                     }
                 }
                 //this->drawValues(item);
-                ImPlot::PopStyleColor();
+                ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
             }
@@ -532,7 +561,7 @@ inline void FSTWindow::drawValues(Plot *item) {
                 break;
         }
 
-        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+        //ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
         //Offset to place the value correctly
         ImVec2 offset = ImVec2(0, 0);
         if (i > 0) {
@@ -543,7 +572,7 @@ inline void FSTWindow::drawValues(Plot *item) {
             }
         }
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
-        ImGui::PopStyleColor();
+       //ImGui::PopStyleColor();
     }
 }
 
