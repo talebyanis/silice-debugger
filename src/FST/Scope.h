@@ -19,7 +19,10 @@ public:
     std::unordered_map<fstHandle, Signal> signals;
     std::unordered_map<std::string, DQPair*> pairs;
 
-    Scope(fstHier hier);
+    Scope* parent;
+    std::vector<Scope*> children;
+
+    Scope(fstHier hier, Scope *parent);
 
     void addSignal(Signal signal);
     void addPair(DQPair *pair);

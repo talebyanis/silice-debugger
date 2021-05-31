@@ -3,8 +3,9 @@
 
 // ---------------------------------------------------------------------
 
-Scope::Scope(fstHier hier) {
+Scope::Scope(fstHier hier, Scope *parent) {
     this->name = hier.u.scope.name;
+    this->parent = parent;
 }
 
 // ---------------------------------------------------------------------
