@@ -79,35 +79,45 @@ inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount) {
     }
 }
 
+void FSTWindow::showScope(Scope &scope) {
+    std::string name = scope.name;
+    //count for hidden signals
+    int hiddenCount = 0;
+
+    bool open = ImGui::TreeNode(name.c_str());
+    if (ImGui::BeginPopupContextItem(name.c_str())) {
+        ImGui::Text("%s", name.c_str());
+        ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
+        ImGui::EndPopup();
+    }
+    if (open) {
+        for(size_t i=0; i<scope.children.size(); i++) {
+            Scope current = *scope.children[i];
+            this->showScope(current);
+        }
+
+        this->showSignalsMenu(scope, hiddenCount);
+
+        if (scope.pairs.size() > 0) { ImGui::Separator(); }
+
+        this->showPairsMenu(scope, hiddenCount);
+
+        if (hiddenCount != 0) {
+            ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
+        }
+
+        ImGui::TreePop();
+    }
+}
+
 //Shows the plots' names on the left to click on them and display matching plots
 void FSTWindow::showPlotMenu() {
     if (g_Reader != nullptr) {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
-        for (const auto &scope : g_Reader->scopes) {
-            std::string name = scope->name;
-            //count for hidden signals
-            int hiddenCount = 0;
-
-            bool open = ImGui::TreeNode(name.c_str());
-            if (ImGui::BeginPopupContextItem(name.c_str())) {
-                ImGui::Text("%s", name.c_str());
-                ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
-                ImGui::EndPopup();
-            }
-            if (open) {
-                this->showSignalsMenu(*scope, hiddenCount);
-
-                if (scope->pairs.size() > 0) { ImGui::Separator(); }
-
-                this->showPairsMenu(*scope, hiddenCount);
-
-                if (hiddenCount != 0) {
-                    ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
-                }
-
-                ImGui::TreePop();
-            }
+        for(size_t i=0; i<g_Reader->scopes.size(); i++) {
+            Scope current = *g_Reader->scopes[i];
+            this->showScope(current);
         }
     }
 }
@@ -397,8 +407,6 @@ void FSTWindow::showPlots() {
             leftIndex = std::max((size_t)0, leftIndex - 1);
             rightIndex = std::min(item->x_data.size()-1, rightIndex + 1);
 
-            std::cout << leftIndex << " " << rightIndex << "\n";
-
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
@@ -413,7 +421,6 @@ void FSTWindow::showPlots() {
                 size_t pixels = ImPlot::GetPlotSize().x;
                 size_t dataSize = rightIndex - leftIndex + 1;
                 if (dataSize > pixels) {
-                    std::cout << "too much data for " << item->name << "\n";
                     std::vector<int> x_data;
                     std::vector<int> y_data;
                     for (size_t i = 0; i < pixels; i++) {

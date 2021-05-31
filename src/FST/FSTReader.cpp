@@ -44,9 +44,19 @@ void FSTReader::initMaps() {
         switch (hier->htyp) {
             //Scope
             case FST_HT_SCOPE:
-                //std::cerr << "scope " << hier->u.scope.name << std::endl;
-                currentScope = new Scope(*hier);
-                this->scopes.push_back(currentScope);
+                std::cout << "scope " << hier->u.scope.name << std::endl;
+                if(currentScope == nullptr) {
+                    currentScope = new Scope(*hier, nullptr);
+                    this->scopes.push_back(currentScope);
+                } else {
+                    currentScope->children.push_back(new Scope(*hier, currentScope));
+                    std::cout << "Add " << currentScope->children.back()->name << " to " << currentScope->name << "\n";
+                    currentScope = currentScope->children.back();
+                }
+                break;
+            case FST_HT_UPSCOPE:
+                if(currentScope->parent) std::cout << "UPSCOPE moved to " << currentScope->parent->name << "\n";
+                currentScope = currentScope->parent;
                 break;
             case FST_HT_ATTRBEGIN:
 //                std::cerr << "FST HT ATTRBEGIN" << hier->u.attr.arg << std::endl;
