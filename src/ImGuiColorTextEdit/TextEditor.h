@@ -8,6 +8,7 @@
 #include <map>
 #include <regex>
 #include <fstream>
+#include <functional>
 #include "imgui.h"
 #include "../LogParser.h"
 #include "../sourcePath.h"
