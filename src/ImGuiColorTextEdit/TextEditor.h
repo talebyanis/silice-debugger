@@ -193,7 +193,7 @@ public:
 
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
-        static const LanguageDefinition& TokenizedSilice(std::string file_path);
+        static const LanguageDefinition& TokenizedSilice(std::string file_path, bool is_readonly);
     };
 
 	TextEditor();

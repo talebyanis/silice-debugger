@@ -69,7 +69,7 @@ TextEditor::TextEditor()
 
 	SetPalette(GetDarkPalette());
 	//SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
-    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path));
+    SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path, this->mReadOnly));
 	mLines.push_back(Line());
 
 	this->mReadOnly = true; // opening the text-editor on read-only mode
@@ -2998,7 +2998,7 @@ static bool TokenizeSiliceType(const char* in_begin, const char* in_end, const c
         return false;
 }
 
-const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(std::string file_path)
+const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(std::string file_path, bool is_readonly)
 {
     static bool inited = false;
     static LanguageDefinition langDef;
@@ -3049,7 +3049,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
             langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
         }
 
-        langDef.mTokenize = [](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
+        langDef.mTokenize = [&is_readonly](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
         {
             paletteIndex = PaletteIndex::Max;
             std::string id_res;
@@ -3076,16 +3076,23 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 paletteIndex = PaletteIndex::Type;
             else if (!(id_res = TokenizeSiliceIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path)).empty())
             {
-                if (id_res == "none")
+                if (is_readonly)
+                {
+                    if (id_res == "none")
+                        paletteIndex = PaletteIndex::Identifier;
+                    else if (id_res == "const")
+                        paletteIndex = PaletteIndex::Const;
+                    else if (id_res == "wire")
+                        paletteIndex = PaletteIndex::Wire;
+                    else if (id_res == "ff")
+                        paletteIndex = PaletteIndex::FF;
+                    else if (id_res == "temp")
+                        paletteIndex = PaletteIndex::Temp;
+                }
+                else
+                {
                     paletteIndex = PaletteIndex::Identifier;
-                else if (id_res == "const")
-                    paletteIndex = PaletteIndex::Const;
-                else if (id_res == "wire")
-                    paletteIndex = PaletteIndex::Wire;
-                else if (id_res == "ff")
-                    paletteIndex = PaletteIndex::FF;
-                else if (id_res == "temp")
-                    paletteIndex = PaletteIndex::Temp;
+                }
             }
             else if (TokenizeSiliceNumber(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Number;
