@@ -72,8 +72,6 @@ TextEditor::TextEditor()
     SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path, this->mReadOnly));
 	mLines.push_back(Line());
 
-	this->mReadOnly = true; // opening the text-editor on read-only mode
-
     // Set cursor on top of the code
     SetCursorPosition(Coordinates(0, 0));
 }
@@ -1462,9 +1460,7 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift)
 void TextEditor::SetReadOnly(bool aValue)
 {
 	mReadOnly = aValue;
-	aValue ?
-		SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(TextEditor::siliceFile.lp)) :
-		SetLanguageDefinition(LanguageDefinition::Silice());
+	SetLanguageDefinition(LanguageDefinition::TokenizedSilice(this->file_path, aValue));
 }
 
 void TextEditor::SetColorizerEnable(bool aValue)
@@ -2088,29 +2084,29 @@ const TextEditor::Palette& TextEditor::GetDarkPalette()
 			0xffd69c56,	// Keyword
 			0xff00ff00,	// Number
 			0xff7070e0,	// String
-			0xff70a0e0, // Char literal
-			0xffffffff, // Punctuation
-			0xff009090,	// Preprocessor
-			0xffaaaaaa, // Identifier
-			0xff9bc64d, // Known identifier
-			0xffaa00aa, // Preproc identifier
-			0xff206020, // Comment (single line)
-			0xff406020, // Comment (multi line)
-			0xff101010, // Background
-			0xffe0e0e0, // Cursor
-			0x80a06020, // Selection
-			0x800020ff, // ErrorMarker
-			0x40f08000, // Breakpoint
-			0xff707000, // Line number
-			0x40000000, // Current line fill
-			0x40808080, // Current line fill (inactive)
-			0x40a0a0a0, // Current line edge
+			0xff70a0e0,   // Char literal
+			0xffffffff,   // Punctuation
+			0xff009090,   // Preprocessor
+			0xffaaaaaa,   // Identifier
+			0xff9bc64d,   // Known identifier
+			0xffaa00aa,   // Preproc identifier
+			0xff206020,   // Comment (single line)
+			0xff406020,   // Comment (multi line)
+			0xff101010,   // Background
+			0xffe0e0e0,   // Cursor
+			0x80a06020,   // Selection
+			0x800020ff,   // ErrorMarker
+			0x40f08000,   // Breakpoint
+			0xff707000,   // Line number
+			0x40000000,   // Current line fill
+			0x40808080,   // Current line fill (inactive)
+			0x40a0a0a0,   // Current line edge
 
 			// Silice Specific Index :
 			0xeefbcda0, // Type
 			0xdff0a0a0, // Const
 			0xa9025fa0, // Wire
-			0x3a7d9ca0, // FF
+			0xFFacd57c, // FF
 			0x91a7c5a0, // Temp
 			0xFF300000, // SelectedIndexLine
             0xFF303030, // IndexLineA
@@ -2566,18 +2562,18 @@ int TextEditor::GetPageSize() const
 }
 
 TextEditor::UndoRecord::UndoRecord(
-	const std::string& aAdded,
+	std::string  aAdded,
 	const TextEditor::Coordinates aAddedStart,
 	const TextEditor::Coordinates aAddedEnd,
-	const std::string& aRemoved,
+	std::string  aRemoved,
 	const TextEditor::Coordinates aRemovedStart,
 	const TextEditor::Coordinates aRemovedEnd,
 	TextEditor::EditorState& aBefore,
 	TextEditor::EditorState& aAfter)
-	: mAdded(aAdded)
+	: mAdded(std::move(aAdded))
 	, mAddedStart(aAddedStart)
 	, mAddedEnd(aAddedEnd)
-	, mRemoved(aRemoved)
+	, mRemoved(std::move(aRemoved))
 	, mRemovedStart(aRemovedStart)
 	, mRemovedEnd(aRemovedEnd)
 	, mBefore(aBefore)
@@ -2661,7 +2657,7 @@ void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& 
     this->linesSelectedIndexes.clear();
     for (const auto &index : indexes)
     {
-        this->linesSelectedIndexes.emplace_back(index.first, this->siliceFile.lp.getLines(this->file_path, index.second));
+        this->linesSelectedIndexes.emplace_back(index.first, TextEditor::siliceFile.lp.getLines(this->file_path, index.second));
     }
 }
 
@@ -2672,9 +2668,9 @@ void TextEditor::unsetSelectedIndex()
 
 void TextEditor::setIndexPairs()
 {
-	for (int index : this->siliceFile.lp.getIndexes(this->file_path))
+	for (int index : TextEditor::siliceFile.lp.getIndexes(this->file_path))
 	{
-		this->linesIndexes.emplace_back(index, this->siliceFile.lp.getLines(this->file_path, index));
+		this->linesIndexes.emplace_back(index, TextEditor::siliceFile.lp.getLines(this->file_path, index));
 	}
 }
 
@@ -2693,7 +2689,7 @@ bool TextEditor::hasIndexColorization()
 bool TextEditor::containsAlgo(const std::string& algoname)
 {
     bool found = false;
-    for (const auto &algo : this->siliceFile.algos)
+    for (const auto &algo : TextEditor::siliceFile.algos)
     {
         if (algoname.find(algo) != std::string::npos)
         {
@@ -2760,7 +2756,7 @@ static bool TokenizeSiliceCharacterLiteral(const char* in_begin, const char* in_
 	return false;
 }
 
-static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, std::string file_path)
+static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, const std::string& file_path)
 {
 	const char* p = in_begin;
 	std::string buffer;
@@ -2776,14 +2772,17 @@ static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in
             p++;
         }
 
-		// Looking for variable's usage in the .v.fsm.log file
+		// Looking for variable's usage in the .v.vio.log file
         std::string usage = TextEditor::siliceFile.lp.getCol(file_path, buffer, 4);
 
 		out_begin = in_begin;
 		out_end = p;
 
         if (usage.empty())
+        {
             return "none"; // none -> we don't have any information from from .v.vio.log file
+        }
+
         return usage;
 	}
 	return "";
@@ -3000,10 +2999,11 @@ static bool TokenizeSiliceType(const char* in_begin, const char* in_end, const c
 
 const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedSilice(std::string file_path, bool is_readonly)
 {
+    static bool was_readonly = true;
     static bool inited = false;
     static LanguageDefinition langDef;
     Identifier id;
-    if (!inited)
+    if (!inited || was_readonly != is_readonly)
     {
         static const char* const siliceKeywords[] = {
                 "algorithm", "circuitry","output", "input", "if", "end", "else", "while", "autorun", "auto", "onehot", "brom", "bram", "dualport_bram", "case", "circuitry", "switch", "default", "break", "always", "bitfield", "interface"
@@ -3024,32 +3024,39 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
         langDef.file_path = std::move(file_path);
 
         // Filling langDef.mIdentifiers to add a toolbox indicating variables type
-        std::list<std::pair<std::string, std::string>> list;
-        list = TextEditor::siliceFile.lp.getMatch("wire");
-        for (auto const& e : list) {
-            id.mDeclaration = " Wire variable ";
-            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+        if (is_readonly)
+        {
+            std::list<std::pair<std::string, std::string>> list;
+            list = TextEditor::siliceFile.lp.getMatch("wire");
+            for (auto const& e : list) {
+                id.mDeclaration = " Wire variable ";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+            }
+
+            list = TextEditor::siliceFile.lp.getMatch("ff");
+            for (auto const& e : list) {
+                id.mDeclaration = " Flip-flop variable ";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+            }
+
+            list = TextEditor::siliceFile.lp.getMatch("const");
+            for (auto const& e : list) {
+                id.mDeclaration = " Constant variable ";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+            }
+
+            list = TextEditor::siliceFile.lp.getMatch("temp");
+            for (auto const& e : list) {
+                id.mDeclaration = " Temporary variable ";
+                langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
+            }
+        }
+        else
+        {
+            langDef.mIdentifiers.clear();
         }
 
-        list = TextEditor::siliceFile.lp.getMatch("ff");
-        for (auto const& e : list) {
-            id.mDeclaration = " Flip-flop variable ";
-            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
-        }
-
-        list = TextEditor::siliceFile.lp.getMatch("const");
-        for (auto const& e : list) {
-            id.mDeclaration = " Constant variable ";
-            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
-        }
-
-        list = TextEditor::siliceFile.lp.getMatch("temp");
-        for (auto const& e : list) {
-            id.mDeclaration = " Temporary variable ";
-            langDef.mIdentifiers.insert(std::make_pair(std::string(e.second), id));
-        }
-
-        langDef.mTokenize = [&is_readonly](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
+        langDef.mTokenize = [is_readonly](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
         {
             paletteIndex = PaletteIndex::Max;
             std::string id_res;
@@ -3064,10 +3071,12 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 out_end = in_end;
                 paletteIndex = PaletteIndex::Default;
             }
-            else if (TokenizeSilicePreprocessor(in_begin, in_end, out_begin, out_end))
+            else if (TokenizeSilicePreprocessor(in_begin, in_end, out_begin, out_end)
+                    || TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Preprocessor;
-            else if (TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
-                paletteIndex = PaletteIndex::PreprocIdentifier;
+            // Should we use purple for $include(...) instructions ?
+            //else if (TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
+            //    paletteIndex = PaletteIndex::PreprocIdentifier;
             else if (TokenizeSiliceString(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::String;
             else if (TokenizeSiliceCharacterLiteral(in_begin, in_end, out_begin, out_end))
@@ -3076,6 +3085,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                 paletteIndex = PaletteIndex::Type;
             else if (!(id_res = TokenizeSiliceIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path)).empty())
             {
+                paletteIndex = PaletteIndex::Identifier;
                 if (is_readonly)
                 {
                     if (id_res == "none")
@@ -3088,10 +3098,6 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
                         paletteIndex = PaletteIndex::FF;
                     else if (id_res == "temp")
                         paletteIndex = PaletteIndex::Temp;
-                }
-                else
-                {
-                    paletteIndex = PaletteIndex::Identifier;
                 }
             }
             else if (TokenizeSiliceNumber(in_begin, in_end, out_begin, out_end))
@@ -3112,6 +3118,7 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::TokenizedS
         langDef.mName = "Silice";
 
         inited = true;
+        was_readonly = is_readonly;
     }
     return langDef;
 }

@@ -118,7 +118,7 @@ void LogParser::parseFSM(const std::string& fsm_filename)
 // ---------------------------------------------------------------------
 
 // Return lines associated with "index" from "filename"
-std::pair<int, int> LogParser::getLines(std::string filename, int index)
+std::pair<int, int> LogParser::getLines(const std::string& filename, int index)
 {
 	std::pair<int, int> pair = std::make_pair(-1, -2); // -2 = inf
 	bool found = false;
