@@ -395,22 +395,24 @@ void FSTWindow::showPlots() {
             size_t midIndex;
             size_t rightIndex = item->x_data.size() - 1;
 
-            auto dicho = [item](size_t leftIndex, size_t rightIndex, ImU64 toFind) {
-                size_t midIndex = (leftIndex + rightIndex) / 2;
-                while (leftIndex < rightIndex - 1) {
-                    midIndex = (leftIndex + rightIndex) / 2;
-                    if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
-                    else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
-                    //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
-                }
-                return midIndex;
-            };
+            if(item->x_data.size() > 2 ) {
+                auto dicho = [item](size_t leftIndex, size_t rightIndex, ImU64 toFind) {
+                    size_t midIndex = (leftIndex + rightIndex) / 2;
+                    while (leftIndex < rightIndex - 1) {
+                        midIndex = (leftIndex + rightIndex) / 2;
+                        if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
+                        else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
+                        //std::cout << leftIndex << " " << rightIndex << " " << toFind <<"\n";
+                    }
+                    return midIndex;
+                };
 
-            leftIndex = dicho(leftIndex, rightIndex, xMin);
-            rightIndex = dicho(leftIndex, rightIndex, xMax);
+                leftIndex = dicho(leftIndex, rightIndex, xMin);
+                rightIndex = dicho(leftIndex, rightIndex, xMax);
 
-            leftIndex = std::max((size_t)0, leftIndex - 1);
-            rightIndex = std::min(item->x_data.size()-1, rightIndex + 1);
+                leftIndex = std::max((size_t) 0, leftIndex - 1);
+                rightIndex = std::min(item->x_data.size() - 1, rightIndex + 1);
+            }
 
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
