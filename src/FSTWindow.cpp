@@ -196,7 +196,12 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
                 plot.y_data.push_back(item[1]);
                 if (item[1] > plot.maxY) plot.maxY = item[1];
             }
-           
+
+            if(g_Plots.empty() && plotXLimits->Max == 0) {
+                if(plot.x_data.size() >= 3) plotXLimits->Max = plot.x_data[2];
+                else plotXLimits->Max = plot.x_data[plot.x_data.size() -1];
+            }
+
             g_Plots.push_back(plot);
             //for (int i = 0; i < plot.x_data.size(); i++) std::cout << plot.x_data[i] << " " << plot.y_data[i] << "\n";
         }
