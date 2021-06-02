@@ -36,8 +36,7 @@ std::map<std::string, bool> checked_algos;
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(float code_font_size, const std::string &general_font_name,
-                                          const std::string &code_font_name) {
+static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, const std::string &code_font_name) {
     // Build texture atlas
     ImGuiIO &io = ::ImGui::GetIO();
     unsigned char *pixels;
@@ -64,7 +63,7 @@ static bool ImGui_Impl_CreateFontsTexture(float code_font_size, const std::strin
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), code_font_size, &cfg,
+        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 22, &cfg,
                                                  io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "Code Font '" << font_path << "' not found" << std::endl;
@@ -215,7 +214,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
                 auto fullpath = openFileDialog(OFD_EXTENSIONS);
                 if (!fullpath.empty()) {
                     fs::path path = fs::path(fullpath);
-                    if (editor.writeFromFile(path.string())) {
+                    if (editor.writeFromFile()) {
                         fileFullPath = path;
                     }
                 }
@@ -324,7 +323,6 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
     this->ZoomMouseWheel(editor);
     ImGui::PopFont();
     ImGui::End();
-
 }
 
 //-------------------------------------------------------
@@ -355,6 +353,7 @@ void MainWindow::getSiliceFiles() {
     {
         while (file.good())
         {
+            filename = "";
             // getline isn't working here...
             // why ? idk
             file >> filename;
@@ -373,13 +372,13 @@ void MainWindow::getSiliceFiles() {
 //-------------------------------------------------------
 
 void MainWindow::Init() {
-    ImGui_Impl_CreateFontsTexture(22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
+    ImGui_Impl_CreateFontsTexture("NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
+    this->getSiliceFiles();
     fstWindow.load(str, this->editors, this->lp);
 
     //fileFullPath = fs::path(PROJECT_DIR "main.ice");
-    this->getSiliceFiles();
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;

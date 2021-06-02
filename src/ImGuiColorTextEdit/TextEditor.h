@@ -197,7 +197,7 @@ public:
 
     const LanguageDefinition& TokenizedSilice(bool is_readonly);
 
-	TextEditor(std::string path, LogParser& logparser);
+	TextEditor(std::string& path, LogParser& logparser);
 	~TextEditor();
 
 	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
@@ -296,7 +296,7 @@ public:
 
 	bool hasIndexColorization();
 	void setIndexPairs();
-	bool writeFromFile(const std::string& filepath);
+	bool writeFromFile();
     void setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);

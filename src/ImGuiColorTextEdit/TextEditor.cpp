@@ -26,7 +26,7 @@ bool equals(InputIt1 first1, InputIt1 last1,
     return first1 == last1 && first2 == last2;
 }
 
-TextEditor::TextEditor(std::string path, LogParser& logparser)
+TextEditor::TextEditor(std::string& path, LogParser& logparser)
         : mLineSpacing(1.0f)
         , mUndoIndex(0)
         , mTabSize(4)
@@ -50,20 +50,17 @@ TextEditor::TextEditor(std::string path, LogParser& logparser)
         , mIgnoreImGuiChild(false)
         , mShowWhitespaces(true)
         , mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
+        , file_path(path)
         , lp(logparser)
 {
     this->p_open_editor = false;
 
     // Opening a file (raw path here) on startup,
-    // ToDo : change path w/ an argument
-    this->file_path = std::move(path);
-    this->writeFromFile(this->file_path);
+    this->writeFromFile();
     this->parseAlgo();
-    //this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 
     SetPalette(GetDarkPalette());
-    //SetLanguageDefinition(LanguageDefinition::SiliceReadOnly(this->siliceFile.lp));
     SetLanguageDefinition(this->TokenizedSilice(this->mReadOnly));
     mLines.push_back(Line());
 
@@ -2617,10 +2614,10 @@ void TextEditor::UndoRecord::Redo(TextEditor* aEditor)
     aEditor->EnsureCursorVisible();
 }
 
-bool TextEditor::writeFromFile(const std::string& filepath)
+bool TextEditor::writeFromFile()
 {
     std::fstream file;
-    file.open(filepath, std::ios::in);
+    file.open(this->file_path, std::ios::in);
     if (file.is_open()) {
         this->mReadOnly = false;
         std::string tp;
@@ -2631,7 +2628,6 @@ bool TextEditor::writeFromFile(const std::string& filepath)
         file.close();
         this->mReadOnly = true;
         this->mIndexColorization = true;
-        this->file_path = filepath;
         this->setIndexPairs();
         return true;
     }
@@ -3047,7 +3043,7 @@ const TextEditor::LanguageDefinition& TextEditor::TokenizedSilice(bool is_readon
         }
 
         // Using tokens for the colorization because it is way faster than std::regex
-        langDef.file_path = std::move(file_path);
+        langDef.file_path = this->file_path;
 
         // Filling langDef.mIdentifiers to add a toolbox indicating variables type
         if (is_readonly)
