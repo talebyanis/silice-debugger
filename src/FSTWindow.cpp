@@ -98,7 +98,7 @@ void FSTWindow::showScope(Scope &scope) {
 
         this->showSignalsMenu(scope, hiddenCount);
 
-        if (scope.pairs.size() > 0) { ImGui::Separator(); }
+        if (!scope.pairs.empty()) { ImGui::Separator(); }
 
         this->showPairsMenu(scope, hiddenCount);
 
@@ -627,10 +627,14 @@ void FSTWindow::render() {
         }
     }
 
-    if (!editor) return;
+    if (this->editors->empty()) return;
 
-    (indexes.empty()) ? editor->unsetSelectedIndex()
-                    : editor->setSelectedIndex(indexes);
+    for (auto &editor : *this->editors)
+    {
+        (indexes.empty()) ? editor.second.unsetSelectedIndex()
+                          : editor.second.setSelectedIndex(indexes);
+    }
+
 }
 
 //-------------------------------------------------------
@@ -702,17 +706,17 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
 
 //-------------------------------------------------------
 
-void FSTWindow::load(const std::string& file, TextEditor &editors) {
+void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>& editors) {
     this->clean();
     this->fstFilePath = file;
-    g_Reader = new FSTReader(file.c_str());
+    g_Reader = new FSTReader(file.c_str(), TextEditor::siliceFile.lp);
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
         double maxTime = g_Reader->getMaxTime();
         plotXLimits->Min = 0 - (maxTime / 20);
         plotXLimits->Max = maxTime + (maxTime / 20);
     }
-    this->editor = &editors;
+    this->editors = &editors;
 
     this->loadQindex();
 
@@ -723,13 +727,13 @@ void FSTWindow::load(const std::string& file, TextEditor &editors) {
 
 //-------------------------------------------------------
 
-void FSTWindow::load(json data, TextEditor &editors) {
+void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors) {
     this->clean();
     this->fstFilePath = data["filePath"];
-    g_Reader = new FSTReader(this->fstFilePath.c_str());
+    g_Reader = new FSTReader(this->fstFilePath.c_str(), TextEditor::siliceFile.lp);
     range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
     plotXLimits = &range;
-    this->editor = &editors;
+    this->editors = &editors;
     markerX = data["markerX"];
     for (int i = 0; i < data["displayedSignals"].size(); ++i) {
         fstHandle signal = data["displayedSignals"][i];

@@ -36,8 +36,8 @@ std::map<std::string, bool> checked_algos;
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, const std::string& general_font_name,
-                                          const std::string& code_font_name) {
+static bool ImGui_Impl_CreateFontsTexture(float code_font_size, const std::string &general_font_name,
+                                          const std::string &code_font_name) {
     // Build texture atlas
     ImGuiIO &io = ::ImGui::GetIO();
     unsigned char *pixels;
@@ -53,7 +53,7 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), general_font_size, &cfg,
+        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18, &cfg,
                                                     io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "General Font '" << font_path << "' not found" << std::endl;
@@ -132,7 +132,7 @@ void MainWindow::ShowDockSpace() {
             if (ImGui::MenuItem("Open fst")) {
                 auto fullpath = openFileDialog(OFD_FILTER_ALL);
                 if (!fullpath.empty()) {
-                    fstWindow.load(fullpath, editor);
+                    fstWindow.load(fullpath, this->editors);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
             }
@@ -142,7 +142,7 @@ void MainWindow::ShowDockSpace() {
                     std::ifstream stream(SRC_PATH "/.save/save.dat");
                     json data;
                     stream >> data;
-                    fstWindow.load(data, editor);
+                    fstWindow.load(data, this->editors);
                     std::cout << "debug opened with file " << data["filePath"] << std::endl;
                 } else {
                     error = true;
@@ -205,9 +205,14 @@ void MainWindow::ShowDockSpace() {
 
 //-------------------------------------------------------
 
-void MainWindow::ShowCodeEditor() {
+inline int64_t getUniqueID(void * truc) {
+    return reinterpret_cast<int64_t>(truc);
+}
+
+void MainWindow::ShowCodeEditors(TextEditor editor) {
     auto cpos = editor.GetCursorPosition();
-    ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::PushID(getUniqueID(&editor));
+    ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -322,15 +327,16 @@ void MainWindow::ShowCodeEditor() {
     ImGui::PushFont(font_code);
     p_open_editor = ImGui::IsWindowFocused();
     editor.Render("TextEditor");
-    this->ZoomMouseWheel();
+    this->ZoomMouseWheel(editor);
     ImGui::PopFont();
-
+    ImGui::PopID();
     ImGui::End();
+
 }
 
 //-------------------------------------------------------
 
-void MainWindow::ZoomMouseWheel() {
+void MainWindow::ZoomMouseWheel(TextEditor& editor) {
     if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor)) {
         if (ImGui::GetIO().MouseWheel > 0) {
             if (ImGui::GetFontSize() < 28) {
@@ -346,13 +352,30 @@ void MainWindow::ZoomMouseWheel() {
 
 //-------------------------------------------------------
 
+void MainWindow::getSiliceFiles() {
+    // Looks for every Silice files needed in the design
+    if (fs::exists(PROJECT_DIR) && fs::is_directory(PROJECT_DIR))
+    {
+        for (auto const & entry : fs::recursive_directory_iterator(PROJECT_DIR))
+        {
+            if (fs::is_regular_file(entry) && entry.path().extension() == ".ice")
+            {
+                this->editors.insert(std::make_pair(entry.path().string(), TextEditor(entry.path().string())));
+            }
+        }
+    }
+}
+
+//-------------------------------------------------------
+
 void MainWindow::Init() {
-    ImGui_Impl_CreateFontsTexture(18, 22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
+    ImGui_Impl_CreateFontsTexture(22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
-    fstWindow.load(str, editor);
+    fstWindow.load(str, this->editors);
 
-    fileFullPath = fs::path(PROJECT_DIR "main.ice");
+    //fileFullPath = fs::path(PROJECT_DIR "main.ice");
+    this->getSiliceFiles();
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
@@ -411,7 +434,10 @@ void MainWindow::Init() {
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
-    this->ShowCodeEditor();
+    for (const auto &item : this->editors)
+    {
+        //this->ShowCodeEditors(item.second);
+    }
     fstWindow.render();
     ImGui::PopFont();
 }

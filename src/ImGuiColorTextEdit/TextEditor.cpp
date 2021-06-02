@@ -28,7 +28,7 @@ bool equals(InputIt1 first1, InputIt1 last1,
 
 TextEditor::SiliceFile TextEditor::siliceFile;
 
-TextEditor::TextEditor()
+TextEditor::TextEditor(std::string path)
 	: mLineSpacing(1.0f)
 	, mUndoIndex(0)
 	, mTabSize(4)
@@ -63,7 +63,8 @@ TextEditor::TextEditor()
 
     // Opening a file (raw path here) on startup,
     // ToDo : change path w/ an argument
-    this->writeFromFile(PROJECT_DIR "wolfpga.ice");
+    this->file_path = std::move(path);
+    this->writeFromFile(this->file_path);
     //this->current_index_colorization = this->linesIndexes.begin()->first;
     this->colorA = true;
 

@@ -7,13 +7,14 @@
 #include <list>
 #include <vector>
 // Stores a line from the .v.vio.log report file :
-// FILENAME - TOKEN - VARNAME - LINE - USAGE
+// FILENAME - TOKEN - VARNAME - LINE - USAGE - VERILOG_NAME
 struct report_line {
 	std::string filename;
 	std::string token;
 	std::string varname;
 	std::string line;
 	std::string usage;
+	std::string v_name;
 };
 
 // Stores a line from the .v.fsm.log report file :
@@ -44,7 +45,6 @@ struct fsm_line {
 	}
 };
 
-
 /*
 LogParser :
 
@@ -65,6 +65,7 @@ public:
 	std::pair<int, int> getLines(const std::string& filename, int index);
     std::list<int> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);
+
 private:
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;

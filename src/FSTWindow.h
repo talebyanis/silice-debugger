@@ -35,8 +35,8 @@ public:
 
     FSTWindow() = default;
 
-    void load(const std::string& file, TextEditor& editor);
-    void load(json data, TextEditor &editors);
+    void load(const std::string& file, std::map<std::string, TextEditor>& editors);
+    void load(json data, std::map<std::string, TextEditor>& editors);
 
     void setAlgoToColorize(std::map<std::string, bool>& algo);
     void render();
@@ -60,7 +60,7 @@ private:
     char customFilterBuffer[256] = {};
     int bit_left_custom = 16;
 
-    TextEditor* editor;
+    std::map<std::string, TextEditor>* editors;
     std::list<std::string> algos_to_colorize;
 
     void clean();

@@ -196,7 +196,7 @@ public:
         static const LanguageDefinition& TokenizedSilice(std::string file_path, bool is_readonly);
     };
 
-	TextEditor();
+	TextEditor(std::string path);
 	~TextEditor();
 
 	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
@@ -443,3 +443,6 @@ private:
 
 	float mLastClick;
 };
+
+// there seems to be two siliceFile instances...
+//inline TextEditor::SiliceFile TextEditor::siliceFile;

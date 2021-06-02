@@ -235,11 +235,12 @@ void clean() {
 
 // ---------------------------------------------------------------------
 
-FSTReader::FSTReader(const char *file) {
+FSTReader::FSTReader(const char *file, LogParser& logparser) {
     clean();
     if (!LibSL::System::File::exists(file)) {
         std::cerr << "Could not open fst wave file " << file << std::endl;
     }
     g_Wave = fstReaderOpen(file);
     initMaps();
+    this->lp = logparser;
 }
