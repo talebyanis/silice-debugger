@@ -4,7 +4,7 @@
 LogParser::LogParser()
 {
     this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
-    this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+    //this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
 }
 
 // Vio methods ---------------------------------------------------------
@@ -211,7 +211,7 @@ report_line LogParser::getLineFromVName(const std::string& match)
     rl.v_name = "#";
     for (const auto &item : this->report_lines)
     {
-        if (item.second.v_name == match)
+        if (item.second.v_name.find(match) != std::string::npos)
         {
             return item.second;
         }
