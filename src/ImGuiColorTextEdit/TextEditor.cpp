@@ -2751,8 +2751,6 @@ static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in
             p++;
         }
 
-        std::cout << "buf : " << buffer << ", " << p-in_begin << std::endl;
-
         // Looking for variable's usage in the .v.vio.log file
         std::string usage = logParser.getCol(file_path, buffer, 4);
 

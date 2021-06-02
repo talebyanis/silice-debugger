@@ -17,7 +17,7 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // Todo : set fileFullPath when doing "make debug" to show the file name in the editor
-static fs::path fileFullPath;
+//static fs::path fileFullPath;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
@@ -204,31 +204,36 @@ void MainWindow::ShowDockSpace() {
 
 //-------------------------------------------------------
 
+bool test_ptr = true;
+
 void MainWindow::ShowCodeEditors(TextEditor& editor) {
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
 
+            // useless
+            /*
             if (ImGui::MenuItem("Open", "Ctrl + O")) {
                 auto fullpath = openFileDialog(OFD_EXTENSIONS);
                 if (!fullpath.empty()) {
                     fs::path path = fs::path(fullpath);
-                    if (editor.writeFromFile()) {
-                        fileFullPath = path;
-                    }
+                    editor.writeFromFile();
                 }
             }
+             */
 
-            if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, !fileFullPath.string().empty())) {
+            if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, editor.file_path.empty())) {
                 auto textToSave = editor.GetText();
-                std::string path = fileFullPath.string();
+                std::string path = editor.file_path;
                 if (!path.empty()) {
-                    std::fstream file(fileFullPath);
+                    std::fstream file(editor.file_path);
                     file << textToSave;
                 }
             }
 
+            // useless
+            /*
             if (ImGui::MenuItem("Save as", "Ctrl + Maj + S")) {
                 auto textToSave = editor.GetText();
                 std::string fullpath = saveFileDialog("file", OFD_FILTER_ALL);
@@ -239,6 +244,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
                     file << textToSave;
                 }
             }
+             */
 
             ImGui::EndMenu();
         }
@@ -302,7 +308,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        for (const auto &item : lp.getAlgos(editor.file_path))
+        for (const auto &item : this->lp.getAlgos(editor.file_path))
         {
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
             {
@@ -315,7 +321,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                 editor.IsOverwrite() ? "Ovr" : "Ins",
                 editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath.string()).c_str());
+                editor.GetLanguageDefinition().mName.c_str(), editor.file_path.c_str());
 
     ImGui::PushFont(font_code);
     p_open_editor = ImGui::IsWindowFocused();
