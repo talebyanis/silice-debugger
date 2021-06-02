@@ -33,8 +33,8 @@ void LogParser::parseVio(const std::string& vio_filename)
 		rl.line = element;
 		file >> element;
 		rl.usage = element;
-		file >> element;
-        rl.v_name = element;
+		//file >> element;
+        //rl.v_name = element;
 
 		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
@@ -44,30 +44,30 @@ void LogParser::parseVio(const std::string& vio_filename)
 
 // Returns a specific column for a line
 // col_nb : 0=filename, 1=token, 2=varname, 3=line, 4=usage, 5=v_name
-std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb)
+std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb) const
 {
-    std::cout << file_name << " " << var_name << std::endl;
-
+    // Looking for the key (filename, varname)
+    // If not found, returning "#" (= none)
     auto pair = std::make_pair(file_name, var_name);
-
-
     if (this->report_lines.find(pair) == this->report_lines.end())
+    {
         return "#";
+    }
 
 	switch (col_nb)
 	{
 	case 0:
-		return report_lines[pair].filename;
+		return report_lines.at(pair).filename;
 	case 1:
-		return report_lines[pair].token;
+		return report_lines.at(pair).token;
 	case 2:
-		return report_lines[pair].varname;
+		return report_lines.at(pair).varname;
 	case 3:
-		return report_lines[pair].line;
+		return report_lines.at(pair).line;
 	case 4:
-		return report_lines[pair].usage;
+		return report_lines.at(pair).usage;
     case 5:
-        return report_lines[pair].v_name;
+        return report_lines.at(pair).v_name;
 	default:
 		break;
 	}

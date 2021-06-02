@@ -2739,7 +2739,7 @@ static bool TokenizeSiliceCharacterLiteral(const char* in_begin, const char* in_
     return false;
 }
 
-static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, const std::string& file_path, LogParser& logParser)
+static std::string TokenizeSiliceIdentifier(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, const std::string& file_path, const LogParser& logParser)
 {
     const char* p = in_begin;
     std::string buffer;
@@ -3082,7 +3082,9 @@ const TextEditor::LanguageDefinition& TextEditor::TokenizedSilice(bool is_readon
             langDef.mIdentifiers.clear();
         }
 
-        langDef.mTokenize = [is_readonly, this](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
+        LogParser& logParser = this->lp;
+
+        langDef.mTokenize = [is_readonly, logParser](const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex) -> bool
         {
             paletteIndex = PaletteIndex::Max;
             std::string id_res;
@@ -3097,24 +3099,23 @@ const TextEditor::LanguageDefinition& TextEditor::TokenizedSilice(bool is_readon
                 out_end = in_end;
                 paletteIndex = PaletteIndex::Default;
             }
-            else if (TokenizeSiliceComments(in_begin, in_end, out_begin, out_end))
-                paletteIndex = PaletteIndex::Comment;
+            //else if (TokenizeSiliceComments(in_begin, in_end, out_begin, out_end))
+            //   paletteIndex = PaletteIndex::Comment;
             else if (TokenizeSilicePreprocessor(in_begin, in_end, out_begin, out_end)
                      || TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Preprocessor;
-                // Should we use purple for $include(...) instructions ?
-                //else if (TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
-                //    paletteIndex = PaletteIndex::PreprocIdentifier;
+            // Should we use purple for $include(...) instructions ?
+            // else if (TokenizeSilicePreprocessorIdentifier(in_begin, in_end, out_begin, out_end))
+            //    paletteIndex = PaletteIndex::PreprocIdentifier;
             else if (TokenizeSiliceString(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::String;
             else if (TokenizeSiliceCharacterLiteral(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::CharLiteral;
             else if (TokenizeSiliceType(in_begin, in_end, out_begin, out_end))
                 paletteIndex = PaletteIndex::Type;
-            else if (!(id_res = TokenizeSiliceIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path, this->lp)).empty())
+            else if (!(id_res = TokenizeSiliceIdentifier(in_begin, in_end, out_begin, out_end, langDef.file_path, logParser)).empty())
             {
-                if (id_res != "#")
-                    paletteIndex = PaletteIndex::Identifier;
+                paletteIndex = PaletteIndex::Identifier;
                 if (is_readonly)
                 {
                     if (id_res == "none")
@@ -3137,9 +3138,9 @@ const TextEditor::LanguageDefinition& TextEditor::TokenizedSilice(bool is_readon
             return paletteIndex != PaletteIndex::Max;
         };
 
-        //langDef.mCommentStart = "/*";
-        //langDef.mCommentEnd = "*/";
-        //langDef.mSingleLineComment = "//";
+        langDef.mCommentStart = "/*";
+        langDef.mCommentEnd = "*/";
+        langDef.mSingleLineComment = "//";
 
         langDef.mCaseSensitive = true;
         langDef.mAutoIndentation = true;

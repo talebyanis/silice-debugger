@@ -347,15 +347,26 @@ void MainWindow::ZoomMouseWheel(TextEditor& editor) {
 
 void MainWindow::getSiliceFiles() {
     // Looks for every Silice files needed in the design
-    if (fs::exists(PROJECT_DIR) && fs::is_directory(PROJECT_DIR))
+
+    std::ifstream file(PROJECT_DIR "BUILD_icarus/build.v.files.log");
+
+    std::string filename;
+    if (file.is_open())
     {
-        for (auto const & entry : fs::recursive_directory_iterator(PROJECT_DIR))
+        while (file.good())
         {
-            if (fs::is_regular_file(entry) && entry.path().extension() == ".ice")
+            // getline isn't working here...
+            // why ? idk
+            file >> filename;
+            if (!filename.empty())
             {
-                this->editors.insert(std::make_pair(entry.path().string(), TextEditor(entry.path().string(), this->lp)));
+                if (fs::is_regular_file(filename) && fs::path(filename).extension() == ".ice")
+                {
+                    this->editors.insert(std::make_pair(filename, TextEditor(filename, this->lp)));
+                }
             }
         }
+        file.close();
     }
 }
 
@@ -429,7 +440,7 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
-        //this->ShowCodeEditors(editor);
+        this->ShowCodeEditors(editor);
     }
     fstWindow.render();
     ImGui::PopFont();
