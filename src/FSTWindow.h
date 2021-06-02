@@ -35,8 +35,8 @@ public:
 
     FSTWindow() = default;
 
-    void load(const std::string& file, std::map<std::string, TextEditor>& editors);
-    void load(json data, std::map<std::string, TextEditor>& editors);
+    void load(const std::string& file, std::map<std::string, TextEditor>& editors, LogParser& logParser);
+    void load(json data, std::map<std::string, TextEditor>& editors, LogParser& logParser);
 
     void setAlgoToColorize(std::map<std::string, bool>& algo);
     void render();

@@ -6,6 +6,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include "sourcePath.h"
 // Stores a line from the .v.vio.log report file :
 // FILENAME - TOKEN - VARNAME - LINE - USAGE - VERILOG_NAME
 struct report_line {
@@ -56,21 +57,21 @@ public:
 	LogParser();
 	
 	// Vio methods
-	void parseVio(const std::string& vio_filename);
 	std::string getCol(const std::string& file_name, const std::string& var_name, int col_nb);
 	std::list<std::pair<std::string, std::string>> getMatch(const std::string& match);
 	report_line getLineFromVName(const std::string& match);
 
 	// FSM methods
-	void parseFSM(const std::string& fsm_filename);
 	std::pair<int, int> getLines(const std::string& filename, int index);
     std::list<int> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);
 
 private:
+    void parseVio(const std::string& vio_filename);
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;
-	
+
+    void parseFSM(const std::string& fsm_filename);
 	// (filename, index)   -> fsm_line
 	std::vector<std::pair<std::pair<std::string, int>, fsm_line>> fsm_lines;
 };

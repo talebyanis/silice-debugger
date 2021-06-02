@@ -193,10 +193,11 @@ public:
 
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
-        static const LanguageDefinition& TokenizedSilice(std::string file_path, bool is_readonly);
     };
 
-	TextEditor(std::string path);
+    const LanguageDefinition& TokenizedSilice(bool is_readonly);
+
+	TextEditor(std::string path, LogParser& logparser);
 	~TextEditor();
 
 	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
@@ -281,29 +282,8 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
-    struct SiliceFile
-    {
-        std::string viofile_path;
-        std::string fsmfile_path;
-        std::vector<std::string> algos;
-        LogParser lp;
 
-        SiliceFile(): lp(), algos() { }
-
-        void parse(const std::string& filepath)
-        {
-            this->lp.parseVio(viofile_path);
-            this->lp.parseFSM(fsmfile_path);
-            std::list<std::string> list = this->lp.getAlgos(filepath);
-            this->algos.reserve(list.size());
-            for (const auto &item : list)
-            {
-                this->algos.push_back(item);
-            }
-        }
-    };
-
-    static SiliceFile siliceFile;
+    std::vector<std::string> algos;
 
     std::string file_path;
 	bool p_open_editor;
@@ -312,15 +292,15 @@ public:
 	std::list<std::pair<std::string, std::pair<int, int>>> linesSelectedIndexes;
 	int current_index_colorization{};
 	bool colorA;
+    LogParser& lp;
 
 	bool hasIndexColorization();
-	void setPathToLogFile(const std::string& path);
 	void setIndexPairs();
 	bool writeFromFile(const std::string& filepath);
     void setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
-	bool containsAlgo(const std::string& algoname);
+	void parseAlgo();
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
@@ -443,6 +423,3 @@ private:
 
 	float mLastClick;
 };
-
-// there seems to be two siliceFile instances...
-//inline TextEditor::SiliceFile TextEditor::siliceFile;

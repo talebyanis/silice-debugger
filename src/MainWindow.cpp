@@ -132,7 +132,7 @@ void MainWindow::ShowDockSpace() {
             if (ImGui::MenuItem("Open fst")) {
                 auto fullpath = openFileDialog(OFD_FILTER_ALL);
                 if (!fullpath.empty()) {
-                    fstWindow.load(fullpath, this->editors);
+                    fstWindow.load(fullpath, this->editors, this->lp);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
             }
@@ -142,7 +142,7 @@ void MainWindow::ShowDockSpace() {
                     std::ifstream stream(SRC_PATH "/.save/save.dat");
                     json data;
                     stream >> data;
-                    fstWindow.load(data, this->editors);
+                    fstWindow.load(data, this->editors, this->lp);
                     std::cout << "debug opened with file " << data["filePath"] << std::endl;
                 } else {
                     error = true;
@@ -204,10 +204,6 @@ void MainWindow::ShowDockSpace() {
 }
 
 //-------------------------------------------------------
-
-inline int64_t getUniqueID(void * truc) {
-    return reinterpret_cast<int64_t>(truc);
-}
 
 void MainWindow::ShowCodeEditors(TextEditor& editor) {
     auto cpos = editor.GetCursorPosition();
@@ -307,7 +303,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        for (const auto &item : TextEditor::siliceFile.algos)
+        for (const auto &item : lp.getAlgos(editor.file_path))
         {
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
             {
@@ -357,7 +353,7 @@ void MainWindow::getSiliceFiles() {
         {
             if (fs::is_regular_file(entry) && entry.path().extension() == ".ice")
             {
-                this->editors.insert(std::make_pair(entry.path().string(), TextEditor(entry.path().string())));
+                this->editors.insert(std::make_pair(entry.path().string(), TextEditor(entry.path().string(), this->lp)));
             }
         }
     }
@@ -369,7 +365,7 @@ void MainWindow::Init() {
     ImGui_Impl_CreateFontsTexture(22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
-    fstWindow.load(str, this->editors);
+    fstWindow.load(str, this->editors, this->lp);
 
     //fileFullPath = fs::path(PROJECT_DIR "main.ice");
     this->getSiliceFiles();
@@ -433,7 +429,7 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
-        this->ShowCodeEditors(editor);
+        //this->ShowCodeEditors(editor);
     }
     fstWindow.render();
     ImGui::PopFont();

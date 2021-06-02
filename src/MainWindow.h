@@ -15,6 +15,8 @@ private:
     std::map<std::string, TextEditor> editors;
 
     void getSiliceFiles();
+
+    LogParser lp;
 public:
     void ShowDockSpace();
     void ShowCodeEditors(TextEditor& editor);

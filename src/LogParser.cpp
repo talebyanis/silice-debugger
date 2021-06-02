@@ -1,7 +1,11 @@
 #include "LogParser.h"
 #include <algorithm>
 
-LogParser::LogParser() = default;
+LogParser::LogParser()
+{
+    this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
+    this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+}
 
 // Vio methods ---------------------------------------------------------
 
@@ -39,21 +43,31 @@ void LogParser::parseVio(const std::string& vio_filename)
 // ---------------------------------------------------------------------
 
 // Returns a specific column for a line
-// col_nb : 0=filename, 1=token, 2=varname, 3=line, 4=usage
+// col_nb : 0=filename, 1=token, 2=varname, 3=line, 4=usage, 5=v_name
 std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb)
 {
+    std::cout << file_name << " " << var_name << std::endl;
+
+    auto pair = std::make_pair(file_name, var_name);
+
+
+    if (this->report_lines.find(pair) == this->report_lines.end())
+        return "#";
+
 	switch (col_nb)
 	{
 	case 0:
-		return report_lines[std::make_pair(file_name, var_name)].filename;
+		return report_lines[pair].filename;
 	case 1:
-		return report_lines[std::make_pair(file_name, var_name)].token;
+		return report_lines[pair].token;
 	case 2:
-		return report_lines[std::make_pair(file_name, var_name)].varname;
+		return report_lines[pair].varname;
 	case 3:
-		return report_lines[std::make_pair(file_name, var_name)].line;
+		return report_lines[pair].line;
 	case 4:
-		return report_lines[std::make_pair(file_name, var_name)].usage;
+		return report_lines[pair].usage;
+    case 5:
+        return report_lines[pair].v_name;
 	default:
 		break;
 	}

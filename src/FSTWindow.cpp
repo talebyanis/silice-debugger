@@ -713,10 +713,10 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
 
 //-------------------------------------------------------
 
-void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>& editors) {
+void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = file;
-    g_Reader = new FSTReader(file.c_str(), TextEditor::siliceFile.lp);
+    g_Reader = new FSTReader(file.c_str(), logParser);
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
         double maxTime = g_Reader->getMaxTime();
@@ -734,10 +734,10 @@ void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>&
 
 //-------------------------------------------------------
 
-void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors) {
+void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = data["filePath"];
-    g_Reader = new FSTReader(this->fstFilePath.c_str(), TextEditor::siliceFile.lp);
+    g_Reader = new FSTReader(this->fstFilePath.c_str(), logParser);
     range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
     plotXLimits = &range;
     this->editors = &editors;
