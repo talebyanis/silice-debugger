@@ -188,3 +188,23 @@ std::list<std::string> LogParser::getAlgos(const std::string& filename)
     }
     return res;
 }
+
+// ---------------------------------------------------------------------
+
+report_line LogParser::getLineFromVName(const std::string& match)
+{
+    report_line rl;
+    for (const auto &item : this->report_lines)
+    {
+        if (item.second.v_name == match)
+        {
+            rl = item.second;
+            break;
+        }
+    }
+    if (rl.v_name != match)
+    {
+        rl.v_name = "#";
+    }
+    return rl;
+}

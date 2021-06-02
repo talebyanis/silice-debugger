@@ -59,6 +59,7 @@ public:
 	void parseVio(const std::string& vio_filename);
 	std::string getCol(const std::string& file_name, const std::string& var_name, int col_nb);
 	std::list<std::pair<std::string, std::string>> getMatch(const std::string& match);
+	report_line getLineFromVName(const std::string& match);
 
 	// FSM methods
 	void parseFSM(const std::string& fsm_filename);
