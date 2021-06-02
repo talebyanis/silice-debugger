@@ -17,7 +17,7 @@ private:
     void getSiliceFiles();
 public:
     void ShowDockSpace();
-    void ShowCodeEditors(TextEditor editor);
+    void ShowCodeEditors(TextEditor& editor);
     void ZoomMouseWheel(TextEditor& editor);
     void Init();
     void Render();

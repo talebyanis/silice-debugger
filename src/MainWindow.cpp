@@ -209,11 +209,9 @@ inline int64_t getUniqueID(void * truc) {
     return reinterpret_cast<int64_t>(truc);
 }
 
-void MainWindow::ShowCodeEditors(TextEditor editor) {
+void MainWindow::ShowCodeEditors(TextEditor& editor) {
     auto cpos = editor.GetCursorPosition();
-    ImGui::PushID(getUniqueID(&editor));
     ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
 
@@ -329,7 +327,6 @@ void MainWindow::ShowCodeEditors(TextEditor editor) {
     editor.Render("TextEditor");
     this->ZoomMouseWheel(editor);
     ImGui::PopFont();
-    ImGui::PopID();
     ImGui::End();
 
 }
@@ -434,9 +431,9 @@ void MainWindow::Init() {
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
-    for (const auto &item : this->editors)
+    for (auto &[filename, editor] : this->editors)
     {
-        //this->ShowCodeEditors(item.second);
+        this->ShowCodeEditors(editor);
     }
     fstWindow.render();
     ImGui::PopFont();
