@@ -66,7 +66,44 @@ void FSTReader::initMaps() {
                     char *name = const_cast<char *>(hier->u.var.name);
                     std::string splitName = std::strtok(name, " ");
                     report_line rl = lp.getLineFromVName(splitName);
+
+                    std::string signalName = rl.varname;
+                    if(signalName.find(rl.token + "_") == 0) {
+                        signalName[rl.token.size()] = '.';
+                    }
+                    if(signalName.find("__block") == 0) {
+                        signalName = rl.token;
+                    }
+
+                    if(rl.v_name == "#") { //internal
+                        currentScope->add(*hier, true);
+                    } else { //user
+                        if(rl.usage == "ff") { //flip-flop
+                            DQPair* current;
+                            if(currentScope->pairsUser.find(signalName) == currentScope->pairsUser.end()) {
+                                current = new DQPair(signalName);
+                                currentScope->addPair(current, false);
+                            } else {
+                                current = currentScope->pairsUser.at(signalName);
+                            }
+                            if(hier->u.var.name[1] == 'd') {
+                                Signal* d = new Signal(*hier,currentScope->name);
+                                current->d = d;
+                            } else {
+                                Signal* q = new Signal(*hier,currentScope->name);
+                                current->q = q;
+                            }
+                        } else {
+                            currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name),false);
+                        }
+                    }
+                }
+
+                    /*
                     if(rl.usage == "ff") { //flip-flop
+                        if(rl.varname.find("read_cnt") != std::string::npos) {
+                            std::cout << currentScope->name << "\n";
+                        }
                         currentScope->add(*hier, false);
                     } else {
                         if(rl.v_name == "#") { //internal
@@ -79,7 +116,7 @@ void FSTReader::initMaps() {
                             currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name),false);
                         }
                     }
-                }
+                }*/
                 break;
             default:
 //                std::cerr << "default " << hier->u.var.name << std::endl;
