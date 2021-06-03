@@ -98,25 +98,6 @@ void FSTReader::initMaps() {
                         }
                     }
                 }
-
-                    /*
-                    if(rl.usage == "ff") { //flip-flop
-                        if(rl.varname.find("read_cnt") != std::string::npos) {
-                            std::cout << currentScope->name << "\n";
-                        }
-                        currentScope->add(*hier, false);
-                    } else {
-                        if(rl.v_name == "#") { //internal
-                             currentScope->add(*hier, true);
-                        } else { //user
-                            std::string signalName = rl.varname;
-                            if(rl.varname.find(rl.token + "_") == 0) {
-                                signalName[rl.token.size()] = '.';
-                            }
-                            currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name),false);
-                        }
-                    }
-                }*/
                 break;
             default:
 //                std::cerr << "default " << hier->u.var.name << std::endl;
@@ -170,21 +151,6 @@ void FSTReader::loadData() {
         fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
         fstReaderClrFacProcessMask(g_Wave, currentSignal->id);
     }
-}
-
-// ---------------------------------------------------------------------
-
-ImU64 FSTReader::getMaxTime() {
-    ImU64 max = 0;
-    for (const auto &item : g_Values) {
-        valuesList values = item;
-        for (const auto &value : values) {
-            if (value[0] > max) {
-                max = value[0];
-            }
-        }
-    }
-    return max;
 }
 
 // ---------------------------------------------------------------------

@@ -72,7 +72,7 @@ private:
     void showPlots();
     inline void drawErrors(Plot* item);
     inline void listenArrows(Plot* item);
-    inline void drawValues(Plot* item);
+    inline void drawValues(Plot* item, size_t leftIndex, size_t rightIndex);
     std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
     int binaryToDecimal(std::string n);
 

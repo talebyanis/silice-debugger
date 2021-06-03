@@ -13,7 +13,7 @@ using json = nlohmann::json;
 //-------------------------------------------------------
 
 inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool internal) {
-    auto show = [this, &hiddenCount](std::unordered_map<fstHandle, Signal> signals) {
+    auto show = [this, &hiddenCount](std::unordered_map<fstHandle, Signal> &signals) {
         for (const auto &signal : signals) {
             std::string name = signal.second.name;
             std::vector<fstHandle> sig = {signal.second.id};
@@ -48,7 +48,7 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
 }
 
 inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool internal) {
-    auto show = [this, &hiddenCount](std::unordered_map<std::string, DQPair*> pairs) {
+    auto show = [this, &hiddenCount](std::unordered_map<std::string, DQPair*> &pairs) {
         for (const auto &signal : pairs) {
             std::string name = signal.second->name;
             std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
@@ -98,8 +98,7 @@ void FSTWindow::showScope(Scope &scope) {
     }
     if (open) {
         for(size_t i=0; i<scope.children.size(); i++) {
-            Scope current = *scope.children[i];
-            this->showScope(current);
+            this->showScope(*scope.children[i]);
         }
 
         ImGui::Separator();
@@ -130,8 +129,7 @@ void FSTWindow::showPlotMenu() {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
         for(size_t i=0; i<g_Reader->scopes.size(); i++) {
-            Scope current = *g_Reader->scopes[i];
-            this->showScope(current);
+            this->showScope(*g_Reader->scopes[i]);
         }
     }
 }
@@ -209,11 +207,6 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
                 plot.x_data.push_back(item[0]);
                 plot.y_data.push_back(item[1]);
                 if (item[1] > plot.maxY) plot.maxY = item[1];
-            }
-
-            if(g_Plots.empty() && plotXLimits->Max == 0) {
-                if(plot.x_data.size() >= 3) plotXLimits->Max = plot.x_data[2];
-                else plotXLimits->Max = plot.x_data[plot.x_data.size() -1];
             }
 
             g_Plots.push_back(plot);
@@ -479,7 +472,7 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                //this->drawValues(item);
+                this->drawValues(item, leftIndex, rightIndex);
                 ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
@@ -563,11 +556,10 @@ inline void FSTWindow::listenArrows(Plot* item) {
     }
 }
 
-inline void FSTWindow::drawValues(Plot *item) {
+inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex) {
     std::basic_string<char> value;
     std::stringstream stream;
-    for (int i = 0; i < item->x_data.size(); i++) {
-        if (item->x_data[i] < plotXLimits->Min || item->x_data[i] > plotXLimits->Max) continue;
+    for (size_t i = leftIndex; i < rightIndex; i++) {
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
@@ -740,9 +732,8 @@ void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>&
     g_Reader = new FSTReader(file.c_str(), logParser);
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
-        double maxTime = g_Reader->getMaxTime();
-        plotXLimits->Min = 0 - (maxTime / 20);
-        plotXLimits->Max = maxTime + (maxTime / 20);
+        plotXLimits->Min = 0;
+        plotXLimits->Max = 5000;
     }
     this->editors = &editors;
 
