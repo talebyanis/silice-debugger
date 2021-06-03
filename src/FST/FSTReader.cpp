@@ -70,9 +70,13 @@ void FSTReader::initMaps() {
                         currentScope->add(*hier, false);
                     } else {
                         if(rl.v_name == "#") { //internal
-                            currentScope->add(*hier, true);
+                             currentScope->add(*hier, true);
                         } else { //user
-                            currentScope->addSignal(Signal(rl.varname, hier->u.var.handle, currentScope->name),false);
+                            std::string signalName = rl.varname;
+                            if(rl.varname.find(rl.token + "_") == 0) {
+                                signalName[rl.token.size()] = '.';
+                            }
+                            currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name),false);
                         }
                     }
                 }

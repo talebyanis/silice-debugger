@@ -33,8 +33,8 @@ void LogParser::parseVio(const std::string& vio_filename)
 		rl.line = element;
 		file >> element;
 		rl.usage = element;
-		//file >> element;
-        //rl.v_name = element;
+		file >> element;
+        rl.v_name = element;
 
 		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
