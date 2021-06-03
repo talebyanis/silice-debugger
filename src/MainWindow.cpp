@@ -443,10 +443,10 @@ void MainWindow::Init() {
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
-    /*for (auto &[filename, editor] : this->editors)
+    for (auto &[filename, editor] : this->editors)
     {
         this->ShowCodeEditors(editor);
-    }*/
+    }
     fstWindow.render();
     ImGui::PopFont();
 }
