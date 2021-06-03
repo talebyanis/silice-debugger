@@ -80,8 +80,8 @@ private:
 
     void showPlotMenu();
     void showScope(Scope &scope);
-    void showSignalsMenu(Scope &scope, int &hiddenCount);
-    void showPairsMenu(Scope &scope, int &hiddenCount);
+    void showSignalsMenu(Scope &scope, int &hiddenCount, bool internal);
+    void showPairsMenu(Scope &scope, int &hiddenCount, bool internal);
 
     void loadQindex();
 };
