@@ -978,29 +978,46 @@ void TextEditor::Render()
             {
                 if (!this->linesIndexes.empty())
                 {
-                    for (std::pair<int, std::pair<int, int>>& indexes : this->linesIndexes)
+                    for (auto& indexes : this->linesIndexes)
                     {
-                        if (indexes.first != -1)
-                        {
-                            if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
-                                (indexes.second.first == indexes.second.second && lineNo + 1 == indexes.second.first))
-                            {
-                                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                                if (indexes.first != this->current_index_colorization)
-                                {
-                                    this->current_index_colorization = indexes.first;
-                                    colorA = !colorA;
-                                }
 
-                                (colorA)
-                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
-                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
-                                break;
-                            }
-                        }
+//                        if (indexes.first != -1)
+//                        {
+//                            if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
+//                                (indexes.second.first == indexes.second.second && lineNo + 1 == indexes.second.first))
+//                            {
+//                                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+//                                if (indexes.first != this->current_index_colorization)
+//                                {
+//                                    this->current_index_colorization = indexes.first;
+//                                    colorA = !colorA;
+//                                }
+//
+//                                (colorA)
+//                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
+//                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
+//                                break;
+//                            }
+//                        }
                     }
                 }
 
+                // Is the current line selected by a _q_index ?
+
+                if (this->li.find(lineNo) != this->li.end())
+                {
+                    auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                    drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
+
+                    if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    {
+                        ImGui::BeginTooltip();
+                        ImGui::Text(" %s ", this->li[lineNo].second.c_str());
+                        ImGui::EndTooltip();
+                    }
+                }
+
+                /*
                 for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
                 {
                     if (linesSelectedIndex.second.first != -1)
@@ -1019,7 +1036,7 @@ void TextEditor::Render()
                             }
                         }
                     }
-                }
+                }*/
             }
 
             // Draw line number (right aligned)
@@ -2637,23 +2654,30 @@ bool TextEditor::writeFromFile()
 
 void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes)
 {
+    std::cout << "here" << std::endl;
     this->linesSelectedIndexes.clear();
-    for (const auto &index : indexes)
+    this->li.clear();
+    for (const auto &[algo, index] : indexes)
     {
-        this->linesSelectedIndexes.emplace_back(index.first, this->lp.getLines(this->file_path, index.second));
+        this->linesSelectedIndexes.emplace_back(algo, this->lp.getLines(this->file_path, index, algo));
+        for (const auto &line : this->lp.getLines(this->file_path, index, algo))
+        {
+            this->li[line] = std::make_pair(index, algo);
+        }
     }
 }
 
 void TextEditor::unsetSelectedIndex()
 {
     this->linesSelectedIndexes.clear();
+    this->li.clear();
 }
 
 void TextEditor::setIndexPairs()
 {
-    for (int index : this->lp.getIndexes(this->file_path))
+    //for (int index : this->lp.getIndexes(this->file_path))
     {
-        this->linesIndexes.emplace_back(index, this->lp.getLines(this->file_path, index));
+        //this->linesIndexes.emplace_back(index, this->lp.getLines(this->file_path, index));
     }
 }
 

@@ -4,7 +4,7 @@
 LogParser::LogParser()
 {
     this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
-    //this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+    this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
 }
 
 // Vio methods ---------------------------------------------------------
@@ -24,20 +24,39 @@ void LogParser::parseVio(const std::string& vio_filename)
 	std::string element;
 	report_line rl;
 	while (file >> element) {
+	    // filename
 		rl.filename = element;
 		file >> element;
+
+		// token / group
 		rl.token = element;
 		file >> element;
+
+		// varname
 		rl.varname = element;
 		file >> element;
+
+		// line
 		rl.line = element;
 		file >> element;
+
+		// usage
 		rl.usage = element;
-		//file >> element;
-        //rl.v_name = element;
+
+		// v_name
+		file >> element;
+        rl.v_name = element;
 
 		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
 	}
+
+    // uncomment to print report_lines
+    /*
+    for (const auto& i : this->report_lines)
+    {
+        std::cout << i.second.filename << " " << i.second.varname << " " << i.second.usage << std::endl;
+    }
+    */
 }
 
 // ---------------------------------------------------------------------
@@ -93,74 +112,80 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(const std::st
 
 // FSM methods -------------------------------------------------------
 
-void LogParser::parseFSM(const std::string& fsm_filename)
-{
+void LogParser::parseFSM(const std::string& fsm_filename) {
     this->fsm_lines.clear();
-	std::fstream file;
+    std::fstream file;
 
-	file.open(fsm_filename, std::ios::in);
-	if (!file)
-	{
-		std::cout << "FSM Log file was not found";
-		exit(1);
-	}
+    file.open(fsm_filename, std::ios::in);
+    if (!file) {
+        std::cout << "FSM Log file was not found";
+        exit(1);
+    }
 
-	std::string element;
-	fsm_line fsml;
-	while (file >> element) {
-		fsml.algo = element;
-		file >> element;
-		fsml.index = stoi(element);
-		file >> element;
-		fsml.filename = element;
-		file >> element;
-		fsml.line = stoi(element);
+    std::string element;
+    int index, nblines;
+    int line1, line2;
+    std::list<int> lines;
+    fsm_line fsml;
+    while (file >> element) {
+        // algo
+        fsml.algo = element;
+        file >> element;
 
-		fsm_lines.insert(fsm_lines.begin(), std::make_pair(std::make_pair(fsml.filename, fsml.index), fsml));
-	}
+        // index
+        index = stoi(element);
+        file >> element;
 
-	if (!fsm_lines.empty())
-	{
-		sort(fsm_lines.begin(), fsm_lines.end(), fsm_line::cmp);
-	}
+        // filename
+        fsml.filename = element;
+        file >> element;
 
-	// uncomment to print fsm_lines
-	//for (const auto& i : this->fsm_lines)
-	//{
-	//	std::cout << i.second.filename << " " << i.second.line << " " << i.second.index << std::endl;
-	//}
+        // nb lines
+        nblines = stoi(element);
+
+        // lines...
+        lines.clear();
+        for (int i = 0; i < nblines; ++i) {
+            file >> element;
+            size_t delimiter;
+            if ((delimiter = element.find(',')) != std::string::npos) {
+                line1 = stoi(element.substr(0, delimiter));
+                line2 = stoi(element.substr(1, delimiter));
+                for (int j = line1; j <= line2; ++j) {
+                    lines.push_back(j);
+                }
+            } else {
+                lines.push_back(stoi(element));
+            }
+            fsml.indexed_lines = lines;
+        }
+        fsm_lines.insert(std::make_pair(std::make_pair(std::make_pair(fsml.filename, fsml.algo), index), fsml));
+    }
+
+    /*
+     if (!fsm_lines.empty())
+    {
+        sort(fsm_lines.begin(), fsm_lines.end(), fsm_line::cmp);
+    }
+     */
+
+    // uncomment to print fsm_lines
+    /*
+    for (const auto &i : this->fsm_lines) {
+        std::cout << i.second.filename << " " << i.second.algo << " " << i.first.second << std::endl;
+    }
+    */
 }
 
 // ---------------------------------------------------------------------
 
-// Return lines associated with "index" from "filename"
-std::pair<int, int> LogParser::getLines(const std::string& filename, int index)
+std::list<int> LogParser::getLines(const std::string& filename, int index, const std::string& algo)
 {
-	std::pair<int, int> pair = std::make_pair(-1, -2); // -2 = inf
-	bool found = false;
-	for (auto const& [key, val] : this->fsm_lines)
-	{
-		if (found)
-		{
-            if (val.filename != filename)
-                break;
-			pair.second = val.line;
-			return pair;
-		}
-		if (val.filename == filename && val.index == index)
-		{
-			pair.first = val.line;
-			found = true;
-		}
-	}
-	if (found)
-	    pair.second = pair.first;
-
-	return pair;
+	return this->fsm_lines[std::make_pair(std::make_pair(filename, algo), index)].indexed_lines;
 }
 
 // ---------------------------------------------------------------------
-
+/*
 std::list<int> LogParser::getIndexes(const std::string& filename)
 {
     std::list<int> res;
@@ -173,8 +198,7 @@ std::list<int> LogParser::getIndexes(const std::string& filename)
     }
     return res;
 }
-
-
+*/
 // ---------------------------------------------------------------------
 
 std::list<std::string> LogParser::getAlgos(const std::string& filename)

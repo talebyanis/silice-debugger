@@ -622,12 +622,12 @@ void FSTWindow::render() {
 
     std::list<std::pair<std::string, int>> indexes;
 
-    for (const auto &item : this->qindexValues)
+    for (const auto &[algoname, list_val] : this->qindexValues)
     {
         int tmp = 0;
-        for (int ii = 1; ii < item.second.size(); ii++) {
-            if (markerX < item.second[ii].first && markerX >= item.second[tmp].first) {
-                indexes.emplace_back(item.first, tmp);
+        for (int ii = 1; ii < list_val.size(); ii++) {
+            if (markerX < list_val[ii].first && markerX >= list_val[tmp].first) {
+                indexes.emplace_back(algoname, tmp);
                 break;
             }
             tmp = ii;
@@ -679,14 +679,14 @@ void FSTWindow::clean() {
 
 void FSTWindow::loadQindex() {
     for (const auto &scope : g_Reader->scopes) {
-        for (const auto &item : this->algos_to_colorize)
+        for (const auto &algoname : this->algos_to_colorize)
         {
-            if (scope->name.find(item) != std::string::npos) {
+            if (scope->name.find(algoname) != std::string::npos) {
                 for (const auto &pair : scope->pairs) {
                     if (pair.second->name.find("index") != std::string::npos) {
                         for (const auto &value : g_Reader->getValues(pair.second->q->id))
                         {
-                            qindexValues[item].emplace_back(value[0], value[1]);
+                            qindexValues[algoname].emplace_back(value[0], value[1]);
                         }
                     }
                 }
@@ -700,11 +700,11 @@ void FSTWindow::loadQindex() {
 void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
 {
     this->algos_to_colorize.clear();
-    for (const auto &item : algos)
+    for (const auto &[algoname, must_be_colored] : algos)
     {
-        if (item.second)
+        if (must_be_colored)
         {
-            this->algos_to_colorize.push_back(item.first);
+            this->algos_to_colorize.push_back(algoname);
         }
     }
     this->qindexValues.clear();

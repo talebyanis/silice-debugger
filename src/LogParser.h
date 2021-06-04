@@ -19,14 +19,22 @@ struct report_line {
 };
 
 // Stores a line from the .v.fsm.log report file :
-// ALGO - INDEX - FILENAME - LINE (starting line)
+// ALGO - INDEX - FILENAME - NUMBER OF INSTRUCTIONS - LINES...
 struct fsm_line {
-	std::string algo;
+    /*
+	// old structure
+    std::string algo;
 	int index;
 	std::string filename;
 	int line;
+    */
 
-	// Comparator used in sortFSMMap() basing on lines
+    std::string algo;
+    std::string filename;
+    std::list<int> indexed_lines;
+
+    /*
+	// Comparator basing on lines
 	static bool cmp(std::pair<std::pair<std::string, int>, fsm_line>& a, std::pair<std::pair<std::string, int>, fsm_line>& b)
 	{
 		// same filename
@@ -44,6 +52,7 @@ struct fsm_line {
 		}
 		return a.first.first < b.first.first;
 	}
+     */
 };
 
 /*
@@ -62,7 +71,7 @@ public:
 	report_line getLineFromVName(const std::string& match);
 
 	// FSM methods
-	std::pair<int, int> getLines(const std::string& filename, int index);
+	std::list<int> getLines(const std::string& filename, int index, const std::string& algo);
     std::list<int> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);
 
@@ -72,7 +81,7 @@ private:
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;
 
     void parseFSM(const std::string& fsm_filename);
-	// (filename, index)   -> fsm_line
-	std::vector<std::pair<std::pair<std::string, int>, fsm_line>> fsm_lines;
+	// (filename, algoname, index) -> fsm_line
+	std::map<std::pair<std::pair<std::string, std::string>, int>, fsm_line> fsm_lines;
 };
 

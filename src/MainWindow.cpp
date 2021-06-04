@@ -17,7 +17,6 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // Todo : set fileFullPath when doing "make debug" to show the file name in the editor
-//static fs::path fileFullPath;
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
@@ -211,7 +210,6 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
     ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-
             // useless
             /*
             if (ImGui::MenuItem("Open", "Ctrl + O")) {
@@ -321,7 +319,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
     ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                 editor.IsOverwrite() ? "Ovr" : "Ins",
                 editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), editor.file_path.c_str());
+                editor.GetLanguageDefinition().mName.c_str(), fs::path(editor.file_path).filename().string().c_str());
 
     ImGui::PushFont(font_code);
     p_open_editor = ImGui::IsWindowFocused();
@@ -351,7 +349,6 @@ void MainWindow::ZoomMouseWheel(TextEditor& editor) {
 
 void MainWindow::getSiliceFiles() {
     // Looks for every Silice files needed in the design
-
     std::ifstream file(PROJECT_DIR "BUILD_icarus/build.v.files.log");
 
     std::string filename;
@@ -383,8 +380,6 @@ void MainWindow::Init() {
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
     this->getSiliceFiles();
     fstWindow.load(str, this->editors, this->lp);
-
-    //fileFullPath = fs::path(PROJECT_DIR "main.ice");
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
