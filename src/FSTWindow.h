@@ -83,7 +83,7 @@ private:
     void showSignalsMenu(Scope &scope, int &hiddenCount, bool internal);
     void showPairsMenu(Scope &scope, int &hiddenCount, bool internal);
 
-    void loadQindex();
+    void loadQindex(Scope &scope);
 };
 
 

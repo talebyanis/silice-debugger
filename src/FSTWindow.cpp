@@ -683,12 +683,11 @@ void FSTWindow::clean() {
 
 //-------------------------------------------------------
 
-void FSTWindow::loadQindex() {
-    for (const auto &scope : g_Reader->scopes) {
+void FSTWindow::loadQindex(Scope &scope) {
         for (const auto &algoname : this->algos_to_colorize)
         {
-            if (scope->name.find(algoname) != std::string::npos) {
-                for (const auto &pair : scope->pairsInternal) {
+            if (scope.name.find(algoname) != std::string::npos) {
+                for (const auto &pair : scope.pairsInternal) {
                     if (pair.second->name.find("index") != std::string::npos) {
                         for (const auto &value : g_Reader->getValues(pair.second->q->id))
                         {
@@ -696,9 +695,12 @@ void FSTWindow::loadQindex() {
                         }
                     }
                 }
+            } else {
+                for(size_t i=0; i<scope.children.size(); i++) {
+                    loadQindex(*scope.children[i]);
+                }
             }
         }
-    }
 }
 
 //-------------------------------------------------------
@@ -737,7 +739,9 @@ void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>&
     }
     this->editors = &editors;
 
-    this->loadQindex();
+    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
+        loadQindex(*g_Reader->scopes[i]);
+    }
 
     for (const auto &item : g_Reader->scopes) {
         loadColors(item, this->g_ScopeColors);
@@ -766,5 +770,7 @@ void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors, LogP
         g_ScopeColors.insert({i->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
     }
 
-    this->loadQindex();
+    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
+        loadQindex(*g_Reader->scopes[i]);
+    }
 }
