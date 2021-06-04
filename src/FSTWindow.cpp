@@ -716,8 +716,10 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
         }
     }
     this->qindexValues.clear();
-    this->loadQindex();
-}
+
+    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
+        loadQindex(*g_Reader->scopes[i]);
+    }
 
 //-------------------------------------------------------
 
