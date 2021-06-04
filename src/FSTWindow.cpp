@@ -12,71 +12,77 @@ using json = nlohmann::json;
 
 //-------------------------------------------------------
 
-inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount) {
-    for (const auto &signal : scope.signals) {
-        std::string name = signal.second.name;
-        std::vector<fstHandle> sig = {signal.second.id};
-        if (name.find(filterBuffer) != std::string::npos) {
-            if (hoverHighLight == signal.second.id) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-            }
-            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
-                                "",
-                                FSTWindow::isDisplayed(sig))) {
-                if (!FSTWindow::isDisplayed(sig)) {
-                    this->addPlot(sig);
-                } else {
-                    this->removePlot(sig);
+inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool internal) {
+    auto show = [this, &hiddenCount](std::unordered_map<fstHandle, Signal> &signals) {
+        for (const auto &signal : signals) {
+            std::string name = signal.second.name;
+            std::vector<fstHandle> sig = {signal.second.id};
+            if (name.find(filterBuffer) != std::string::npos) {
+                if (hoverHighLight == signal.second.id) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                 }
+                if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                    "",
+                                    FSTWindow::isDisplayed(sig))) {
+                    if (!FSTWindow::isDisplayed(sig)) {
+                        this->addPlot(sig);
+                    } else {
+                        this->removePlot(sig);
+                    }
+                }
+                if (ImGui::IsItemHovered()) {
+                    hoverRightClickMenu = signal.second.id;
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndTooltip();
+                }
+                if (hoverHighLight == signal.second.id) {
+                    ImGui::PopStyleColor();
+                }
+            } else {
+                hiddenCount++;
             }
-            if (ImGui::IsItemHovered()) {
-                hoverRightClickMenu = signal.second.id;
-                ImGui::BeginTooltip();
-                ImGui::Text("%s", name.c_str());
-                ImGui::EndTooltip();
-            }
-            if (hoverHighLight == signal.second.id) {
-                ImGui::PopStyleColor();
-            }
-        } else {
-            hiddenCount++;
         }
-    }
+    };
+    show(internal ? scope.signalsInternal : scope.signalsUser);
 }
 
-inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount) {
-    for (const auto &signal : scope.pairs) {
-        std::string name = signal.second->name;
-        std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
-        if (name.find(filterBuffer) != std::string::npos) {
-            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-            }
-            std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
-            std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
-            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
-                                "",
-                                FSTWindow::isDisplayed(vectorA) ||
-                                FSTWindow::isDisplayed(vectorB))) {
-                if (!FSTWindow::isDisplayed(pair)) {
-                    this->addPlot(pair);
-                } else {
-                    this->removePlot(pair);
+inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool internal) {
+    auto show = [this, &hiddenCount](std::unordered_map<std::string, DQPair*> &pairs) {
+        for (const auto &signal : pairs) {
+            std::string name = signal.second->name;
+            std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
+            if (name.find(filterBuffer) != std::string::npos) {
+                if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
                 }
+                std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
+                std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
+                if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                    "",
+                                    FSTWindow::isDisplayed(vectorA) ||
+                                    FSTWindow::isDisplayed(vectorB))) {
+                    if (!FSTWindow::isDisplayed(pair)) {
+                        this->addPlot(pair);
+                    } else {
+                        this->removePlot(pair);
+                    }
+                }
+                if (ImGui::IsItemHovered()) {
+                    hoverRightClickMenu = signal.second->d->id;
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndTooltip();
+                }
+                if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
+                    ImGui::PopStyleColor();
+                }
+            } else {
+                hiddenCount++;
             }
-            if (ImGui::IsItemHovered()) {
-                hoverRightClickMenu = signal.second->d->id;
-                ImGui::BeginTooltip();
-                ImGui::Text("%s", name.c_str());
-                ImGui::EndTooltip();
-            }
-            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                ImGui::PopStyleColor();
-            }
-        } else {
-            hiddenCount++;
         }
-    }
+    };
+    show(internal ? scope.pairsInternal : scope.pairsUser);
 }
 
 void FSTWindow::showScope(Scope &scope) {
@@ -92,15 +98,22 @@ void FSTWindow::showScope(Scope &scope) {
     }
     if (open) {
         for(size_t i=0; i<scope.children.size(); i++) {
-            Scope current = *scope.children[i];
-            this->showScope(current);
+            this->showScope(*scope.children[i]);
         }
 
-        this->showSignalsMenu(scope, hiddenCount);
+        ImGui::Separator();
 
-        if (!scope.pairs.empty()) { ImGui::Separator(); }
+        showSignalsMenu(scope, hiddenCount, false);
+        if (!scope.pairsUser.empty()) { ImGui::Separator(); }
+        showPairsMenu(scope, hiddenCount, false);
 
-        this->showPairsMenu(scope, hiddenCount);
+
+        if(ImGui::TreeNode("Internal")) {
+            showSignalsMenu(scope, hiddenCount, true);
+            if (!scope.pairsInternal.empty()) { ImGui::Separator(); }
+            showPairsMenu(scope, hiddenCount, true);
+            ImGui::TreePop();
+        }
 
         if (hiddenCount != 0) {
             ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
@@ -116,8 +129,7 @@ void FSTWindow::showPlotMenu() {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
         for(size_t i=0; i<g_Reader->scopes.size(); i++) {
-            Scope current = *g_Reader->scopes[i];
-            this->showScope(current);
+            this->showScope(*g_Reader->scopes[i]);
         }
     }
 }
@@ -195,11 +207,6 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
                 plot.x_data.push_back(item[0]);
                 plot.y_data.push_back(item[1]);
                 if (item[1] > plot.maxY) plot.maxY = item[1];
-            }
-
-            if(g_Plots.empty() && plotXLimits->Max == 0) {
-                if(plot.x_data.size() >= 3) plotXLimits->Max = plot.x_data[2];
-                else plotXLimits->Max = plot.x_data[plot.x_data.size() -1];
             }
 
             g_Plots.push_back(plot);
@@ -465,7 +472,7 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                //this->drawValues(item);
+                this->drawValues(item, leftIndex, rightIndex);
                 ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
@@ -549,11 +556,10 @@ inline void FSTWindow::listenArrows(Plot* item) {
     }
 }
 
-inline void FSTWindow::drawValues(Plot *item) {
+inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex) {
     std::basic_string<char> value;
     std::stringstream stream;
-    for (int i = 0; i < item->x_data.size(); i++) {
-        if (item->x_data[i] < plotXLimits->Min || item->x_data[i] > plotXLimits->Max) continue;
+    for (size_t i = leftIndex; i < rightIndex; i++) {
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
@@ -713,22 +719,28 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
 
 //-------------------------------------------------------
 
+void loadColors(Scope *scope, std::map<std::string, ImVec4> &g_ScopeColors) {
+    g_ScopeColors.insert({scope->name, ImVec4(1, 1, 1, 1)});
+    for (const auto &item : scope->children) {
+        loadColors(item,g_ScopeColors);
+    }
+}
+
 void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str(), logParser);
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
-        double maxTime = g_Reader->getMaxTime();
-        plotXLimits->Min = 0 - (maxTime / 20);
-        plotXLimits->Max = maxTime + (maxTime / 20);
+        plotXLimits->Min = 0;
+        plotXLimits->Max = 5000;
     }
     this->editors = &editors;
 
     this->loadQindex();
 
     for (const auto &item : g_Reader->scopes) {
-        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
+        loadColors(item, this->g_ScopeColors);
     }
 }
 
@@ -752,7 +764,6 @@ void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors, LogP
     for (auto & i : g_Reader->scopes) {
         auto vals = data["color"][i->name];
         g_ScopeColors.insert({i->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
-
     }
 
     this->loadQindex();

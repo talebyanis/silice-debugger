@@ -233,10 +233,10 @@ report_line LogParser::getLineFromVName(const std::string& match)
 {
     report_line rl;
     rl.v_name = "#";
-    for (const auto &item : this->report_lines)
-    {
-        if (item.second.v_name.find(match) != std::string::npos)
-        {
+    for (const auto &item : this->report_lines) {
+        if (item.second.v_name == match ||
+            (item.second.v_name.find(',') != std::string::npos && (item.second.v_name.find(match) == 0 || item.second.v_name.find(match) == match.size()+1))
+            ) {
             return item.second;
         }
     }
