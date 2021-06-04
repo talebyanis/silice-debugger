@@ -58,7 +58,7 @@ TextEditor::TextEditor(std::string& path, LogParser& logparser)
     // Opening a file (raw path here) on startup,
     this->writeFromFile();
     this->parseAlgo();
-    this->colorA = true;
+    this->isset_toolbox = true;
 
     SetPalette(GetDarkPalette());
     SetLanguageDefinition(this->TokenizedSilice(this->mReadOnly));
@@ -976,7 +976,7 @@ void TextEditor::Render()
             // Draw indexes (Silice)
             if (this->mIndexColorization)
             {
-                this->colorA = false;
+                this->isset_toolbox = false;
                 if (!this->indexedLines.empty())
                 {
                     if (!this->indexedLines[lineNo+1].empty())
@@ -993,7 +993,7 @@ void TextEditor::Render()
                             }
                             ImGui::EndTooltip();
                         }
-                        this->colorA = true;
+                        this->isset_toolbox = true;
                     }
                 }
 
@@ -1003,7 +1003,7 @@ void TextEditor::Render()
                     auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
                     drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
-                    if (!colorA && ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    if (!isset_toolbox && ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
                     {
                         ImGui::BeginTooltip();
                         ImGui::Text(" %s ", this->selectedLines[lineNo + 1].c_str());

@@ -291,7 +291,7 @@ public:
     std::map<int, std::string> selectedLines; // (line_number -> index, algoname)
 	std::map<int, std::list<std::string>> indexedLines; // (line_number -> algoname)
 	int current_index_colorization{};
-	bool colorA;
+	bool isset_toolbox;
     LogParser& lp;
 
 	bool hasIndexColorization();
