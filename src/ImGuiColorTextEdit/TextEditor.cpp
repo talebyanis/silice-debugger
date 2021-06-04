@@ -976,67 +976,40 @@ void TextEditor::Render()
             // Draw indexes (Silice)
             if (this->mIndexColorization)
             {
-                if (!this->linesIndexes.empty())
+                this->colorA = false;
+                if (!this->indexedLines.empty())
                 {
-                    for (auto& indexes : this->linesIndexes)
+                    if (!this->indexedLines[lineNo+1].empty())
                     {
+                        auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
 
-//                        if (indexes.first != -1)
-//                        {
-//                            if (lineNo + 1 >= indexes.second.first && lineNo + 1 < indexes.second.second ||
-//                                (indexes.second.first == indexes.second.second && lineNo + 1 == indexes.second.first))
-//                            {
-//                                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-//                                if (indexes.first != this->current_index_colorization)
-//                                {
-//                                    this->current_index_colorization = indexes.first;
-//                                    colorA = !colorA;
-//                                }
-//
-//                                (colorA)
-//                                ? drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineA])
-//                                : drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
-//                                break;
-//                            }
-//                        }
+                        drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
+                        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                        {
+                            ImGui::BeginTooltip();
+                            for (const auto &algoname : this->indexedLines[lineNo + 1])
+                            {
+                                ImGui::Text(" %s ", algoname.c_str());
+                            }
+                            ImGui::EndTooltip();
+                        }
+                        this->colorA = true;
                     }
                 }
 
                 // Is the current line selected by a _q_index ?
-
-                if (this->li.find(lineNo) != this->li.end())
+                if (!this->selectedLines[lineNo+1].empty())
                 {
                     auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
                     drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
-                    if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    if (!colorA && ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
                     {
                         ImGui::BeginTooltip();
-                        ImGui::Text(" %s ", this->li[lineNo].second.c_str());
+                        ImGui::Text(" %s ", this->selectedLines[lineNo + 1].c_str());
                         ImGui::EndTooltip();
                     }
                 }
-
-                /*
-                for (const auto &linesSelectedIndex : this->linesSelectedIndexes)
-                {
-                    if (linesSelectedIndex.second.first != -1)
-                    {
-                        if (lineNo + 1 >= linesSelectedIndex.second.first && lineNo + 1 < linesSelectedIndex.second.second ||
-                            (linesSelectedIndex.second.first == linesSelectedIndex.second.second && lineNo + 1 >= linesSelectedIndex.second.first))
-                        {
-                            auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                            drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
-
-                            if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
-                            {
-                                ImGui::BeginTooltip();
-                                ImGui::Text(" %s ", linesSelectedIndex.first.c_str());
-                                ImGui::EndTooltip();
-                            }
-                        }
-                    }
-                }*/
             }
 
             // Draw line number (right aligned)
@@ -2654,31 +2627,24 @@ bool TextEditor::writeFromFile()
 
 void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes)
 {
-    std::cout << "here" << std::endl;
-    this->linesSelectedIndexes.clear();
-    this->li.clear();
+    this->selectedLines.clear();
     for (const auto &[algo, index] : indexes)
     {
-        this->linesSelectedIndexes.emplace_back(algo, this->lp.getLines(this->file_path, index, algo));
         for (const auto &line : this->lp.getLines(this->file_path, index, algo))
         {
-            this->li[line] = std::make_pair(index, algo);
+            this->selectedLines[line] = algo;
         }
     }
 }
 
 void TextEditor::unsetSelectedIndex()
 {
-    this->linesSelectedIndexes.clear();
-    this->li.clear();
+    this->selectedLines.clear();
 }
 
 void TextEditor::setIndexPairs()
 {
-    //for (int index : this->lp.getIndexes(this->file_path))
-    {
-        //this->linesIndexes.emplace_back(index, this->lp.getLines(this->file_path, index));
-    }
+    this->indexedLines = this->lp.getIndexes(this->file_path);
 }
 
 void TextEditor::ScaleFont(bool make_bigger)

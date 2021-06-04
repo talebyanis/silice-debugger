@@ -696,8 +696,8 @@ void FSTWindow::loadQindex(Scope &scope) {
                     }
                 }
             } else {
-                for(size_t i=0; i<scope.children.size(); i++) {
-                    loadQindex(*scope.children[i]);
+                for(auto & i : scope.children) {
+                    loadQindex(*i);
                 }
             }
         }
@@ -714,8 +714,8 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos) {
     }
     this->qindexValues.clear();
 
-    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
-        loadQindex(*g_Reader->scopes[i]);
+    for (auto & scope : g_Reader->scopes) {
+        loadQindex(*scope);
     }
 }
 

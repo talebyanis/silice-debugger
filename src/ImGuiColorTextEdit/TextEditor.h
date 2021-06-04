@@ -288,9 +288,8 @@ public:
     std::string file_path;
 	bool p_open_editor;
     bool mIndexColorization{};
-    std::map<int, std::pair<int, std::string>> li; // (line_number -> index, algoname)
-	std::list<std::pair<int, std::list<int>>> linesIndexes;
-	std::list<std::pair<std::string, std::list<int>>> linesSelectedIndexes;
+    std::map<int, std::string> selectedLines; // (line_number -> index, algoname)
+	std::map<int, std::list<std::string>> indexedLines; // (line_number -> algoname)
 	int current_index_colorization{};
 	bool colorA;
     LogParser& lp;

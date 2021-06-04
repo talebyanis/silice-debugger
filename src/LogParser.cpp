@@ -162,13 +162,6 @@ void LogParser::parseFSM(const std::string& fsm_filename) {
         fsm_lines.insert(std::make_pair(std::make_pair(std::make_pair(fsml.filename, fsml.algo), index), fsml));
     }
 
-    /*
-     if (!fsm_lines.empty())
-    {
-        sort(fsm_lines.begin(), fsm_lines.end(), fsm_line::cmp);
-    }
-     */
-
     // uncomment to print fsm_lines
     /*
     for (const auto &i : this->fsm_lines) {
@@ -185,20 +178,34 @@ std::list<int> LogParser::getLines(const std::string& filename, int index, const
 }
 
 // ---------------------------------------------------------------------
-/*
-std::list<int> LogParser::getIndexes(const std::string& filename)
+
+std::map<int, std::list<std::string>> LogParser::getIndexes(const std::string& filename)
 {
-    std::list<int> res;
-    for (const auto &line : this->fsm_lines)
+    std::map<int, std::list<std::string>> res;
+    for (const auto &[key, fsmline] : this->fsm_lines)
     {
-        if (line.second.filename == filename)
+        if (fsmline.filename == filename)
         {
-            res.push_back(line.second.index);
+            for (const auto &line : fsmline.indexed_lines)
+            {
+                if (res.find(line) == res.end())
+                {
+                    res[line].push_back(fsmline.algo);
+                }
+                else
+                {
+                    if (std::find(res[line].begin(), res[line].end(), fsmline.algo) == res[line].end())
+                    {
+                        res[line].push_back(fsmline.algo);
+                    }
+                }
+
+            }
         }
     }
     return res;
 }
-*/
+
 // ---------------------------------------------------------------------
 
 std::list<std::string> LogParser::getAlgos(const std::string& filename)

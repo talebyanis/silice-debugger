@@ -72,7 +72,7 @@ public:
 
 	// FSM methods
 	std::list<int> getLines(const std::string& filename, int index, const std::string& algo);
-    std::list<int> getIndexes(const std::string& filename);
+    std::map<int, std::list<std::string>> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);
 
 private:
