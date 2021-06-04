@@ -705,13 +705,10 @@ void FSTWindow::loadQindex(Scope &scope) {
 
 //-------------------------------------------------------
 
-void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
-{
+void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos) {
     this->algos_to_colorize.clear();
-    for (const auto &[algoname, must_be_colored] : algos)
-    {
-        if (must_be_colored)
-        {
+    for (const auto &[algoname, must_be_colored] : algos) {
+        if (must_be_colored) {
             this->algos_to_colorize.push_back(algoname);
         }
     }
@@ -720,6 +717,7 @@ void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
     for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
         loadQindex(*g_Reader->scopes[i]);
     }
+}
 
 //-------------------------------------------------------
 
