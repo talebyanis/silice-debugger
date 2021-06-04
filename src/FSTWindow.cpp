@@ -688,7 +688,7 @@ void FSTWindow::loadQindex() {
         for (const auto &algoname : this->algos_to_colorize)
         {
             if (scope->name.find(algoname) != std::string::npos) {
-                for (const auto &pair : scope->pairs) {
+                for (const auto &pair : scope->pairsInternal) {
                     if (pair.second->name.find("index") != std::string::npos) {
                         for (const auto &value : g_Reader->getValues(pair.second->q->id))
                         {
