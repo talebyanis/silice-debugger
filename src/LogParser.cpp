@@ -143,66 +143,6 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(const std::st
 
 // FSM methods -------------------------------------------------------
 
-/*
-void LogParser::parseFSM(const std::string& fsm_filename) {
-    this->fsm_lines.clear();
-    std::fstream file;
-
-    file.open(fsm_filename, std::ios::in);
-    if (!file) {
-        std::cout << "FSM Log file was not found";
-        exit(1);
-    }
-
-    std::string element;
-    int index, nblines;
-    int line1, line2;
-    std::list<int> lines;
-    fsm_line fsml;
-    while (file >> element) {
-        // algo
-        fsml.algo = element;
-        file >> element;
-
-        // index
-        index = stoi(element);
-        file >> element;
-
-        // filename
-        fsml.filename = element;
-        file >> element;
-
-        // nb lines
-        nblines = stoi(element);
-
-        // lines...
-        lines.clear();
-        for (int i = 0; i < nblines; ++i) {
-            file >> element;
-            size_t delimiter;
-            if ((delimiter = element.find(',')) != std::string::npos) {
-                line1 = stoi(element.substr(0, delimiter));
-                line2 = stoi(element.substr(1, delimiter));
-                for (int j = line1; j <= line2; ++j) {
-                    lines.push_back(j);
-                }
-            } else {
-                lines.push_back(stoi(element));
-            }
-            fsml.indexed_lines = lines;
-        }
-        fsm_lines.insert(std::make_pair(std::make_pair(std::make_pair(fsml.filename, fsml.algo), index), fsml));
-    }
-
-    // uncomment to print fsm_lines
-    /*
-    for (const auto &i : this->fsm_lines) {
-        std::cout << i.second.filename << " " << i.second.algo << " " << i.first.second << std::endl;
-    }
-
-}
-*/
-
 void LogParser::parseFSM(const std::string& fsm_filename)
 {
     this->fsm_lines.clear();
@@ -233,11 +173,12 @@ void LogParser::parseFSM(const std::string& fsm_filename)
         file.close();
     }
     // uncomment to print report_lines
+    /*
     for (const auto& i : this->fsm_lines)
     {
         std::cout << "1. " << i.second.filename << "\n2. " << i.second.algo << "\n3. " << i.second.indexed_lines.size() << std::endl;
     }
-
+    */
 }
 
 // ---------------------------------------------------------------------
