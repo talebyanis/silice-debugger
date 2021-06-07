@@ -7,12 +7,25 @@
 #include <list>
 #include <vector>
 #include "sourcePath.h"
+
+// Stores a line from the .v.alg.log report file :
+// INSTANCE - ALGO - DISPLAY NAME - PATH
+struct algo_line
+{
+    std::string instance;
+    std::string algo;
+    std::string d_name;
+    std::string path;
+};
+
 // Stores a line from the .v.vio.log report file :
 // FILENAME - TOKEN - VARNAME - LINE - USAGE - VERILOG_NAME
-struct report_line {
+struct report_line
+{
 	std::string filename;
 	std::string token;
 	std::string varname;
+	std::string type;
 	std::string line;
 	std::string usage;
 	std::string v_name;
@@ -20,39 +33,11 @@ struct report_line {
 
 // Stores a line from the .v.fsm.log report file :
 // ALGO - INDEX - FILENAME - NUMBER OF INSTRUCTIONS - LINES...
-struct fsm_line {
-    /*
-	// old structure
-    std::string algo;
-	int index;
-	std::string filename;
-	int line;
-    */
-
+struct fsm_line
+{
     std::string algo;
     std::string filename;
     std::list<int> indexed_lines;
-
-    /*
-	// Comparator basing on lines
-	static bool cmp(std::pair<std::pair<std::string, int>, fsm_line>& a, std::pair<std::pair<std::string, int>, fsm_line>& b)
-	{
-		// same filename
-		if (a.first.first == b.first.first)
-		{
-			// comparing lines
-			if (a.second.line == b.second.line)
-			{
-				return a.second.index < b.second.index;
-			}
-			else
-			{
-				return a.second.line < b.second.line;
-			}
-		}
-		return a.first.first < b.first.first;
-	}
-     */
 };
 
 /*
@@ -66,7 +51,7 @@ public:
 	LogParser();
 	
 	// Vio methods
-	std::string getCol(const std::string& file_name, const std::string& var_name, int col_nb) const;
+	[[nodiscard]] std::string getCol(const std::string& file_name, const std::string& var_name, int col_nb) const;
 	std::list<std::pair<std::string, std::string>> getMatch(const std::string& match);
 	report_line getLineFromVName(const std::string& match);
 
@@ -76,6 +61,10 @@ public:
 	std::list<std::string> getAlgos(const std::string& filename);
 
 private:
+    void parseAlgo(const std::string& algo_filename);
+    // instance -> algo_line
+    std::map<std::string, algo_line> algo_lines;
+
     void parseVio(const std::string& vio_filename);
 	// (filename, varname) -> report_line
 	std::map<std::pair<std::string, std::string>, report_line> report_lines;

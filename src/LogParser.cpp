@@ -3,8 +3,52 @@
 
 LogParser::LogParser()
 {
+    this->parseAlgo(PROJECT_DIR "BUILD_icarus/build.v.alg.log");
     this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
     this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+}
+
+// Algo methods --------------------------------------------------------
+
+// instance - algo - d_name - path
+void LogParser::parseAlgo(const std::string& algo_filename)
+{
+    this->algo_lines.clear();
+    std::fstream file;
+    file.open(algo_filename, std::ios::in);
+    if (!file)
+    {
+        std::cout << "Algo Log file was not found";
+        exit(1);
+    }
+
+    std::string element;
+    algo_line al;
+    while (file >> element) {
+        // instance
+        al.instance = element;
+        file >> element;
+
+        // algo
+        al.algo = element;
+        file >> element;
+
+        // d_name
+        al.d_name = element;
+        file >> element;
+
+        // path
+        al.path = element;
+
+        this->algo_lines.emplace(std::make_pair(al.instance, al));
+    }
+    // uncomment to print algo_lines
+    /*
+    for (const auto& i : this->algo_lines)
+    {
+        std::cout << i.second.instance << " " << i.second.algo << " " << i.second.path << " " << i.second.d_name << std::endl;
+    }
+    */
 }
 
 // Vio methods ---------------------------------------------------------
@@ -12,44 +56,31 @@ LogParser::LogParser()
 void LogParser::parseVio(const std::string& vio_filename)
 {
     this->report_lines.clear();
-	std::fstream file;
+    // Looks for every Silice files needed in the design
+    std::ifstream file(vio_filename);
 
-	file.open(vio_filename, std::ios::in);
-	if (!file)
-	{
-		std::cout << "VIO Log file was not found";
-		exit(1);
-	}
-
-	std::string element;
-	report_line rl;
-	while (file >> element) {
-	    // filename
-		rl.filename = element;
-		file >> element;
-
-		// token / group
-		rl.token = element;
-		file >> element;
-
-		// varname
-		rl.varname = element;
-		file >> element;
-
-		// line
-		rl.line = element;
-		file >> element;
-
-		// usage
-		rl.usage = element;
-
-		// v_name
-		file >> element;
-        rl.v_name = element;
-
-		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
-	}
-
+    report_line rl;
+    std::string instance;
+    int nb_line;
+    if (file.is_open())
+    {
+        while (file.good())
+        {
+            file >> instance;
+            file >> nb_line;
+            for (int i = 0; i < nb_line; ++i) {
+                file >> rl.token;
+                file >> rl.varname;
+                file >> rl.line;
+                file >> rl.type;
+                file >> rl.usage;
+                file >> rl.v_name;
+                rl.filename = this->algo_lines[instance].path;
+            }
+            this->report_lines[std::make_pair(rl.filename, rl.varname)] = rl;
+        }
+        file.close();
+    }
     // uncomment to print report_lines
     /*
     for (const auto& i : this->report_lines)
@@ -112,6 +143,7 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(const std::st
 
 // FSM methods -------------------------------------------------------
 
+/*
 void LogParser::parseFSM(const std::string& fsm_filename) {
     this->fsm_lines.clear();
     std::fstream file;
@@ -167,7 +199,45 @@ void LogParser::parseFSM(const std::string& fsm_filename) {
     for (const auto &i : this->fsm_lines) {
         std::cout << i.second.filename << " " << i.second.algo << " " << i.first.second << std::endl;
     }
-    */
+
+}
+*/
+
+void LogParser::parseFSM(const std::string& fsm_filename)
+{
+    this->fsm_lines.clear();
+    // Looks for every Silice files needed in the design
+    std::ifstream file(fsm_filename);
+
+    fsm_line fsml;
+    std::string instance;
+    int index, nb_line, line_number;
+    if (file.is_open())
+    {
+        while (file.good())
+        {
+            file >> instance;
+            file >> index;
+            file >> nb_line;
+            for (int i = 0; i < nb_line; ++i) {
+                file >> line_number;
+                fsml.indexed_lines.push_back(line_number);
+            }
+            if (nb_line > 0)
+            {
+                fsml.algo = this->algo_lines[instance].algo;
+                fsml.filename = this->algo_lines[instance].path;
+                this->fsm_lines[std::make_pair(std::make_pair(fsml.filename, fsml.algo), index)] = fsml;
+            }
+        }
+        file.close();
+    }
+    // uncomment to print report_lines
+    for (const auto& i : this->fsm_lines)
+    {
+        std::cout << "1. " << i.second.filename << "\n2. " << i.second.algo << "\n3. " << i.second.indexed_lines.size() << std::endl;
+    }
+
 }
 
 // ---------------------------------------------------------------------
