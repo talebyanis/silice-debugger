@@ -76,8 +76,8 @@ void LogParser::parseVio(const std::string& vio_filename)
                 file >> rl.usage;
                 file >> rl.v_name;
                 rl.filename = this->algo_lines[instance].path;
+                this->report_lines[std::make_pair(rl.filename, rl.varname)] = rl;
             }
-            this->report_lines[std::make_pair(rl.filename, rl.varname)] = rl;
         }
         file.close();
     }
