@@ -440,7 +440,7 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
-        this->ShowCodeEditors(editor);
+        //this->ShowCodeEditors(editor);
     }
     fstWindow.render();
     ImGui::PopFont();

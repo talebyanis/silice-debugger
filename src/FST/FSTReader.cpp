@@ -45,10 +45,10 @@ void FSTReader::initMaps() {
             //Scope
             case FST_HT_SCOPE:
                 if(currentScope == nullptr) {
-                    currentScope = new Scope(*hier, nullptr);
+                    currentScope = new Scope(*hier, lp.getAlgoLine(hier->u.scope.name).d_name, nullptr);
                     this->scopes.push_back(currentScope);
                 } else {
-                    currentScope->children.push_back(new Scope(*hier, currentScope));
+                    currentScope->children.push_back(new Scope(*hier, lp.getAlgoLine(hier->u.scope.name).d_name, currentScope));
                     currentScope = currentScope->children.back();
                 }
                 break;

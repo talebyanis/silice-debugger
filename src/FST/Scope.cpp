@@ -3,7 +3,9 @@
 
 // ---------------------------------------------------------------------
 
-Scope::Scope(fstHier hier, Scope *parent) {
+Scope::Scope(fstHier hier, std::string d_name, Scope *parent) {
+    if(d_name.empty()) this->d_name = hier.u.scope.name;
+    else this->d_name = d_name;
     this->name = hier.u.scope.name;
     this->parent = parent;
 }

@@ -260,3 +260,14 @@ report_line LogParser::getLineFromVName(const std::string& match)
     }
     return rl;
 }
+
+algo_line LogParser::getAlgoLine(std::string name)
+{
+    algo_line al;
+    for (const auto &item : algo_lines) {
+        if(item.second.algo == name) {
+            return item.second;
+        }
+    }
+    return al;
+}

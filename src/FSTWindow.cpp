@@ -90,7 +90,12 @@ void FSTWindow::showScope(Scope &scope) {
     //count for hidden signals
     int hiddenCount = 0;
 
-    bool open = ImGui::TreeNode(name.c_str());
+    bool open = ImGui::TreeNode(scope.d_name.c_str());
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+        ImGui::Text("%s", name.c_str());
+        ImGui::EndTooltip();
+    }
     if (ImGui::BeginPopupContextItem(name.c_str())) {
         ImGui::Text("%s", name.c_str());
         ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));

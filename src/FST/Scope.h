@@ -16,6 +16,7 @@ private:
 
 public:
     std::string name;
+    std::string d_name;
     std::unordered_map<fstHandle, Signal> signalsInternal;
     std::unordered_map<std::string, DQPair*> pairsInternal;
     std::unordered_map<fstHandle, Signal> signalsUser;
@@ -24,7 +25,7 @@ public:
     Scope* parent;
     std::vector<Scope*> children;
 
-    Scope(fstHier hier, Scope *parent);
+    Scope(fstHier hier, std::string d_name, Scope *parent);
 
     void addSignal(Signal signal, bool internal);
     void addPair(DQPair *pair, bool internal);
