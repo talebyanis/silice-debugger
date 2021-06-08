@@ -387,6 +387,7 @@ void MainWindow::Init() {
         for (const auto &item : this->lp.getAlgos(editor.second.file_path))
         {
             checked_algos[item.c_str()] = true;
+            fstWindow.setAlgoToColorize(checked_algos);
         }
     }
 

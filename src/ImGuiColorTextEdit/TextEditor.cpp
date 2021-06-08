@@ -2618,7 +2618,7 @@ bool TextEditor::writeFromFile()
         file.close();
         this->mReadOnly = true;
         this->mIndexColorization = true;
-        this->setIndexPairs();
+        this->setIndexedLines();
         return true;
     }
     std::cout << "File to write in Text Editor was not found" << std::endl;
@@ -2642,7 +2642,7 @@ void TextEditor::unsetSelectedIndex()
     this->selectedLines.clear();
 }
 
-void TextEditor::setIndexPairs()
+void TextEditor::setIndexedLines()
 {
     this->indexedLines = this->lp.getIndexes(this->file_path);
 }

@@ -295,7 +295,7 @@ public:
     LogParser& lp;
 
 	bool hasIndexColorization();
-	void setIndexPairs();
+	void setIndexedLines();
 	bool writeFromFile();
     void setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes);
 	void unsetSelectedIndex();
