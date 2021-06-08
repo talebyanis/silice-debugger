@@ -381,6 +381,15 @@ void MainWindow::Init() {
     this->getSiliceFiles();
     fstWindow.load(str, this->editors, this->lp);
 
+    // Initializing checkboxes
+    for (const auto &editor : this->editors)
+    {
+        for (const auto &item : this->lp.getAlgos(editor.second.file_path))
+        {
+            checked_algos[item.c_str()] = true;
+        }
+    }
+
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
 
@@ -440,7 +449,7 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
-        //this->ShowCodeEditors(editor);
+        this->ShowCodeEditors(editor);
     }
     fstWindow.render();
     ImGui::PopFont();
