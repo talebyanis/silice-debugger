@@ -2630,8 +2630,6 @@ void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& 
     this->selectedLines.clear();
     for (const auto &[algo, index] : indexes)
     {
-        if (algo == "div0")
-            std::cout << algo << ", " << index << std::endl;
         for (const auto &line : this->lp.getLines(this->file_path, index, algo))
         {
             this->selectedLines[line] = algo;

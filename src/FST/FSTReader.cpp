@@ -137,7 +137,6 @@ std::vector<int> FSTReader::getErrors(fstHandle signal) {
 
 void FSTReader::loadData() {
     if (currentSignal->errors.empty() && currentSignal->values.empty()) {
-        std::cout << "loading " << currentSignal->name << "\n";    
         fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
         auto callback = [](void* user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char* value) {
             int dvalue = decodeValue(reinterpret_cast<const char*>(value));
