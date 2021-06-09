@@ -984,7 +984,7 @@ void TextEditor::Render()
                         auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
 
                         drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::IndexLineB]);
-                        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                        if (ImGui::IsMouseHoveringRect(lineStartScreenPos, end) && ImGui::IsWindowHovered())
                         {
                             ImGui::BeginTooltip();
                             for (const auto &algoname : this->indexedLines[lineNo + 1])
@@ -1003,7 +1003,7 @@ void TextEditor::Render()
                     auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
                     drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::SelectedIndexLine]);
 
-                    if (!isset_toolbox && ImGui::IsMouseHoveringRect(lineStartScreenPos, end))
+                    if (!isset_toolbox && ImGui::IsMouseHoveringRect(lineStartScreenPos, end) && ImGui::IsWindowHovered())
                     {
                         ImGui::BeginTooltip();
                         ImGui::Text(" %s ", this->selectedLines[lineNo + 1].c_str());
@@ -1135,7 +1135,7 @@ void TextEditor::Render()
         }
 
         // Draw a tooltip on known identifiers/preprocessor symbols
-        if (ImGui::IsMousePosValid())
+        if (ImGui::IsMousePosValid()&& ImGui::IsWindowHovered())
         {
             auto id = GetWordAt(ScreenPosToCoordinates(ImGui::GetMousePos()));
             if (!id.empty())
