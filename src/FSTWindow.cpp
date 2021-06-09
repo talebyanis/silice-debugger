@@ -639,7 +639,7 @@ void FSTWindow::render() {
         int tmp = 0;
         for (int ii = 1; ii < list_val.size(); ii++) {
             if (markerX < list_val[ii].first && markerX >= list_val[tmp].first) {
-                indexes.emplace_back(algoname, tmp);
+                indexes.emplace_back(algoname, list_val[tmp].second);
                 break;
             }
             tmp = ii;

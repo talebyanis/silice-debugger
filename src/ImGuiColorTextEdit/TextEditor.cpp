@@ -2630,6 +2630,8 @@ void TextEditor::setSelectedIndex(const std::list<std::pair<std::string, int>>& 
     this->selectedLines.clear();
     for (const auto &[algo, index] : indexes)
     {
+        if (algo == "div0")
+            std::cout << algo << ", " << index << std::endl;
         for (const auto &line : this->lp.getLines(this->file_path, index, algo))
         {
             this->selectedLines[line] = algo;
@@ -2997,7 +2999,7 @@ static bool TokenizeSiliceType(const char* in_begin, const char* in_end, const c
             p++;
         }
 
-        if (std::regex_match(buffer, std::regex("u?int[1-9]+[0-9]*")))
+        if (std::regex_match(buffer, std::regex("u?int[0-9]*")))
         {
             out_begin = in_begin;
             out_end = p;
@@ -3163,8 +3165,8 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Silice()
         }
 
         // Types (WIP)
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]+", PaletteIndex::Type));
-        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("uint[0-9]+", PaletteIndex::Type));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("int[0-9]*", PaletteIndex::Type));
+        langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("uint[0-9]*", PaletteIndex::Type));
 
         // Preprocessor instructions
         langDef.mTokenRegexStrings.push_back(std::make_pair<std::string, PaletteIndex>("\\$\\$.*", PaletteIndex::Preprocessor));
