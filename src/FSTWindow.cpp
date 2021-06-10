@@ -19,7 +19,7 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
             std::vector<fstHandle> sig = {signal.second.id};
             if (name.find(filterBuffer) != std::string::npos) {
                 if (hoverHighLight == signal.second.id) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
                 }
                 if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                     "",
@@ -54,7 +54,7 @@ inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool intern
             std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
             if (name.find(filterBuffer) != std::string::npos) {
                 if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
                 }
                 std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
                 std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
@@ -116,10 +116,12 @@ void FSTWindow::showScope(Scope &scope) {
 
 
         if(ImGui::TreeNode("Internal")) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5,0.5,0.5,1));
             showSignalsMenu(scope, hiddenCount, true);
             if (!scope.pairsInternal.empty()) { ImGui::Separator(); }
             showPairsMenu(scope, hiddenCount, true);
             ImGui::TreePop();
+            ImGui::PopStyleColor();
         }
 
         if (hiddenCount != 0) {
