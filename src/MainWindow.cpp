@@ -5,6 +5,7 @@
 #include <LibSL.h>
 #include <LibSL_gl.h>
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "FileDialog.h"
 #include "../libs/implot/implot.h"
 #include "FST/FSTReader.h"
@@ -18,10 +19,12 @@ namespace fs = std::filesystem;
 
 // Todo : set fileFullPath when doing "make debug" to show the file name in the editor
 
-ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
-                                | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
-                                | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+//ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
+//                                | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+//                                | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground;
 bool p_open_dockspace = true;
 bool p_open_editor = true;
 
@@ -97,31 +100,69 @@ static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, 
 
 //-------------------------------------------------------
 
-void MainWindow::ShowDockSpace() {
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
+void MainWindow::RenderDockspace()
+{
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+// because it would be confusing to have two docking targets within each others.
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-    // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+
+// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
     if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
         window_flags |= ImGuiWindowFlags_NoBackground;
 
-    // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-    // all active windows docked into it will lose their parent and become undocked.
-    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-    // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+// all active windows docked into it will lose their parent and become undocked.
+// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::PushID("DockSpaceWnd");
-    ImGui::Begin("DockSpaceWnd", &p_open_dockspace, window_flags);
-    ImGui::PopStyleVar(3);
-    // DockSpace
-    ImGuiIO &io = ImGui::GetIO();
-    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+    ImGui::Begin("DockSpace", nullptr, window_flags);
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
+
+// DockSpace
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+    {
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+        static auto first_time = true;
+        if (first_time)
+        {
+            first_time = false;
+
+            ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
+            ImGui::DockBuilderAddNode(dockspace_id, dockspace_flags | ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+            // split the dockspace into 2 nodes -- DockBuilderSplitNode takes in the following args in the following order
+            //   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
+            //                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
+            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
+            auto dock_id_right = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.25f, nullptr, &dockspace_id);
+
+            // we now dock our windows into the docking node we made above
+            for (const auto &[filename, editor] : this->editors)
+            {
+                ImGui::DockBuilderDockWindow(editor.first.file_path.c_str(), dock_id_right);
+            }
+            ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
+            ImGui::DockBuilderFinish(dockspace_id);
+        }
+    }
 
     bool error = false;
 
@@ -189,16 +230,7 @@ void MainWindow::ShowDockSpace() {
         ImGui::EndMenuBar();
     }
 
-    if(error) ImGui::OpenPopup("errorLoadSave");
-    if (ImGui::BeginPopup("errorLoadSave")) {
-        ImGui::OpenPopup("error in");
-        ImGui::Text("Error loading save file");
-        ImGui::Text("Try to save your debug session before loading a save file");
-        ImGui::EndPopup();
-    }
-
     ImGui::End();
-    ImGui::PopID();
 }
 
 //-------------------------------------------------------
@@ -446,11 +478,13 @@ void MainWindow::Init() {
 
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
-    this->ShowDockSpace();
+    //this->ShowDockSpace();
+    this->RenderDockspace();
     for (auto &[filename, editor] : this->editors)
     {
         this->ShowCodeEditors(editor.first, editor.second);
     }
     fstWindow.render();
+
     ImGui::PopFont();
 }

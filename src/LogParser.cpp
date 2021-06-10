@@ -233,7 +233,6 @@ std::list<std::string> LogParser::getAlgos(const std::string& filename)
     std::list<std::string> res;
     for (const auto &line : this->fsm_lines)
     {
-        std::cout << line.second.algo << std::endl;
         // Avoiding duplicates
         if (filename == line.second.filename && std::find(res.begin(), res.end(), line.second.algo) == res.end())
         {
