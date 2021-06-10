@@ -162,8 +162,6 @@ void LogParser::parseFSM(const std::string& fsm_filename)
             fsml.indexed_lines.clear();
             for (int i = 0; i < nb_line; ++i) {
                 file >> line_number;
-                if (index == 2 && instance == "__main")
-                    std::cout << "ln: " << line_number << ", nbline=" << nb_line << ", instance=" << instance << std::endl;
                 fsml.indexed_lines.push_back(line_number);
             }
             if (nb_line > 0)
@@ -180,7 +178,7 @@ void LogParser::parseFSM(const std::string& fsm_filename)
         file.close();
     }
     // uncomment to print fsm_lines
-
+    /*
     for (const auto& i : this->fsm_lines)
     {
         std::cout << "1. " << i.second.filename << "\n2. " << i.second.algo << "\n3. " << i.second.indexed_lines.size() << std::endl;
@@ -189,7 +187,7 @@ void LogParser::parseFSM(const std::string& fsm_filename)
             std::cout << item << std::endl;
         }
     }
-
+    */
 }
 
 // ---------------------------------------------------------------------
@@ -233,24 +231,13 @@ std::map<int, std::list<std::string>> LogParser::getIndexes(const std::string& f
 std::list<std::string> LogParser::getAlgos(const std::string& filename)
 {
     std::list<std::string> res;
-    bool found = false;
     for (const auto &line : this->fsm_lines)
     {
-        if (filename == line.second.filename)
+        std::cout << line.second.algo << std::endl;
+        // Avoiding duplicates
+        if (filename == line.second.filename && std::find(res.begin(), res.end(), line.second.algo) == res.end())
         {
-            for (const auto &item : res)
-            {
-                if (item == line.second.algo)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                res.push_back(line.second.algo);
-            }
-            found = false;
+            res.push_back(line.second.algo);
         }
     }
     return res;

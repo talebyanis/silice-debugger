@@ -205,7 +205,7 @@ void MainWindow::ShowDockSpace() {
 
 bool test_ptr = true;
 
-void MainWindow::ShowCodeEditors(TextEditor& editor) {
+void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) {
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
@@ -306,7 +306,7 @@ void MainWindow::ShowCodeEditors(TextEditor& editor) {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        for (const auto &item : this->lp.getAlgos(editor.file_path))
+        for (const auto &item : algo_list)
         {
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
             {
@@ -364,7 +364,7 @@ void MainWindow::getSiliceFiles() {
             {
                 if (fs::is_regular_file(filename) && fs::path(filename).extension() == ".ice")
                 {
-                    this->editors.insert(std::make_pair(filename, TextEditor(filename, this->lp)));
+                    this->editors.insert(std::make_pair(filename, std::make_pair(TextEditor(filename, this->lp), this->lp.getAlgos(filename))));
                 }
             }
         }
@@ -382,12 +382,11 @@ void MainWindow::Init() {
     fstWindow.load(str, this->editors, this->lp);
 
     // Initializing checkboxes
-    for (const auto &editor : this->editors)
+    for (const auto &[filepath, editor] : this->editors)
     {
-        for (const auto &item : this->lp.getAlgos(editor.second.file_path))
+        for (const auto &algoname : editor.second)
         {
-            checked_algos[item.c_str()] = true;
-            fstWindow.setAlgoToColorize(checked_algos);
+            checked_algos[algoname] = true;
         }
     }
 
@@ -450,7 +449,7 @@ void MainWindow::Render() {
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
-        this->ShowCodeEditors(editor);
+        this->ShowCodeEditors(editor.first, editor.second);
     }
     fstWindow.render();
     ImGui::PopFont();

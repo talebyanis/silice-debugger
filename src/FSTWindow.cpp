@@ -650,8 +650,8 @@ void FSTWindow::render() {
 
     for (auto &editor : *this->editors)
     {
-        (indexes.empty()) ? editor.second.unsetSelectedIndex()
-                          : editor.second.setSelectedIndex(indexes);
+        (indexes.empty()) ? editor.second.first.unsetSelectedIndex()
+                          : editor.second.first.setSelectedIndex(indexes);
     }
 
 }
@@ -734,7 +734,7 @@ void loadColors(Scope *scope, std::map<std::string, ImVec4> &g_ScopeColors) {
     }
 }
 
-void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>& editors, LogParser& logParser) {
+void FSTWindow::load(const std::string& file, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = file;
     g_Reader = new FSTReader(file.c_str(), logParser);
@@ -756,7 +756,7 @@ void FSTWindow::load(const std::string& file, std::map<std::string, TextEditor>&
 
 //-------------------------------------------------------
 
-void FSTWindow::load(json data, std::map<std::string, TextEditor>& editors, LogParser& logParser) {
+void FSTWindow::load(json data, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = data["filePath"];
     g_Reader = new FSTReader(this->fstFilePath.c_str(), logParser);
