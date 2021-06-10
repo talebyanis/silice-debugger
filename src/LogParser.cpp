@@ -159,26 +159,37 @@ void LogParser::parseFSM(const std::string& fsm_filename)
             file >> instance;
             file >> index;
             file >> nb_line;
+            fsml.indexed_lines.clear();
             for (int i = 0; i < nb_line; ++i) {
                 file >> line_number;
+                if (index == 2 && instance == "__main")
+                    std::cout << "ln: " << line_number << ", nbline=" << nb_line << ", instance=" << instance << std::endl;
                 fsml.indexed_lines.push_back(line_number);
             }
             if (nb_line > 0)
             {
                 fsml.algo = this->algo_lines[instance].algo;
                 fsml.filename = this->algo_lines[instance].path;
-                this->fsm_lines[std::make_pair(std::make_pair(fsml.filename, fsml.algo), index)] = fsml;
+                auto pair = std::make_pair(std::make_pair(fsml.filename, fsml.algo), index);
+                // it is possible that this method loops on an empty line at the end of the fsm.log file
+                // if so, the lasts fsm_lines values recorded will be replaced with bad values
+                if (this->fsm_lines[pair].algo.empty())
+                    this->fsm_lines[pair] = fsml;
             }
         }
         file.close();
     }
-    // uncomment to print report_lines
-    /*
+    // uncomment to print fsm_lines
+
     for (const auto& i : this->fsm_lines)
     {
         std::cout << "1. " << i.second.filename << "\n2. " << i.second.algo << "\n3. " << i.second.indexed_lines.size() << std::endl;
+        for (const auto &item : i.second.indexed_lines)
+        {
+            std::cout << item << std::endl;
+        }
     }
-    */
+
 }
 
 // ---------------------------------------------------------------------
@@ -264,7 +275,7 @@ report_line LogParser::getLineFromVName(const std::string& match)
     return rl;
 }
 
-algo_line LogParser::getAlgoLine(std::string name)
+algo_line LogParser::getAlgoLine(const std::string& name)
 {
     algo_line al;
     for (const auto &item : algo_lines) {

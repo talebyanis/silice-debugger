@@ -59,7 +59,7 @@ public:
 	std::list<int> getLines(const std::string& filename, int index, const std::string& algo);
     std::map<int, std::list<std::string>> getIndexes(const std::string& filename);
 	std::list<std::string> getAlgos(const std::string& filename);
-	algo_line getAlgoLine(std::string name);
+	algo_line getAlgoLine(const std::string& name);
 
 private:
     void parseAlgo(const std::string& algo_filename);
