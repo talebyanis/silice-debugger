@@ -74,14 +74,13 @@ void FSTReader::initMaps() {
                     if(signalName.find("__block") == 0) {
                         signalName = rl.token;
                     }
-
                     if(rl.v_name == "#") { //internal
-                        currentScope->add(*hier, true);
+                        currentScope->add(*hier, true, "#");
                     } else { //user
                         if(rl.usage == "ff") { //flip-flop
                             DQPair* current;
                             if(currentScope->pairsUser.find(signalName) == currentScope->pairsUser.end()) {
-                                current = new DQPair(signalName);
+                                current = new DQPair(signalName, rl.type);
                                 currentScope->addPair(current, false);
                             } else {
                                 current = currentScope->pairsUser.at(signalName);
@@ -94,7 +93,7 @@ void FSTReader::initMaps() {
                                 current->q = q;
                             }
                         } else {
-                            currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name),false);
+                            currentScope->addSignal(Signal(signalName, hier->u.var.handle, currentScope->name, rl.type),false);
                         }
                     }
                 }

@@ -25,7 +25,7 @@ void Scope::addPair(DQPair *pair, bool internal) {
     pairs->insert(std::pair<std::string, DQPair*>(pair->name, pair));
 }
 
-void Scope::add(fstHier hier, bool internal) {
+void Scope::add(fstHier hier, bool internal, std::string type) {
     std::string name = hier.u.var.name;
     if(name[0] == '_' && (name[1] == 'q' || name[1] == 'd') && name[2] == '_') {
         DQPair* current;
@@ -34,16 +34,16 @@ void Scope::add(fstHier hier, bool internal) {
         else pairs = &pairsUser;
         std::string subName = name.substr(3);
         if(pairs->find(subName) == pairs->end()) {
-            current = new DQPair(subName);
+            current = new DQPair(subName,type);
             this->addPair(current, internal);
         } else {
             current = pairs->at(subName);
         }
         if(name[1] == 'd') {
-            Signal* d = new Signal(hier,this->name);
+            Signal* d = new Signal(hier.u.var.name,hier.u.var.handle,this->name,type);
             current->d = d;
         } else {
-            Signal* q = new Signal(hier,this->name);
+            Signal* q = new Signal(hier.u.var.name,hier.u.var.handle,this->name,type);
             current->q = q;
         }
     } else {

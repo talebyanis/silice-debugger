@@ -14,12 +14,22 @@ using json = nlohmann::json;
 
 inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool internal) {
     auto show = [this, &hiddenCount](std::unordered_map<fstHandle, Signal> &signals) {
+        bool color = false;
         for (const auto &signal : signals) {
             std::string name = signal.second.name;
             std::vector<fstHandle> sig = {signal.second.id};
             if (name.find(filterBuffer) != std::string::npos) {
+                color = false;
+                std::cout << signal.second.type << "\n";
                 if (hoverHighLight == signal.second.id) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
+                    color = true;
+                } else if(signal.second.type == "output") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+                    color = true;
+                } else if(signal.second.type == "input") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0,1,0,1));
+                    color = true;
                 }
                 if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
                                     "",
@@ -36,7 +46,7 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
                     ImGui::Text("%s", name.c_str());
                     ImGui::EndTooltip();
                 }
-                if (hoverHighLight == signal.second.id) {
+                if (color) {
                     ImGui::PopStyleColor();
                 }
             } else {

@@ -29,7 +29,7 @@ public:
 
     void addSignal(Signal signal, bool internal);
     void addPair(DQPair *pair, bool internal);
-    void add(fstHier hier, bool internal);
+    void add(fstHier hier, bool internal, std::string usage);
 
     Signal* getSignal(fstHandle handle);
     DQPair* getPair(std::string pairName);
