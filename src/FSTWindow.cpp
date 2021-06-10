@@ -116,10 +116,12 @@ void FSTWindow::showScope(Scope &scope) {
 
 
         if(ImGui::TreeNode("Internal")) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5,0.5,0.5,1));
             showSignalsMenu(scope, hiddenCount, true);
             if (!scope.pairsInternal.empty()) { ImGui::Separator(); }
             showPairsMenu(scope, hiddenCount, true);
             ImGui::TreePop();
+            ImGui::PopStyleColor();
         }
 
         if (hiddenCount != 0) {
