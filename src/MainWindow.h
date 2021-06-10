@@ -18,7 +18,6 @@ private:
 
     LogParser lp;
 public:
-    void RenderDockspace();
     void ShowDockSpace();
     void ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list);
     void ZoomMouseWheel(TextEditor& editor);

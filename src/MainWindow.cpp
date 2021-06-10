@@ -20,11 +20,10 @@ namespace fs = std::filesystem;
 // Todo : set fileFullPath when doing "make debug" to show the file name in the editor
 
 ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
-//ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
-//                                | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
-//                                | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
+                                | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
+                                | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground;
 bool p_open_dockspace = true;
 bool p_open_editor = true;
 
@@ -33,7 +32,6 @@ static GLuint g_FontTexture;
 static ImFont *font_general;
 static ImFont *font_code; // font used for the TextEditor's code
 
-std::string current_algo;
 std::map<std::string, bool> checked_algos;
 
 //-------------------------------------------------------
@@ -100,7 +98,7 @@ static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, 
 
 //-------------------------------------------------------
 
-void MainWindow::RenderDockspace()
+void MainWindow::ShowDockSpace()
 {
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -151,15 +149,14 @@ void MainWindow::RenderDockspace()
             // split the dockspace into 2 nodes -- DockBuilderSplitNode takes in the following args in the following order
             //   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
             //                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
-            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.2f, nullptr, &dockspace_id);
-            auto dock_id_right = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.25f, nullptr, &dockspace_id);
+            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.5f, nullptr, &dockspace_id);
 
             // we now dock our windows into the docking node we made above
+            ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
             for (const auto &[filename, editor] : this->editors)
             {
-                ImGui::DockBuilderDockWindow(editor.first.file_path.c_str(), dock_id_right);
+                ImGui::DockBuilderDockWindow(fs::path(editor.first.file_path).filename().c_str(), dockspace_id);
             }
-            ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
             ImGui::DockBuilderFinish(dockspace_id);
         }
     }
@@ -239,20 +236,9 @@ bool test_ptr = true;
 
 void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) {
     auto cpos = editor.GetCursorPosition();
-    ImGui::Begin(editor.file_path.c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::Begin(fs::path(editor.file_path).filename().c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            // useless
-            /*
-            if (ImGui::MenuItem("Open", "Ctrl + O")) {
-                auto fullpath = openFileDialog(OFD_EXTENSIONS);
-                if (!fullpath.empty()) {
-                    fs::path path = fs::path(fullpath);
-                    editor.writeFromFile();
-                }
-            }
-             */
-
             if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, editor.file_path.empty())) {
                 auto textToSave = editor.GetText();
                 std::string path = editor.file_path;
@@ -261,21 +247,6 @@ void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& alg
                     file << textToSave;
                 }
             }
-
-            // useless
-            /*
-            if (ImGui::MenuItem("Save as", "Ctrl + Maj + S")) {
-                auto textToSave = editor.GetText();
-                std::string fullpath = saveFileDialog("file", OFD_FILTER_ALL);
-                fileFullPath = fs::path(fullpath);
-                if (!fullpath.empty()) {
-                    std::fstream file(fullpath);
-                    file.open(fullpath, std::ios::out);
-                    file << textToSave;
-                }
-            }
-             */
-
             ImGui::EndMenu();
         }
 
@@ -478,8 +449,7 @@ void MainWindow::Init() {
 
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
-    //this->ShowDockSpace();
-    this->RenderDockspace();
+    this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
     {
         this->ShowCodeEditors(editor.first, editor.second);
