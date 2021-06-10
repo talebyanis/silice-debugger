@@ -8,7 +8,8 @@ Signal::Signal(fstHier hier , std::string scopeName) {
     this->scopeName = scopeName;
 }
 
-Signal::Signal(std::string name, fstHandle id, std::string scopeName) {
+Signal::Signal(std::string name, fstHandle id, std::string scopeName, std::string type) {
+    this->type = type;
     this->name = name;
     this->id = id;
     this->scopeName = scopeName;
