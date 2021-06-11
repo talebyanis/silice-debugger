@@ -155,7 +155,7 @@ void MainWindow::ShowDockSpace()
             ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
             for (const auto &[filename, editor] : this->editors)
             {
-                ImGui::DockBuilderDockWindow(fs::path(editor.first.file_path).filename().c_str(), dockspace_id);
+                ImGui::DockBuilderDockWindow(fs::path(editor.first.file_path).filename().string().c_str(), dockspace_id);
             }
             ImGui::DockBuilderFinish(dockspace_id);
         }
@@ -236,7 +236,7 @@ bool test_ptr = true;
 
 void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) {
     auto cpos = editor.GetCursorPosition();
-    ImGui::Begin(fs::path(editor.file_path).filename().c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
+    ImGui::Begin(fs::path(editor.file_path).filename().string().c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, editor.file_path.empty())) {
