@@ -387,8 +387,9 @@ void MainWindow::getSiliceFiles() {
                 if (fs::is_regular_file(filename) && fs::path(filename).extension() == ".ice")
                 {
                     thread_vector.emplace_back([this](std::string file_path) {
+                        std::list<std::string> list = this->lp.getAlgos(file_path);
                         mutex.lock();
-                        this->editors.insert(std::make_pair(file_path, std::make_pair(TextEditor(file_path, this->lp), this->lp.getAlgos(file_path))));
+                        this->editors.insert(std::make_pair(file_path, std::make_pair(TextEditor(file_path, this->lp), list)));
                         mutex.unlock();
                     }, filename);
                 }
