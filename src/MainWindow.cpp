@@ -36,6 +36,8 @@ static ImFont *font_code; // font used for the TextEditor's code
 
 std::map<std::string, bool> checked_algos;
 
+bool show_fullpath = false;
+
 //-------------------------------------------------------
 
 static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, const std::string &code_font_name) {
@@ -304,6 +306,9 @@ void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& alg
             if (ImGui::MenuItem("Toggle index colorization", nullptr, editor.hasIndexColorization())) {
                 editor.mIndexColorization = !editor.mIndexColorization;
             }
+            if (ImGui::MenuItem("Show silice file's fullpath", nullptr, show_fullpath)) {
+                show_fullpath = !show_fullpath;
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -321,10 +326,21 @@ void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& alg
         ImGui::Separator();
     }
 
-    ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
-                editor.IsOverwrite() ? "Ovr" : "Ins",
-                editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), fs::path(editor.file_path).filename().string().c_str());
+    if (show_fullpath)
+    {
+        ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+                    editor.IsOverwrite() ? "Ovr" : "Ins",
+                    editor.CanUndo() ? "*" : " ",
+                    editor.GetLanguageDefinition().mName.c_str(), editor.file_path.c_str());
+    }
+    else
+    {
+        ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+                    editor.IsOverwrite() ? "Ovr" : "Ins",
+                    editor.CanUndo() ? "*" : " ",
+                    editor.GetLanguageDefinition().mName.c_str(), fs::path(editor.file_path).filename().string().c_str());
+    }
+
 
     ImGui::PushFont(font_code);
     p_open_editor = ImGui::IsWindowFocused();
