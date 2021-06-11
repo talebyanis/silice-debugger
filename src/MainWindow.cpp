@@ -12,6 +12,8 @@
 #include "sourcePath.h"
 #include "FSTWindow.h"
 #include <nlohmann/json.hpp>
+#include <thread>
+#include <mutex>
 
 using json = nlohmann::json;
 
@@ -354,22 +356,31 @@ void MainWindow::getSiliceFiles() {
     // Looks for every Silice files needed in the design
     std::ifstream file(PROJECT_DIR "BUILD_icarus/build.v.files.log");
 
+    static std::mutex mutex;
+    std::vector<std::thread> thread_vector;
     std::string filename;
+
     if (file.is_open())
     {
         while (file.good())
         {
             filename = "";
-            // getline isn't working here...
-            // why ? idk
             file >> filename;
             if (!filename.empty())
             {
                 if (fs::is_regular_file(filename) && fs::path(filename).extension() == ".ice")
                 {
-                    this->editors.insert(std::make_pair(filename, std::make_pair(TextEditor(filename, this->lp), this->lp.getAlgos(filename))));
+                    thread_vector.emplace_back([this](std::string file_path) {
+                        mutex.lock();
+                        this->editors.insert(std::make_pair(file_path, std::make_pair(TextEditor(file_path, this->lp), this->lp.getAlgos(file_path))));
+                        mutex.unlock();
+                    }, filename);
                 }
             }
+        }
+        for (auto &thread : thread_vector)
+        {
+            thread.join();
         }
         file.close();
     }
