@@ -144,7 +144,6 @@ void FSTReader::loadData() {
             } else {  //error
                 currentSignal->errors.push_back(time);
             }
-            //std::cout << facidx << " " << time << " " << dvalue << "\n";
         };
         fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
         fstReaderClrFacProcessMask(g_Wave, currentSignal->id);

@@ -20,7 +20,6 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
             std::vector<fstHandle> sig = {signal.second.id};
             if (name.find(filterBuffer) != std::string::npos) {
                 color = false;
-                std::cout << signal.second.type << "\n";
                 if (hoverHighLight == signal.second.id) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
                     color = true;
@@ -229,7 +228,6 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             }
 
             g_Plots.push_back(plot);
-            //for (int i = 0; i < plot.x_data.size(); i++) std::cout << plot.x_data[i] << " " << plot.y_data[i] << "\n";
         }
     }
 }
@@ -571,6 +569,12 @@ inline void FSTWindow::listenArrows(Plot* item) {
                 break;
             }
         }
+    }
+    if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow),true)) {
+        double min = plotXLimits->Min;
+        double max = plotXLimits->Max;
+        plotXLimits->Min = markerX - (max - min) / 2;
+        plotXLimits->Max = markerX + (max - min) / 2;
     }
 }
 
