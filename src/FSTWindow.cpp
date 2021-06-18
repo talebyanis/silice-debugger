@@ -58,12 +58,21 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
 
 inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool internal) {
     auto show = [this, &hiddenCount](std::unordered_map<std::string, DQPair*> &pairs) {
+        bool color = false;
         for (const auto &signal : pairs) {
             std::string name = signal.second->name;
             std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
             if (name.find(filterBuffer) != std::string::npos) {
+                color = false;
                 if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
+                    color = true;
+                } else if(signal.second->type == "output") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+                    color = true;
+                } else if(signal.second->type == "input") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0,1,0,1));
+                    color = true;
                 }
                 std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
                 std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
@@ -82,6 +91,9 @@ inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool intern
                     ImGui::BeginTooltip();
                     ImGui::Text("%s", name.c_str());
                     ImGui::EndTooltip();
+                }
+                if (color) {
+                    ImGui::PopStyleColor();
                 }
                 if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
                     ImGui::PopStyleColor();
