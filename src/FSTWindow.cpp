@@ -134,7 +134,7 @@ void FSTWindow::showScope(Scope &scope) {
         }
 
         if (hiddenCount != 0) {
-            ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
+            ImGui::MenuItem(("Hidden items : " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
         }
 
         ImGui::TreePop();
