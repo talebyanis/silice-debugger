@@ -95,9 +95,6 @@ inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool intern
                 if (color) {
                     ImGui::PopStyleColor();
                 }
-                if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                    ImGui::PopStyleColor();
-                }
             } else {
                 hiddenCount++;
             }
