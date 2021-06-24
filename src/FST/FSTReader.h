@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "TextEditor.h"
 
 #include "../../libs/fstapi/fstapi.h"
 #include "imgui.h"
@@ -16,12 +17,15 @@
 class FSTReader {
 private :
     void initMaps();
+    LogParser lp;
 public:
     std::vector<Scope*> scopes;
 
-    FSTReader(const char *file);
+    FSTReader(const char *file, LogParser& logparser);
 
     Signal* getSignal(fstHandle signal);
+
+    void loadData();
 
     ImU64 getMaxTime();
     valuesList getValues(fstHandle signal);

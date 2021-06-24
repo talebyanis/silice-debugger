@@ -8,6 +8,7 @@
 #include <map>
 #include <regex>
 #include <fstream>
+#include <functional>
 #include "imgui.h"
 #include "../LogParser.h"
 #include "../sourcePath.h"
@@ -167,7 +168,8 @@ public:
 	{
 		typedef std::pair<std::string, PaletteIndex> TokenRegexString;
 		typedef std::vector<TokenRegexString> TokenRegexStrings;
-		typedef bool(*TokenizeCallback)(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, PaletteIndex & paletteIndex);
+
+		using TokenizeCallback = std::function<bool(const char *, const char *, const char *&, const char *&, PaletteIndex&)>;
 
 		std::string mName;
 		Keywords mKeywords;
@@ -176,6 +178,7 @@ public:
 		std::string mCommentStart, mCommentEnd, mSingleLineComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
+		std::string file_path;
 
 		TokenizeCallback mTokenize;
 
@@ -184,22 +187,17 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			: mPreprocChar('\0'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
-		static const LanguageDefinition& CPlusPlus();
-		static const LanguageDefinition& HLSL();
-		static const LanguageDefinition& GLSL();
-		static const LanguageDefinition& C();
-		static const LanguageDefinition& SQL();
-		static const LanguageDefinition& AngelScript();
-		static const LanguageDefinition& Lua();
 		static const LanguageDefinition& Silice();
 		static const LanguageDefinition& SiliceReadOnly(LogParser &lp);
-	};
+    };
 
-	TextEditor();
+    const LanguageDefinition& TokenizedSilice(bool is_readonly);
+
+	TextEditor(std::string& path, LogParser& logparser);
 	~TextEditor();
 
 	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
@@ -284,38 +282,25 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 	// Addition
-    struct SiliceFile
-    {
-        std::string file_path;
-        std::string viofile_path;
-        std::string fsmfile_path;
-        std::list<std::string> algos;
-        LogParser lp;
 
-        void parse()
-        {
-            this->lp.parseVio(viofile_path);
-            this->lp.parseFSM(fsmfile_path);
-            this->algos = this->lp.getAlgos(this->file_path);
-        }
-    };
+    std::vector<std::string> algos;
 
-    SiliceFile siliceFile;
-
+    std::string file_path;
 	bool p_open_editor;
-    bool mIndexColorization;
-	std::list<std::pair<int, std::pair<int, int>>> linesIndexes;
-	std::list<std::pair<std::string, std::pair<int, int>>> linesSelectedIndexes;
-	int current_index_colorization;
-	bool colorA;
+    bool mIndexColorization{};
+    std::map<int, std::string> selectedLines; // (line_number -> index, algoname)
+	std::map<int, std::list<std::string>> indexedLines; // (line_number -> algoname)
+	int current_index_colorization{};
+	bool isset_toolbox;
+    LogParser& lp;
 
 	bool hasIndexColorization();
-	void setPathToLogFile(const std::string& path);
-	void setIndexPairs();
-	bool writeFromFile(const std::string& filepath);
+	void setIndexedLines();
+	bool writeFromFile();
     void setSelectedIndex(const std::list<std::pair<std::string, int>>& indexes);
 	void unsetSelectedIndex();
 	void ScaleFont(bool make_bigger);
+	void parseAlgo();
 
 private:
 	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
@@ -334,11 +319,11 @@ private:
 		~UndoRecord() {}
 
 		UndoRecord(
-			const std::string& aAdded,
+			std::string  aAdded,
 			const TextEditor::Coordinates aAddedStart,
 			const TextEditor::Coordinates aAddedEnd,
 
-			const std::string& aRemoved,
+			std::string  aRemoved,
 			const TextEditor::Coordinates aRemovedStart,
 			const TextEditor::Coordinates aRemovedEnd,
 
@@ -423,8 +408,8 @@ private:
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
 
-	Palette mPaletteBase;
-	Palette mPalette;
+	Palette mPaletteBase{};
+	Palette mPalette{};
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
 

@@ -1,62 +1,123 @@
 #include "LogParser.h"
 #include <algorithm>
 
-LogParser::LogParser() = default;
+LogParser::LogParser()
+{
+    this->parseAlgo(PROJECT_DIR "BUILD_icarus/build.v.alg.log");
+    this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
+    this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+}
+
+// Algo methods --------------------------------------------------------
+
+// instance - algo - d_name - path
+void LogParser::parseAlgo(const std::string& algo_filename)
+{
+    this->algo_lines.clear();
+    std::fstream file;
+    file.open(algo_filename, std::ios::in);
+    if (!file)
+    {
+        std::cout << "Algo Log file was not found";
+        exit(1);
+    }
+
+    std::string element;
+    algo_line al;
+    while (file >> element) {
+        // instance
+        al.instance = element;
+        file >> element;
+
+        // algo
+        al.algo = element;
+        file >> element;
+
+        // d_name
+        al.d_name = element;
+        file >> element;
+
+        // path
+        al.path = element;
+
+        this->algo_lines.emplace(std::make_pair(al.instance, al));
+    }
+    // uncomment to print algo_lines
+    /*
+    for (const auto& i : this->algo_lines)
+    {
+        std::cout << i.second.instance << " " << i.second.algo << " " << i.second.path << " " << i.second.d_name << std::endl;
+    }
+    */
+}
 
 // Vio methods ---------------------------------------------------------
 
-void LogParser::parseVio(std::string vio_filename)
+void LogParser::parseVio(const std::string& vio_filename)
 {
     this->report_lines.clear();
-	std::fstream file;
+    // Looks for every Silice files needed in the design
+    std::ifstream file(vio_filename);
 
-	file.open(vio_filename, std::ios::in);
-	if (!file)
-	{
-		std::cout << "VIO Log file was not found";
-		exit(1);
-	}
-
-	std::string element;
-	report_line rl;
-	while (file >> element) {
-		rl.filename = element;
-		file >> element;
-		rl.token = element;
-		file >> element;
-		rl.varname = element;
-		file >> element;
-		rl.line = element;
-		file >> element;
-		rl.usage = element;
-
-		report_lines.emplace(std::make_pair(std::make_pair(rl.filename, rl.varname), rl));
-	}
+    report_line rl;
+    std::string instance;
+    int nb_line;
+    if (file.is_open())
+    {
+        while (file.good())
+        {
+            file >> instance;
+            file >> nb_line;
+            for (int i = 0; i < nb_line; ++i) {
+                file >> rl.token;
+                file >> rl.varname;
+                file >> rl.line;
+                file >> rl.type;
+                file >> rl.usage;
+                file >> rl.v_name;
+                rl.filename = this->algo_lines[instance].path;
+                this->report_lines[std::make_pair(rl.filename, rl.varname)] = rl;
+            }
+        }
+        file.close();
+    }
+    // uncomment to print report_lines
+    /*
+    for (const auto& i : this->report_lines)
+    {
+        std::cout << i.second.filename << " " << i.second.varname << " " << i.second.usage << std::endl;
+    }
+    */
 }
 
 // ---------------------------------------------------------------------
 
 // Returns a specific column for a line
-// col_nb : 1=filename, 2=token, 3=varname, 4=line, 5=usage
-std::string LogParser::getCol(std::string file_name, std::string var_name, int col_nb)
+// col_nb : 0=filename, 1=token, 2=varname, 3=line, 4=usage, 5=v_name
+std::string LogParser::getCol(const std::string& file_name, const std::string& var_name, int col_nb) const
 {
+    // Looking for the key (filename, varname)
+    // If not found, returning "#" (= none)
+    auto pair = std::make_pair(file_name, var_name);
+    if (this->report_lines.find(pair) == this->report_lines.end())
+    {
+        return "#";
+    }
+
 	switch (col_nb)
 	{
 	case 0:
-		return report_lines[std::make_pair(file_name, var_name)].filename;
-		break;
+		return report_lines.at(pair).filename;
 	case 1:
-		return report_lines[std::make_pair(file_name, var_name)].token;
-		break;
+		return report_lines.at(pair).token;
 	case 2:
-		return report_lines[std::make_pair(file_name, var_name)].varname;
-		break;
+		return report_lines.at(pair).varname;
 	case 3:
-		return report_lines[std::make_pair(file_name, var_name)].line;
-		break;
+		return report_lines.at(pair).line;
 	case 4:
-		return report_lines[std::make_pair(file_name, var_name)].usage;
-		break;
+		return report_lines.at(pair).usage;
+    case 5:
+        return report_lines.at(pair).v_name;
 	default:
 		break;
 	}
@@ -67,9 +128,9 @@ std::string LogParser::getCol(std::string file_name, std::string var_name, int c
 // ---------------------------------------------------------------------
 
 // Returns a list of key (file_name, var_name) having their value's usage matching with the parameter (const, temp...)
-std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string match)
+std::list<std::pair<std::string, std::string>> LogParser::getMatch(const std::string& match)
 {
-	std::list<std::pair<std::string, std::string>>* list = new std::list<std::pair<std::string, std::string>>();
+	auto* list = new std::list<std::pair<std::string, std::string>>();
 	for (auto const& [key, val] : report_lines)
 	{
 		if (val.usage == match)
@@ -85,109 +146,128 @@ std::list<std::pair<std::string, std::string>> LogParser::getMatch(std::string m
 void LogParser::parseFSM(const std::string& fsm_filename)
 {
     this->fsm_lines.clear();
-	std::fstream file;
+    // Looks for every Silice files needed in the design
+    std::ifstream file(fsm_filename);
 
-	file.open(fsm_filename, std::ios::in);
-	if (!file)
-	{
-		std::cerr << "FSM Log file was not found";
-		exit(1);
-	}
-
-	std::string element;
-	fsm_line fsml;
-	while (file >> element) {
-		fsml.algo = element;
-		file >> element;
-		fsml.index = stoi(element);
-		file >> element;
-		fsml.filename = element;
-		file >> element;
-		fsml.line = stoi(element);
-
-		fsm_lines.insert(fsm_lines.begin(), std::make_pair(std::make_pair(fsml.filename, fsml.index), fsml));
-	}
-
-	if (!fsm_lines.empty())
-	{
-		sort(fsm_lines.begin(), fsm_lines.end(), fsm_line::cmp);
-	}
-
-	// uncomment to print fsm_lines
-	//for (const auto& i : this->fsm_lines)
-	//{
-	//	std::cout << i.second.filename << " " << i.second.line << " " << i.second.index << std::endl;
-	//}
-}
-
-// ---------------------------------------------------------------------
-
-// Return lines associated with "index" from "filename"
-std::pair<int, int> LogParser::getLines(const std::string& filename, int index)
-{
-	std::pair<int, int> pair = std::make_pair(-1, -2);
-	bool found = false;
-	for (auto const& [key, val] : this->fsm_lines)
-	{
-		if (found)
-		{
-            if (val.filename != filename)
-                break;
-			pair.second = val.line;
-			return pair;
-		}
-		if (val.filename == filename && val.index == index)
-		{
-			pair.first = val.line;
-			found = true;
-		}
-	}
-	if (found)
-	    pair.second = pair.first;
-
-	return pair;
-}
-
-// ---------------------------------------------------------------------
-
-std::list<int> LogParser::getIndexes(const std::string& filename)
-{
-    std::list<int> res;
-    for (const auto &line : this->fsm_lines)
+    fsm_line fsml;
+    std::string instance;
+    int index, nb_line, line_number;
+    if (file.is_open())
     {
-        if (line.second.filename == filename)
+        while (file.good())
         {
-            res.push_back(line.second.index);
+            file >> instance;
+            file >> index;
+            file >> nb_line;
+            fsml.indexed_lines.clear();
+            for (int i = 0; i < nb_line; ++i) {
+                file >> line_number;
+                fsml.indexed_lines.push_back(line_number);
+            }
+            if (nb_line > 0)
+            {
+                fsml.algo = this->algo_lines[instance].algo;
+                fsml.filename = this->algo_lines[instance].path;
+                auto pair = std::make_pair(std::make_pair(fsml.filename, fsml.algo), index);
+                // it is possible that this method loops on an empty line at the end of the fsm.log file
+                // if so, the lasts fsm_lines values recorded will be replaced with bad values
+                if (this->fsm_lines[pair].algo.empty())
+                    this->fsm_lines[pair] = fsml;
+            }
+        }
+        file.close();
+    }
+    // uncomment to print fsm_lines
+    /*
+    for (const auto& i : this->fsm_lines)
+    {
+        std::cout << "1. " << i.second.filename << "\n2. " << i.second.algo << "\n3. " << i.second.indexed_lines.size() << std::endl;
+        for (const auto &item : i.second.indexed_lines)
+        {
+            std::cout << item << std::endl;
+        }
+    }
+    */
+}
+
+// ---------------------------------------------------------------------
+
+std::list<int> LogParser::getLines(const std::string& filename, int index, const std::string& algo)
+{
+	return this->fsm_lines[std::make_pair(std::make_pair(filename, algo), index)].indexed_lines;
+}
+
+// ---------------------------------------------------------------------
+
+std::map<int, std::list<std::string>> LogParser::getIndexes(const std::string& filename)
+{
+    std::map<int, std::list<std::string>> res;
+    for (const auto &[key, fsmline] : this->fsm_lines)
+    {
+        if (fsmline.filename == filename)
+        {
+            for (const auto &line : fsmline.indexed_lines)
+            {
+                if (res.find(line) == res.end())
+                {
+                    res[line].push_back(fsmline.algo);
+                }
+                else
+                {
+                    if (std::find(res[line].begin(), res[line].end(), fsmline.algo) == res[line].end())
+                    {
+                        res[line].push_back(fsmline.algo);
+                    }
+                }
+
+            }
         }
     }
     return res;
 }
-
 
 // ---------------------------------------------------------------------
 
 std::list<std::string> LogParser::getAlgos(const std::string& filename)
 {
     std::list<std::string> res;
-    bool found = false;
     for (const auto &line : this->fsm_lines)
     {
-        if (filename == line.second.filename)
+        // Avoiding duplicates
+        if (filename == line.second.filename && std::find(res.begin(), res.end(), line.second.algo) == res.end())
         {
-            for (const auto &item : res)
-            {
-                if (item == line.second.algo)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found)
-            {
-                res.push_back(line.second.algo);
-            }
-            found = false;
+            res.push_back(line.second.algo);
         }
     }
     return res;
+}
+
+// ---------------------------------------------------------------------
+
+report_line LogParser::getLineFromVName(const std::string& match)
+{
+    report_line rl;
+    rl.v_name = "#";
+    for (const auto &item : this->report_lines) {
+        if (item.second.v_name.find(',') != std::string::npos && item.second.v_name.size() == 2 * match.size() + 1) {
+            if (item.second.v_name.substr(0, match.size()) == match
+                || item.second.v_name.substr(match.size() + 1, match.size()) == match) {
+                return item.second;
+            }
+        } else if (item.second.v_name == match) {
+            return item.second;
+        }
+    }
+    return rl;
+}
+
+algo_line LogParser::getAlgoLine(const std::string& name)
+{
+    algo_line al;
+    for (const auto &item : algo_lines) {
+        if(item.second.algo == name) {
+            return item.second;
+        }
+    }
+    return al;
 }

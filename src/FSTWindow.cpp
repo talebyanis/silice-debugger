@@ -12,22 +12,44 @@ using json = nlohmann::json;
 
 //-------------------------------------------------------
 
-inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount) {
-    for (const auto &signal : scope.signals) {
-        std::string name = signal.second.name;
-        std::vector<fstHandle> sig = {signal.second.id};
-        if (name.find(filterBuffer) != std::string::npos) {
-            if (hoverHighLight == signal.second.id) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-            }
-            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
-                                "",
-                                FSTWindow::isDisplayed(sig))) {
-                if (!FSTWindow::isDisplayed(sig)) {
-                    this->addPlot(sig);
-                } else {
-                    this->removePlot(sig);
+inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool internal) {
+    auto show = [this, &hiddenCount](std::unordered_map<fstHandle, Signal> &signals) {
+        bool color = false;
+        for (const auto &signal : signals) {
+            std::string name = signal.second.name;
+            std::vector<fstHandle> sig = {signal.second.id};
+            if (name.find(filterBuffer) != std::string::npos) {
+                color = false;
+                if (hoverHighLight == signal.second.id) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
+                    color = true;
+                } else if(signal.second.type == "output") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+                    color = true;
+                } else if(signal.second.type == "input") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0,1,0,1));
+                    color = true;
                 }
+                if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                    "",
+                                    FSTWindow::isDisplayed(sig))) {
+                    if (!FSTWindow::isDisplayed(sig)) {
+                        this->addPlot(sig);
+                    } else {
+                        this->removePlot(sig);
+                    }
+                }
+                if (ImGui::IsItemHovered()) {
+                    hoverRightClickMenu = signal.second.id;
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndTooltip();
+                }
+                if (color) {
+                    ImGui::PopStyleColor();
+                }
+            } else {
+                hiddenCount++;
             }
             if (ImGui::IsItemHovered()) {
                 hoverRightClickMenu = signal.second.id;
@@ -41,39 +63,101 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount) {
         } else {
             hiddenCount++;
         }
-    }
+    };
+    show(internal ? scope.signalsInternal : scope.signalsUser);
 }
 
-inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount) {
-    for (const auto &signal : scope.pairs) {
-        std::string name = signal.second->name;
-        std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
-        if (name.find(filterBuffer) != std::string::npos) {
-            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.1, 0.35, 0.10, 1));
-            }
-            if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
-                                "",
-                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[0]})) ||
-                                FSTWindow::isDisplayed(std::vector<fstHandle>({pair[1]})))) {
-                if (!FSTWindow::isDisplayed(pair)) {
-                    this->addPlot(pair);
-                } else {
-                    this->removePlot(pair);
+inline void FSTWindow::showPairsMenu(Scope &scope, int &hiddenCount, bool internal) {
+    auto show = [this, &hiddenCount](std::unordered_map<std::string, DQPair*> &pairs) {
+        bool color = false;
+        for (const auto &signal : pairs) {
+            std::string name = signal.second->name;
+            std::vector<fstHandle> pair = {signal.second->d->id, signal.second->q->id};
+            if (name.find(filterBuffer) != std::string::npos) {
+                color = false;
+                if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4, 0.4, 0.9, 1));
+                    color = true;
+                } else if(signal.second->type == "output") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+                    color = true;
+                } else if(signal.second->type == "input") {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0,1,0,1));
+                    color = true;
                 }
+                std::vector<fstHandle> vectorA = std::vector<fstHandle>({pair[0]});
+                std::vector<fstHandle> vectorB = std::vector<fstHandle>({pair[1]});
+                if (ImGui::MenuItem((name.size() > 25 ? (name.substr(0, 25) + "...").c_str() : name.c_str()),
+                                    "",
+                                    FSTWindow::isDisplayed(vectorA) ||
+                                    FSTWindow::isDisplayed(vectorB))) {
+                    if (!FSTWindow::isDisplayed(pair)) {
+                        this->addPlot(pair);
+                    } else {
+                        this->removePlot(pair);
+                    }
+                }
+                if (ImGui::IsItemHovered()) {
+                    hoverRightClickMenu = signal.second->d->id;
+                    ImGui::BeginTooltip();
+                    ImGui::Text("%s", name.c_str());
+                    ImGui::EndTooltip();
+                }
+                if (color) {
+                    ImGui::PopStyleColor();
+                }
+            } else {
+                hiddenCount++;
             }
-            if (ImGui::IsItemHovered()) {
-                hoverRightClickMenu = signal.second->d->id;
-                ImGui::BeginTooltip();
-                ImGui::Text("%s", name.c_str());
-                ImGui::EndTooltip();
-            }
-            if (hoverHighLight == signal.second->q->id || hoverHighLight == signal.second->d->id) {
-                ImGui::PopStyleColor();
-            }
-        } else {
-            hiddenCount++;
         }
+    };
+    show(internal ? scope.pairsInternal : scope.pairsUser);
+}
+
+void FSTWindow::showScope(Scope &scope) {
+    std::string name = scope.name;
+    //count for hidden signals
+    int hiddenCount = 0;
+
+    bool open = ImGui::TreeNode(name.c_str());
+    if (ImGui::BeginPopupContextItem(name.c_str())) {
+        ImGui::Text("%s", name.c_str());
+        ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
+        ImGui::EndPopup();
+    }
+    if(!scope.d_name.empty()) {
+        if (ImGui::IsItemHovered()) {
+            ImGui::BeginTooltip();
+            ImGui::Text("%s", scope.d_name.c_str());
+            ImGui::EndTooltip();
+        }
+    }
+    if (open) {
+        for(size_t i=0; i<scope.children.size(); i++) {
+            this->showScope(*scope.children[i]);
+        }
+
+        ImGui::Separator();
+
+        showSignalsMenu(scope, hiddenCount, false);
+        if (!scope.pairsUser.empty()) { ImGui::Separator(); }
+        showPairsMenu(scope, hiddenCount, false);
+
+
+        if(ImGui::TreeNode("Internal")) {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5,0.5,0.5,1));
+            showSignalsMenu(scope, hiddenCount, true);
+            if (!scope.pairsInternal.empty()) { ImGui::Separator(); }
+            showPairsMenu(scope, hiddenCount, true);
+            ImGui::TreePop();
+            ImGui::PopStyleColor();
+        }
+
+        if (hiddenCount != 0) {
+            ImGui::MenuItem(("Hidden items : " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
+        }
+
+        ImGui::TreePop();
     }
 }
 
@@ -82,30 +166,8 @@ void FSTWindow::showPlotMenu() {
     if (g_Reader != nullptr) {
         ImGui::InputText("  Filter", filterBuffer, sizeof(filterBuffer));
         //For every scope we have one TreeNode
-        for (const auto &scope : g_Reader->scopes) {
-            std::string name = scope->name;
-            //count for hidden signals
-            int hiddenCount = 0;
-
-            bool open = ImGui::TreeNode(name.c_str());
-            if (ImGui::BeginPopupContextItem(name.c_str())) {
-                ImGui::Text("%s", name.c_str());
-                ImGui::ColorPicker4("Color Picker", (float *) &g_ScopeColors.at(name));
-                ImGui::EndPopup();
-            }
-            if (open) {
-                this->showSignalsMenu(*scope, hiddenCount);
-
-                if (scope->pairs.size() > 0) { ImGui::Separator(); }
-
-                this->showPairsMenu(*scope, hiddenCount);
-
-                if (hiddenCount != 0) {
-                    ImGui::MenuItem(("Hidden items " + std::to_string(hiddenCount)).c_str(), NULL, false, false);
-                }
-
-                ImGui::TreePop();
-            }
+        for(size_t i=0; i<g_Reader->scopes.size(); i++) {
+            this->showScope(*g_Reader->scopes[i]);
         }
     }
 }
@@ -152,7 +214,8 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
         return;
     }
     for (const auto &signal : signals) {
-        if (!this->isDisplayed(std::vector<fstHandle>({signal}))) {
+        std::vector<fstHandle> vector = std::vector<fstHandle>({signal});
+        if (!this->isDisplayed(vector)) {
             Plot plot;
             plot.signalId = signal;
             std::string signalName = g_Reader->getSignal(signal)->name;
@@ -175,10 +238,15 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             }
             plot.color = ImVec4(1, 1, 1, 1);
             valuesList values = g_Reader->getValues(signal);
+
+            plot.maxY = 0;
+
             for (const auto &item : values) {
                 plot.x_data.push_back(item[0]);
                 plot.y_data.push_back(item[1]);
+                if (item[1] > plot.maxY) plot.maxY = item[1];
             }
+
             g_Plots.push_back(plot);
         }
     }
@@ -200,15 +268,13 @@ void FSTWindow::removePlot(std::vector<fstHandle> signals) {
 
 //-------------------------------------------------------
 
-bool FSTWindow::isDisplayed(std::vector<fstHandle> signals) {
-    bool ret = true;
+bool FSTWindow::isDisplayed(std::vector<fstHandle> &signals) {
     for (const auto &signal : signals) {
-        auto res = std::find_if(g_Plots.begin(), g_Plots.end(), [signal](Plot plot) {
-            return plot.signalId == signal;
-        });
-        ret &= res != g_Plots.end();
+        for (size_t i = 0; i < g_Plots.size(); i++) {
+            if (g_Plots[i].signalId == signal) return true;
+        }
     }
-    return ret;
+    return false;
 }
 
 //-------------------------------------------------------
@@ -326,19 +392,26 @@ void FSTWindow::showPlots() {
 
         ImVec2 cursor = ImGui::GetCursorScreenPos();
         ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(cursor.x, cursor.y),
-                                                  ImVec2(cursor.x + 1000, cursor.y + 25),
+                                                  ImVec2(cursor.x + 3000, cursor.y + 25),
                                                   IM_COL32(51, 64, 74, 255));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
         ImGui::Button(item->name.c_str());
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(
-                ImVec2(cursor.x + ImGui::GetWindowSize().x - ImGui::CalcTextSize("Folding").x - 39, cursor.y));
+                ImVec2(cursor.x + ImGui::GetWindowSize().x - 50, cursor.y));
 
         //Folding button
-        if (ImGui::Button("Folding")) {
-            item->fold = !item->fold;
+        if (item->fold) {
+            if (ImGui::Button("^")) {
+                item->fold = !item->fold;
+            }
+        } else {
+            if (ImGui::Button("v")) {
+                item->fold = !item->fold;
+            }
         }
+
 
         ImGui::SameLine();
 
@@ -355,24 +428,65 @@ void FSTWindow::showPlots() {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
-            double max = *std::max_element(item->y_data.begin(), item->y_data.end());
-            ImPlot::SetNextPlotLimitsY(0.0 - max / 3, max + max / 3);
+            ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0, (float)item->maxY + (float)item->maxY / 3.0);
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
-            double xMin = plotXLimits->Min;
+            double xMin = std::max(0.0,plotXLimits->Min);
             double xMax = plotXLimits->Max;
             ImPlot::LinkNextPlotLimits(&xMin, &xMax, nullptr, nullptr);
+
+            size_t leftIndex = 0;
+            size_t midIndex;
+            size_t rightIndex = item->x_data.size() - 1;
+
+            if(item->x_data.size() > 2 ) {
+                auto dicho = [item](size_t leftIndex, size_t rightIndex, ImU64 toFind) {
+                    size_t midIndex = (leftIndex + rightIndex) / 2;
+                    while (leftIndex < rightIndex - 1) {
+                        midIndex = (leftIndex + rightIndex) / 2;
+                        if (item->x_data[midIndex] <= toFind) leftIndex = midIndex;
+                        else if (item->x_data[midIndex] > toFind) rightIndex = midIndex;
+                    }
+                    return midIndex;
+                };
+
+                leftIndex = dicho(leftIndex, rightIndex, xMin);
+                rightIndex = dicho(leftIndex, rightIndex, xMax);
+
+                leftIndex = std::max((size_t) 0, leftIndex - 1);
+                rightIndex = std::min(item->x_data.size() - 1, rightIndex + 1);
+            }
 
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
-                                  NULL,
+                                  0,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoTickLabels)) {
+
                 //Marker
                 ImPlot::DragLineX("Marker", &markerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
-                ImPlot::PlotStairs(item->name.c_str(), (int *) &item->x_data[0], (int *) &item->y_data[0],
-                                   item->x_data.size());
+                //If there is too much data to display (more samples than pixels)
+                //we remove some data that won't be display anyway
+                size_t pixels = ImPlot::GetPlotSize().x;
+                size_t dataSize = rightIndex - leftIndex + 1;
+                if (dataSize > pixels) {
+                    std::vector<int> x_data;
+                    std::vector<int> y_data;
+                    for (size_t i = 0; i < pixels; i++) {
+                        //there is (x = dataSize/pixels) times more data than pixels
+                        //so we take one sample out of x 
+                        size_t index = leftIndex + i * (dataSize / pixels);  
+                        x_data.push_back(item->x_data[index]);
+                        y_data.push_back(item->y_data[index]);
+                    }
+                    ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
+                        pixels);
+                }
+                else {
+                    ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
+                        dataSize);
+                }
 
                 this->drawErrors(item);
 
@@ -383,7 +497,7 @@ void FSTWindow::showPlots() {
 
                     //modifies the range for all plots to be sync
                     ImPlotLimits limits = ImPlot::GetPlotLimits();
-                    plotXLimits->Min = limits.X.Min;
+                    plotXLimits->Min = std::max(0.0,limits.X.Min);
                     plotXLimits->Max = limits.X.Max;
 
                     //Arrows to move to values change
@@ -394,8 +508,8 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                this->drawValues(item);
-                ImPlot::PopStyleColor(2);
+                this->drawValues(item, leftIndex, rightIndex);
+                ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
             }
@@ -431,10 +545,6 @@ void FSTWindow::showPlots() {
 
 inline void FSTWindow::drawErrors(Plot *item) {
     std::vector<int> errors = g_Reader->getErrors(item->signalId);
-    int maxY = -1;
-    for (const auto &y : item->y_data) {
-        if (y > maxY) maxY = y;
-    }
     for (const auto &error : errors) {
         int next = -1;
         for (const auto &x : item->x_data) {
@@ -444,8 +554,8 @@ inline void FSTWindow::drawErrors(Plot *item) {
             }
         }
         ImPlot::PushPlotClipRect();
-        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - maxY));
-        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * maxY));
+        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - item->maxY));
+        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * item->maxY));
         ImPlot::GetPlotDrawList()->AddRectFilled(min, max, IM_COL32(255, 0, 0, 100));
         ImPlot::PopPlotClipRect();
     }
@@ -480,12 +590,18 @@ inline void FSTWindow::listenArrows(Plot* item) {
             }
         }
     }
+    if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow),true)) {
+        double min = plotXLimits->Min;
+        double max = plotXLimits->Max;
+        plotXLimits->Min = markerX - (max - min) / 2;
+        plotXLimits->Max = markerX + (max - min) / 2;
+    }
 }
 
-inline void FSTWindow::drawValues(Plot *item) {
-    for (int i = 0; i < item->x_data.size(); i++) {
-        std::basic_string<char> value;
-        std::stringstream stream;
+inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex) {
+    std::basic_string<char> value;
+    std::stringstream stream;
+    for (size_t i = leftIndex; i < rightIndex; i++) {
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
@@ -507,7 +623,7 @@ inline void FSTWindow::drawValues(Plot *item) {
                 break;
         }
 
-        ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
+        //ImPlot::PushStyleColor(ImPlotCol_InlayText, ImVec4(1, 1, 1, 1));
         //Offset to place the value correctly
         ImVec2 offset = ImVec2(0, 0);
         if (i > 0) {
@@ -518,6 +634,7 @@ inline void FSTWindow::drawValues(Plot *item) {
             }
         }
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+       //ImGui::PopStyleColor();
     }
 }
 
@@ -553,22 +670,26 @@ void FSTWindow::render() {
 
     std::list<std::pair<std::string, int>> indexes;
 
-    for (const auto &item : this->qindexValues)
+    for (const auto &[algoname, list_val] : this->qindexValues)
     {
         int tmp = 0;
-        for (int ii = 1; ii < item.second.size(); ii++) {
-            if (markerX < item.second[ii].first && markerX >= item.second[tmp].first) {
-                indexes.emplace_back(item.first, tmp);
+        for (int ii = 1; ii < list_val.size(); ii++) {
+            if (markerX < list_val[ii].first && markerX >= list_val[tmp].first) {
+                indexes.emplace_back(algoname, list_val[tmp].second);
                 break;
             }
             tmp = ii;
         }
     }
 
-    if (!editor) return;
+    if (this->editors->empty()) return;
 
-    (indexes.empty()) ? editor->unsetSelectedIndex()
-                    : editor->setSelectedIndex(indexes);
+    for (auto &editor : *this->editors)
+    {
+        (indexes.empty()) ? editor.second.first.unsetSelectedIndex()
+                          : editor.second.first.setSelectedIndex(indexes);
+    }
+
 }
 
 //-------------------------------------------------------
@@ -604,70 +725,80 @@ void FSTWindow::clean() {
 
 //-------------------------------------------------------
 
-void FSTWindow::loadQindex() {
-    for (const auto &scope : g_Reader->scopes) {
-        for (const auto &item : this->algos_to_colorize)
+void FSTWindow::loadQindex(Scope &scope) {
+        for (const auto &algoname : this->algos_to_colorize)
         {
-            if (scope->name.find(item) != std::string::npos) {
-                for (const auto &pair : scope->pairs) {
+            if (scope.name.find(algoname) != std::string::npos) {
+                for (const auto &pair : scope.pairsInternal) {
                     if (pair.second->name.find("index") != std::string::npos) {
                         for (const auto &value : g_Reader->getValues(pair.second->q->id))
                         {
-                            qindexValues[item].emplace_back(value[0], value[1]);
+                            qindexValues[algoname].emplace_back(value[0], value[1]);
                         }
                     }
                 }
+            } else {
+                for(auto & i : scope.children) {
+                    loadQindex(*i);
+                }
             }
         }
-    }
 }
 
 //-------------------------------------------------------
 
-void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos)
-{
+void FSTWindow::setAlgoToColorize(std::map<std::string, bool>& algos) {
     this->algos_to_colorize.clear();
-    for (const auto &item : algos)
-    {
-        if (item.second)
-        {
-            this->algos_to_colorize.push_back(item.first);
+    for (const auto &[algoname, must_be_colored] : algos) {
+        if (must_be_colored) {
+            this->algos_to_colorize.push_back(algoname);
         }
     }
     this->qindexValues.clear();
-    this->loadQindex();
+
+    for (auto & scope : g_Reader->scopes) {
+        loadQindex(*scope);
+    }
 }
 
 //-------------------------------------------------------
 
-void FSTWindow::load(const std::string& file, TextEditor &editors) {
+void loadColors(Scope *scope, std::map<std::string, ImVec4> &g_ScopeColors) {
+    g_ScopeColors.insert({scope->name, ImVec4(1, 1, 1, 1)});
+    for (const auto &item : scope->children) {
+        loadColors(item,g_ScopeColors);
+    }
+}
+
+void FSTWindow::load(const std::string& file, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = file;
-    g_Reader = new FSTReader(file.c_str());
+    g_Reader = new FSTReader(file.c_str(), logParser);
     if (plotXLimits == nullptr) {
         plotXLimits = &range;
-        double maxTime = g_Reader->getMaxTime();
-        plotXLimits->Min = 0 - (maxTime / 20);
-        plotXLimits->Max = maxTime + (maxTime / 20);
+        plotXLimits->Min = 0;
+        plotXLimits->Max = 5000;
     }
-    this->editor = &editors;
+    this->editors = &editors;
 
-    this->loadQindex();
+    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
+        loadQindex(*g_Reader->scopes[i]);
+    }
 
     for (const auto &item : g_Reader->scopes) {
-        g_ScopeColors.insert({item->name, ImVec4(1, 1, 1, 1)});
+        loadColors(item, this->g_ScopeColors);
     }
 }
 
 //-------------------------------------------------------
 
-void FSTWindow::load(json data, TextEditor &editors) {
+void FSTWindow::load(json data, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser) {
     this->clean();
     this->fstFilePath = data["filePath"];
-    g_Reader = new FSTReader(this->fstFilePath.c_str());
+    g_Reader = new FSTReader(this->fstFilePath.c_str(), logParser);
     range = ImPlotRange(data["rangeMin"], data["rangeMax"]);
     plotXLimits = &range;
-    this->editor = &editors;
+    this->editors = &editors;
     markerX = data["markerX"];
     for (int i = 0; i < data["displayedSignals"].size(); ++i) {
         fstHandle signal = data["displayedSignals"][i];
@@ -679,8 +810,9 @@ void FSTWindow::load(json data, TextEditor &editors) {
     for (auto & i : g_Reader->scopes) {
         auto vals = data["color"][i->name];
         g_ScopeColors.insert({i->name, ImVec4(vals[0], vals[1], vals[2], vals[3])});
-
     }
 
-    this->loadQindex();
+    for (size_t i = 0; i < g_Reader->scopes.size(); ++i) {
+        loadQindex(*g_Reader->scopes[i]);
+    }
 }

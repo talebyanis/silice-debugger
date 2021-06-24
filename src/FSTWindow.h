@@ -17,14 +17,15 @@ enum ConvertType {
 };
 
 typedef struct {
-    std::vector<int> x_data;
-    std::vector<int> y_data;
+    std::vector<ImU64> x_data;
+    std::vector<ImU64> y_data;
     std::string name;
     fstHandle signalId;
     ConvertType type;
     std::string customtype_string;
     ImVec4 color;
     bool fold;
+    int maxY;
 } Plot;
 
 class FSTWindow {
@@ -34,8 +35,8 @@ public:
 
     FSTWindow() = default;
 
-    void load(const std::string& file, TextEditor& editor);
-    void load(json data, TextEditor &editors);
+    void load(const std::string& file, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser);
+    void load(json data, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser);
 
     void setAlgoToColorize(std::map<std::string, bool>& algo);
     void render();
@@ -59,29 +60,30 @@ private:
     char customFilterBuffer[256] = {};
     int bit_left_custom = 16;
 
-    TextEditor* editor;
+    std::map<std::string, std::pair<TextEditor, std::list<std::string>>>* editors;
     std::list<std::string> algos_to_colorize;
 
     void clean();
 
     void addPlot(const std::vector<fstHandle>& signals);
     void removePlot(std::vector<fstHandle> signals);
-    bool isDisplayed(std::vector<fstHandle> signals);
+    bool isDisplayed(std::vector<fstHandle> &signals);
 
     void showPlots();
     inline void drawErrors(Plot* item);
     inline void listenArrows(Plot* item);
-    inline void drawValues(Plot* item);
+    inline void drawValues(Plot* item, size_t leftIndex, size_t rightIndex);
     std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
     int binaryToDecimal(std::string n);
 
     void showRightClickPlotSettings(fstHandle signal);
 
     void showPlotMenu();
-    void showSignalsMenu(Scope &scope, int &hiddenCount);
-    void showPairsMenu(Scope &scope, int &hiddenCount);
+    void showScope(Scope &scope);
+    void showSignalsMenu(Scope &scope, int &hiddenCount, bool internal);
+    void showPairsMenu(Scope &scope, int &hiddenCount, bool internal);
 
-    void loadQindex();
+    void loadQindex(Scope &scope);
 };
 
 

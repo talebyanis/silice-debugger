@@ -20,9 +20,10 @@ public:
     std::string scopeName;
     valuesList values;
     errorsList errors;
+    std::string type;
 
     Signal() = default;
-    Signal(std::string name, fstHandle id, std::string scopeName);
+    Signal(std::string name, fstHandle id, std::string scopeName, std::string usage);
     Signal(fstHier hier, std::string scopeName);
 };
 

@@ -5,24 +5,27 @@
 #include <LibSL.h>
 #include <LibSL_gl.h>
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "FileDialog.h"
 #include "../libs/implot/implot.h"
 #include "FST/FSTReader.h"
 #include "sourcePath.h"
 #include "FSTWindow.h"
 #include <nlohmann/json.hpp>
+#include <thread>
+#include <mutex>
 
 using json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
 // Todo : set fileFullPath when doing "make debug" to show the file name in the editor
-static fs::path fileFullPath;
 
-ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar
                                 | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
                                 | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
 bool p_open_dockspace = true;
 bool p_open_editor = true;
 
@@ -31,13 +34,13 @@ static GLuint g_FontTexture;
 static ImFont *font_general;
 static ImFont *font_code; // font used for the TextEditor's code
 
-std::string current_algo;
 std::map<std::string, bool> checked_algos;
+
+bool show_fullpath = false;
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_font_size, const std::string& general_font_name,
-                                          const std::string& code_font_name) {
+static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, const std::string &code_font_name) {
     // Build texture atlas
     ImGuiIO &io = ::ImGui::GetIO();
     unsigned char *pixels;
@@ -53,7 +56,7 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), general_font_size, &cfg,
+        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18, &cfg,
                                                     io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "General Font '" << font_path << "' not found" << std::endl;
@@ -64,7 +67,7 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
         cfg.OversampleH = 2;
         cfg.OversampleV = 2;
         cfg.PixelSnapH = true;
-        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), code_font_size, &cfg,
+        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 22, &cfg,
                                                  io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
     } else {
         std::cerr << Console::red << "Code Font '" << font_path << "' not found" << std::endl;
@@ -99,31 +102,68 @@ static bool ImGui_Impl_CreateFontsTexture(float general_font_size, float code_fo
 
 //-------------------------------------------------------
 
-void MainWindow::ShowDockSpace() {
-    ImGuiViewport *viewport = ImGui::GetMainViewport();
+void MainWindow::ShowDockSpace()
+{
+    static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+// because it would be confusing to have two docking targets within each others.
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->Pos);
     ImGui::SetNextWindowSize(viewport->Size);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
-    // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+
+// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
     if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
         window_flags |= ImGuiWindowFlags_NoBackground;
 
-    // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-    // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-    // all active windows docked into it will lose their parent and become undocked.
-    // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-    // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+// all active windows docked into it will lose their parent and become undocked.
+// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::PushID("DockSpaceWnd");
-    ImGui::Begin("DockSpaceWnd", &p_open_dockspace, window_flags);
-    ImGui::PopStyleVar(3);
-    // DockSpace
-    ImGuiIO &io = ImGui::GetIO();
-    ImGuiID dockspace_id = ImGui::GetID("DockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+    ImGui::Begin("DockSpace", nullptr, window_flags);
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar(2);
+
+// DockSpace
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+    {
+        ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+
+        static auto first_time = true;
+        if (first_time)
+        {
+            first_time = false;
+
+            ImGui::DockBuilderRemoveNode(dockspace_id); // clear any previous layout
+            ImGui::DockBuilderAddNode(dockspace_id, dockspace_flags | ImGuiDockNodeFlags_DockSpace);
+            ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+
+            // split the dockspace into 2 nodes -- DockBuilderSplitNode takes in the following args in the following order
+            //   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
+            //                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
+            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.5f, nullptr, &dockspace_id);
+
+            // we now dock our windows into the docking node we made above
+            ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
+            for (const auto &[filename, editor] : this->editors)
+            {
+                ImGui::DockBuilderDockWindow(fs::path(editor.first.file_path).filename().string().c_str(), dockspace_id);
+            }
+            ImGui::DockBuilderFinish(dockspace_id);
+        }
+    }
 
     bool error = false;
 
@@ -132,7 +172,7 @@ void MainWindow::ShowDockSpace() {
             if (ImGui::MenuItem("Open fst")) {
                 auto fullpath = openFileDialog(OFD_FILTER_ALL);
                 if (!fullpath.empty()) {
-                    fstWindow.load(fullpath, editor);
+                    fstWindow.load(fullpath, this->editors, this->lp);
                     std::cout << "file " << fullpath << " opened" << std::endl;
                 }
             }
@@ -142,7 +182,7 @@ void MainWindow::ShowDockSpace() {
                     std::ifstream stream(SRC_PATH "/.save/save.dat");
                     json data;
                     stream >> data;
-                    fstWindow.load(data, editor);
+                    fstWindow.load(data, this->editors, this->lp);
                     std::cout << "debug opened with file " << data["filePath"] << std::endl;
                 } else {
                     error = true;
@@ -191,57 +231,26 @@ void MainWindow::ShowDockSpace() {
         ImGui::EndMenuBar();
     }
 
-    if(error) ImGui::OpenPopup("errorLoadSave");
-    if (ImGui::BeginPopup("errorLoadSave")) {
-        ImGui::OpenPopup("error in");
-        ImGui::Text("Error loading save file");
-        ImGui::Text("Try to save your debug session before loading a save file");
-        ImGui::EndPopup();
-    }
-
     ImGui::End();
-    ImGui::PopID();
 }
 
 //-------------------------------------------------------
 
-void MainWindow::ShowCodeEditor() {
+bool test_ptr = true;
+
+void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) {
     auto cpos = editor.GetCursorPosition();
-    ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
-    // ImGui::SetWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+    ImGui::Begin(fs::path(editor.file_path).filename().string().c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-
-            if (ImGui::MenuItem("Open", "Ctrl + O")) {
-                auto fullpath = openFileDialog(OFD_EXTENSIONS);
-                if (!fullpath.empty()) {
-                    fs::path path = fs::path(fullpath);
-                    if (editor.writeFromFile(path.string())) {
-                        fileFullPath = path;
-                    }
-                }
-            }
-
-            if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, !fileFullPath.string().empty())) {
+            if (ImGui::MenuItem("Save", "Ctrl + S", nullptr, editor.file_path.empty())) {
                 auto textToSave = editor.GetText();
-                std::string path = fileFullPath.string();
+                std::string path = editor.file_path;
                 if (!path.empty()) {
-                    std::fstream file(fileFullPath);
+                    std::fstream file(editor.file_path);
                     file << textToSave;
                 }
             }
-
-            if (ImGui::MenuItem("Save as", "Ctrl + Maj + S")) {
-                auto textToSave = editor.GetText();
-                std::string fullpath = saveFileDialog("file", OFD_FILTER_ALL);
-                fileFullPath = fs::path(fullpath);
-                if (!fullpath.empty()) {
-                    std::fstream file(fullpath);
-                    file.open(fullpath, std::ios::out);
-                    file << textToSave;
-                }
-            }
-
             ImGui::EndMenu();
         }
 
@@ -297,6 +306,9 @@ void MainWindow::ShowCodeEditor() {
             if (ImGui::MenuItem("Toggle index colorization", nullptr, editor.hasIndexColorization())) {
                 editor.mIndexColorization = !editor.mIndexColorization;
             }
+            if (ImGui::MenuItem("Show silice file's fullpath", nullptr, show_fullpath)) {
+                show_fullpath = !show_fullpath;
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -304,8 +316,7 @@ void MainWindow::ShowCodeEditor() {
 
     if (editor.hasIndexColorization()) {
         ImGui::Separator();
-        ImGui::Text("Algorithm(s) ");
-        for (const auto &item : this->editor.siliceFile.algos)
+        for (const auto &item : algo_list)
         {
             ImGui::SameLine();
             if (ImGui::Checkbox(item.c_str(), &checked_algos[item.c_str()]))
@@ -316,23 +327,33 @@ void MainWindow::ShowCodeEditor() {
         ImGui::Separator();
     }
 
-    ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
-                editor.IsOverwrite() ? "Ovr" : "Ins",
-                editor.CanUndo() ? "*" : " ",
-                editor.GetLanguageDefinition().mName.c_str(), extractFileName(fileFullPath.string()).c_str());
+    if (show_fullpath)
+    {
+        ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+                    editor.IsOverwrite() ? "Ovr" : "Ins",
+                    editor.CanUndo() ? "*" : " ",
+                    editor.GetLanguageDefinition().mName.c_str(), editor.file_path.c_str());
+    }
+    else
+    {
+        ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
+                    editor.IsOverwrite() ? "Ovr" : "Ins",
+                    editor.CanUndo() ? "*" : " ",
+                    editor.GetLanguageDefinition().mName.c_str(), fs::path(editor.file_path).filename().string().c_str());
+    }
+
 
     ImGui::PushFont(font_code);
     p_open_editor = ImGui::IsWindowFocused();
     editor.Render("TextEditor");
-    this->ZoomMouseWheel();
+    this->ZoomMouseWheel(editor);
     ImGui::PopFont();
-
     ImGui::End();
 }
 
 //-------------------------------------------------------
 
-void MainWindow::ZoomMouseWheel() {
+void MainWindow::ZoomMouseWheel(TextEditor& editor) {
     if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor)) {
         if (ImGui::GetIO().MouseWheel > 0 || ImGui::GetIO().KeysDown[LIBSL_KEY_UP]) {
             if (ImGui::GetFontSize() < 28) {
@@ -348,14 +369,58 @@ void MainWindow::ZoomMouseWheel() {
 
 //-------------------------------------------------------
 
+void MainWindow::getSiliceFiles() {
+    // Looks for every Silice files needed in the design
+    std::ifstream file(PROJECT_DIR "BUILD_icarus/build.v.files.log");
+
+    static std::mutex mutex;
+    std::vector<std::thread> thread_vector;
+    std::string filename;
+
+    if (file.is_open())
+    {
+        while (file.good())
+        {
+            filename = "";
+            file >> filename;
+            if (!filename.empty())
+            {
+                if (fs::is_regular_file(filename) && fs::path(filename).extension() == ".ice")
+                {
+                    thread_vector.emplace_back([this](std::string file_path) {
+                        std::list<std::string> list = this->lp.getAlgos(file_path);
+                        mutex.lock();
+                        this->editors.insert(std::make_pair(file_path, std::make_pair(TextEditor(file_path, this->lp), list)));
+                        mutex.unlock();
+                    }, filename);
+                }
+            }
+        }
+        for (auto &thread : thread_vector)
+        {
+            thread.join();
+        }
+        file.close();
+    }
+}
+
+//-------------------------------------------------------
+
 void MainWindow::Init() {
-    ImGui_Impl_CreateFontsTexture(18, 22, "NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
+    ImGui_Impl_CreateFontsTexture("NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
     const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
-    fstWindow.load(str, editor);
+    this->getSiliceFiles();
+    fstWindow.load(str, this->editors, this->lp);
 
-    // Todo : dynamically replace with the correct path
-    fileFullPath = fs::path(PROJECT_DIR "main.ice");
+    // Initializing checkboxes
+    for (const auto &[filepath, editor] : this->editors)
+    {
+        for (const auto &algoname : editor.second)
+        {
+            checked_algos[algoname] = true;
+        }
+    }
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
@@ -414,7 +479,11 @@ void MainWindow::Init() {
 void MainWindow::Render() {
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
-    this->ShowCodeEditor();
+    for (auto &[filename, editor] : this->editors)
+    {
+        this->ShowCodeEditors(editor.first, editor.second);
+    }
     fstWindow.render();
+
     ImGui::PopFont();
 }
