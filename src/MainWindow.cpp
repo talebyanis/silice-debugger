@@ -371,7 +371,7 @@ void MainWindow::ZoomMouseWheel(TextEditor& editor) {
 
 void MainWindow::getSiliceFiles() {
     // Looks for every Silice files needed in the design
-    std::ifstream file(PROJECT_DIR "BUILD_icarus/build.v.files.log");
+    std::ifstream file(PROJECT_DIR "build.v.files.log");
 
     static std::mutex mutex;
     std::vector<std::thread> thread_vector;
@@ -409,7 +409,7 @@ void MainWindow::getSiliceFiles() {
 void MainWindow::Init() {
     ImGui_Impl_CreateFontsTexture("NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
-    const std::string str = PROJECT_DIR "BUILD_icarus/icarus.fst";
+    const std::string str = PROJECT_DIR "icarus.fst";
     this->getSiliceFiles();
     fstWindow.load(str, this->editors, this->lp);
 

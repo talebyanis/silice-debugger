@@ -3,9 +3,9 @@
 
 LogParser::LogParser()
 {
-    this->parseAlgo(PROJECT_DIR "BUILD_icarus/build.v.alg.log");
-    this->parseVio(PROJECT_DIR "BUILD_icarus/build.v.vio.log");
-    this->parseFSM(PROJECT_DIR "BUILD_icarus/build.v.fsm.log");
+    this->parseAlgo(PROJECT_DIR "build.v.alg.log");
+    this->parseVio(PROJECT_DIR "build.v.vio.log");
+    this->parseFSM(PROJECT_DIR "build.v.fsm.log");
 }
 
 // Algo methods --------------------------------------------------------

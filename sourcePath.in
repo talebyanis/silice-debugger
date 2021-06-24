@@ -1,7 +1,7 @@
 #pragma once
 
 #define SRC_PATH "@CMAKE_SOURCE_DIR@"
-#define test_env
+// #define test_env
 
 #ifdef test_env
 #define PROJECT_DIR "@CMAKE_SOURCE_DIR@/examples/wolfpga/"
