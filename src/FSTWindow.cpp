@@ -51,17 +51,6 @@ inline void FSTWindow::showSignalsMenu(Scope &scope, int &hiddenCount, bool inte
             } else {
                 hiddenCount++;
             }
-            if (ImGui::IsItemHovered()) {
-                hoverRightClickMenu = signal.second.id;
-                ImGui::BeginTooltip();
-                ImGui::Text(" %s ", name.c_str());
-                ImGui::EndTooltip();
-            }
-            if (hoverHighLight == signal.second.id) {
-                ImGui::PopStyleColor();
-            }
-        } else {
-            hiddenCount++;
         }
     };
     show(internal ? scope.signalsInternal : scope.signalsUser);
@@ -414,13 +403,14 @@ void FSTWindow::showPlots() {
 
 
         ImGui::SameLine();
+        ImGui::PopStyleVar(2);
 
         //Button to close plot
         if (ImGui::Button("x")) {
             this->removePlot(std::vector<fstHandle>({item->signalId}));
+            continue;
         }
-        ImGui::PopStyleVar(2);
-
+        
         if (!item->fold) {
             ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(10, 0));
             //Coloring the line
