@@ -477,10 +477,12 @@ void FSTWindow::showPlots() {
                     }
                     ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
                         pixels);
+                    this->drawValues(item, leftIndex, rightIndex, dataSize/pixels);
                 }
                 else {
                     ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
                         dataSize);
+                    this->drawValues(item, leftIndex, rightIndex,1);
                 }
 
                 this->drawErrors(item);
@@ -503,7 +505,6 @@ void FSTWindow::showPlots() {
                         markerX = ImPlot::GetPlotMousePos().x;
                     }
                 }
-                this->drawValues(item, leftIndex, rightIndex);
                 ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
@@ -593,10 +594,10 @@ inline void FSTWindow::listenArrows(Plot* item) {
     }
 }
 
-inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex) {
+inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex, size_t ratio) {
     std::basic_string<char> value;
     std::stringstream stream;
-    for (size_t i = leftIndex; i < rightIndex; i++) {
+    for (size_t i = leftIndex; i < rightIndex; i+=ratio) {
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
