@@ -13,6 +13,8 @@ std::vector<std::vector<int>> g_Errors;
 
 std::mutex g_Mutex;
 
+ImU64 maxTime = 0;
+
 Signal* currentSignal;
 
 // ---------------------------------------------------------------------
@@ -104,6 +106,12 @@ void FSTReader::initMaps() {
         }
         hier = fstReaderIterateHier(g_Wave);
     } while (hier != NULL);
+    for (const auto &item : this->scopes[0]->signalsInternal) {
+        if(item.second.name == "clk") {
+            valuesList clkvalues = this->getValues(item.second.id);
+            maxTime = clkvalues[clkvalues.size()-1][0];
+        }
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -147,6 +155,10 @@ void FSTReader::loadData() {
         };
         fstReaderIterBlocks(g_Wave, callback, NULL, NULL);
         fstReaderClrFacProcessMask(g_Wave, currentSignal->id);
+        if(!currentSignal->values.empty() && maxTime != 0) {
+            ImU64 val = currentSignal->values[currentSignal->values.size() - 1][1];
+            currentSignal->values.push_back({maxTime, 0});
+        }
     }
 }
 

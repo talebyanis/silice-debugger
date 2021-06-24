@@ -418,7 +418,12 @@ void FSTWindow::showPlots() {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
-            ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0, (float)item->maxY + (float)item->maxY / 3.0);
+            if(item->maxY == 0) {
+                ImPlot::SetNextPlotLimitsY(-0.5,0.5);
+            } else {
+                ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0,
+                                           (float) item->maxY + (float) item->maxY / 3.0);
+            }
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
             double xMin = std::max(0.0,plotXLimits->Min);
