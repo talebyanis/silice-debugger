@@ -724,19 +724,28 @@ void FSTWindow::clean() {
 void FSTWindow::loadQindex(Scope &scope) {
         for (const auto &algoname : this->algos_to_colorize)
         {
-            if (scope.name.find(algoname) != std::string::npos) {
-                for (const auto &pair : scope.pairsInternal) {
-                    if (pair.second->name.find("index") != std::string::npos) {
-                        for (const auto &value : g_Reader->getValues(pair.second->q->id))
-                        {
-                            qindexValues[algoname].emplace_back(value[0], value[1]);
+            if (qindexValues_save[algoname].empty())
+            {
+                if (scope.name.find(algoname) != std::string::npos) {
+                    for (const auto &pair : scope.pairsInternal) {
+                        if (pair.second->name.find("index") != std::string::npos) {
+                            for (const auto &value : g_Reader->getValues(pair.second->q->id))
+                            {
+                                qindexValues_save[algoname].emplace_back(value[0], value[1]);
+                                qindexValues[algoname].emplace_back(value[0], value[1]);
+                            }
+                            break;
                         }
                     }
+                } else {
+                    for(auto & i : scope.children) {
+                        loadQindex(*i);
+                    }
                 }
-            } else {
-                for(auto & i : scope.children) {
-                    loadQindex(*i);
-                }
+            }
+            else
+            {
+                qindexValues[algoname] = qindexValues_save[algoname];
             }
         }
 }

@@ -53,6 +53,7 @@ private:
     fstHandle hoverRightClickMenu = 0;
 
     std::map<std::string, std::vector<std::pair<int, int>>> qindexValues;
+    std::map<std::string, std::vector<std::pair<int, int>>> qindexValues_save;
 
     double markerX = 0;
 

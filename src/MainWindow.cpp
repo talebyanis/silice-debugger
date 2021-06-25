@@ -409,18 +409,21 @@ void MainWindow::getSiliceFiles() {
 void MainWindow::Init() {
     ImGui_Impl_CreateFontsTexture("NotoSans-Regular.ttf", "JetBrainsMono-Bold.ttf");
 
-    const std::string str = PROJECT_DIR "icarus.fst";
     this->getSiliceFiles();
-    fstWindow.load(str, this->editors, this->lp);
-
     // Initializing checkboxes
     for (const auto &[filepath, editor] : this->editors)
     {
         for (const auto &algoname : editor.second)
         {
             checked_algos[algoname] = true;
+            std::cout << algoname << std::endl;
         }
     }
+
+    const std::string str = PROJECT_DIR "icarus.fst";
+    fstWindow.load(str, this->editors, this->lp);
+
+    fstWindow.setAlgoToColorize(checked_algos);
 
     ImGui::GetStyle().FrameRounding = 4.0f;
     ImGui::GetStyle().GrabRounding = 4.0f;
