@@ -477,7 +477,7 @@ void FSTWindow::showPlots() {
                     }
                     ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
                         pixels);
-                    this->drawValues(item, leftIndex, rightIndex, dataSize/pixels);
+                    this->drawValues(item, leftIndex, rightIndex, (dataSize/pixels) * 15);
                 }
                 else {
                     ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
