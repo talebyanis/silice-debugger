@@ -151,7 +151,9 @@ void LogParser::parseFSM(const std::string& fsm_filename)
 
     fsm_line fsml;
     std::string instance;
-    int index, nb_line, line_number;
+    std::string line_number;
+    size_t delimiter;
+    int index, nb_line;
     if (file.is_open())
     {
         while (file.good())
@@ -162,7 +164,20 @@ void LogParser::parseFSM(const std::string& fsm_filename)
             fsml.indexed_lines.clear();
             for (int i = 0; i < nb_line; ++i) {
                 file >> line_number;
-                fsml.indexed_lines.push_back(line_number);
+
+                // "number,number" or just "number" ?
+                if ((delimiter = line_number.find(',')) != std::string::npos)
+                {
+                    int tmp = stoi(line_number.substr(0, delimiter));
+                    int tmp1 = stoi(line_number.substr(2, delimiter));
+                    for (int j = tmp; j <= tmp1; ++j) {
+                        fsml.indexed_lines.push_back(j);
+                    }
+                }
+                else
+                {
+                    fsml.indexed_lines.push_back(stoi(line_number));
+                }
             }
             if (nb_line > 0)
             {
