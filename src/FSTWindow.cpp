@@ -559,7 +559,7 @@ inline void FSTWindow::drawErrors(Plot *item) {
 
 inline void FSTWindow::listenArrows(Plot* item) {
     ImGui::SetKeyboardFocusHere();
-    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) {
+    if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) { // TODO: std::binary_search
       for (ImU64 x : item->x_data) {
             if (markerX < x) {
                 markerX = x;
@@ -573,7 +573,7 @@ inline void FSTWindow::listenArrows(Plot* item) {
         }
     }
     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow), true)) {
-        for (int ii = item->x_data.size() - 1; ii >= 0; ii--) {
+        for (int ii = item->x_data.size() - 1; ii >= 0; ii--) { // TODO: std::binary_search
             ImU64 x = item->x_data[ii];
             if (markerX > x) {
                 markerX = x;
