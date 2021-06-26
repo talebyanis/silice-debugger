@@ -371,7 +371,7 @@ void MainWindow::ZoomMouseWheel(TextEditor& editor) {
 
 void MainWindow::getSiliceFiles() {
     // Looks for every Silice files needed in the design
-    std::ifstream file(PROJECT_DIR "build.v.files.log");
+    std::ifstream file("build.v.files.log");
 
     static std::mutex mutex;
     std::vector<std::thread> thread_vector;
@@ -420,7 +420,7 @@ void MainWindow::Init() {
         }
     }
 
-    const std::string str = PROJECT_DIR "icarus.fst";
+    const std::string str = "icarus.fst";
     fstWindow.load(str, this->editors, this->lp);
 
     fstWindow.setAlgoToColorize(checked_algos);
