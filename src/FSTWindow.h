@@ -25,7 +25,7 @@ typedef struct {
     std::string customtype_string;
     ImVec4 color;
     bool fold;
-    int maxY;
+    ImU64 maxY;
 } Plot;
 
 class FSTWindow 

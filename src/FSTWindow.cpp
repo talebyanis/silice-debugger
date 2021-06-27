@@ -209,7 +209,7 @@ void FSTWindow::addPlot(const std::vector<fstHandle>& signals) {
             plot.signalId = signal;
             std::string signalName = m_Reader->getSignal(signal)->name;
             plot.name = signalName;
-            plot.type = DECIMALS;
+            plot.type = HEXADECIMAL;
             if (signalName[1] == 'd') {
                 if (signalName.find("index") == std::string::npos) {
                     plot.fold = false;
@@ -425,11 +425,11 @@ void FSTWindow::showPlots()
             ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 
             //set the plots Y limits to just below the lowest value to just upper the highest
-            if(item->maxY == 0) {
+            if (item->maxY == 0) {
                 ImPlot::SetNextPlotLimitsY(-0.5,0.5);
             } else {
-                ImPlot::SetNextPlotLimitsY(0.0 - (float) item->maxY / 3.0,
-                                           (float) item->maxY + (float) item->maxY / 3.0);
+                ImPlot::SetNextPlotLimitsY(0.0 - (double) item->maxY / 3.0,
+                  (double)item->maxY + (double)item->maxY / 3.0);
             }
 
             //Cloning in other values to prevent LinkNextPlot from modifying values (SetNextPlotLimitsX not working idk why)
@@ -617,18 +617,18 @@ inline bool FSTWindow::listenArrows(Plot* item) {
 }
 
 inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex, size_t ratio) {
-    std::basic_string<char> value;
-    std::stringstream stream;
     for (size_t i = leftIndex; i < rightIndex; i+=ratio) {
+        std::stringstream stream;
+        std::basic_string<char> value;
         switch (item->type) {
             case BINARY:
                 value = std::bitset<16>(item->y_data[i]).to_string();
                 break;
             case DECIMALS:
-                value = std::to_string(item->y_data[i]);
+                value = 'd' + std::to_string(item->y_data[i]);
                 break;
             case HEXADECIMAL:
-                stream << std::hex << item->y_data[i];
+                stream << 'h' << std::hex << item->y_data[i];
                 value = stream.str();
                 break;
             case CUSTOM:
@@ -651,7 +651,9 @@ inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightInde
                 offset.y = 6;
             }
         }
+        
         ImPlot::PlotText(value.c_str(), item->x_data[i], item->y_data[i], false, offset);
+
        //ImGui::PopStyleColor();
     }
 }
