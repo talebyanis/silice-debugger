@@ -2652,7 +2652,7 @@ void TextEditor::ScaleFont(bool make_bigger)
 {
     static float scale = 1;
     make_bigger ? scale += .05 : scale -= .05;
-    ImGui::GetFont()->Scale=scale;
+    ImGui::GetFont()->Scale = scale;
 }
 
 bool TextEditor::hasIndexColorization() {

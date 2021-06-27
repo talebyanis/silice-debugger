@@ -33,8 +33,6 @@ class FSTWindow
 
 public:
 
-    std::string m_FstFilePath;
-
     FSTWindow() = default;
 
     void load(const std::string& file, std::map<std::string, std::pair<TextEditor, std::list<std::string>>>& editors, LogParser& logParser);
@@ -48,6 +46,7 @@ public:
 
 private:
 
+    std::string m_FstFilePath;
     FSTReader *m_Reader = nullptr;
 
     std::vector<Plot> m_Plots;

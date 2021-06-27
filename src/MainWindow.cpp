@@ -40,63 +40,13 @@ bool show_fullpath = false;
 
 //-------------------------------------------------------
 
-static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, const std::string &code_font_name) {
+static bool ImGui_Impl_CreateFontsTexture(const std::string &general_font_name, const std::string &code_font_name) 
+{
     // Build texture atlas
     ImGuiIO &io = ::ImGui::GetIO();
-    unsigned char *pixels;
-    int width, height;
-#if 0
     ImFontConfig font_cfg = ImFontConfig();
-    font_cfg.SizePixels = font_size;
+    font_cfg.SizePixels = 22;
     io.Fonts->AddFontDefault(&font_cfg);
-#else
-    std::string font_path = std::string(SRC_PATH "/src/data/fonts/" + general_font_name);
-    if (LibSL::System::File::exists(font_path.c_str())) {
-        ImFontConfig cfg;
-        cfg.OversampleH = 2;
-        cfg.OversampleV = 2;
-        cfg.PixelSnapH = true;
-        font_general = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 18, &cfg,
-                                                    io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-    } else {
-        std::cerr << Console::red << "General Font '" << font_path << "' not found" << std::endl;
-    }
-    font_path = std::string(SRC_PATH "/src/data/fonts/" + code_font_name);
-    if (LibSL::System::File::exists(font_path.c_str())) {
-        ImFontConfig cfg;
-        cfg.OversampleH = 2;
-        cfg.OversampleV = 2;
-        cfg.PixelSnapH = true;
-        font_code = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 22, &cfg,
-                                                 io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-    } else {
-        std::cerr << Console::red << "Code Font '" << font_path << "' not found" << std::endl;
-    }
-
-
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width,
-                                 &height);   // Load as RGBA 32-bits for OpenGL3 demo because it is more likely to be compatible with user's existing shader.
-
-    // Upload texture to graphics system
-    GLint last_texture;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glGenTextures(1, &g_FontTexture);
-    glBindTexture(GL_TEXTURE_2D, g_FontTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    // Store our identifier
-    io.Fonts->TexID = (void *) (intptr_t) g_FontTexture;
-
-    // Restore state
-    glBindTexture(GL_TEXTURE_2D, last_texture);
-
-    // Cleanup
-    io.Fonts->ClearTexData();
-    io.Fonts->ClearInputData();
-#endif
-
     return true;
 }
 
@@ -169,7 +119,7 @@ void MainWindow::ShowDockSpace()
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open fst")) {
+            /*if (ImGui::MenuItem("Open fst")) {
                 auto fullpath = openFileDialog(OFD_FILTER_ALL);
                 if (!fullpath.empty()) {
                     fstWindow.load(fullpath, this->editors, this->lp);
@@ -177,9 +127,10 @@ void MainWindow::ShowDockSpace()
                 }
             }
             ImGui::Separator();
-            if (ImGui::MenuItem("Load debug")) {
-                if (exists(SRC_PATH "/.save/save.dat")) {
-                    std::ifstream stream(SRC_PATH "/.save/save.dat");
+            */
+            if (ImGui::MenuItem("Load session")) {
+                if (exists("debugger.dat")) {
+                    std::ifstream stream("debugger.dat");
                     json data;
                     stream >> data;
                     fstWindow.load(data, this->editors, this->lp);
@@ -188,12 +139,9 @@ void MainWindow::ShowDockSpace()
                     error = true;
                 }
             }
-            if (ImGui::MenuItem("Save debug", nullptr, false, fstWindow.reader())) {
+            if (ImGui::MenuItem("Save session", nullptr, false, fstWindow.reader())) {
                 if (fstWindow.reader()) {
-                    if (!exists(SRC_PATH "/.save")) {
-                        createDirectory(SRC_PATH "/.save");
-                    }
-                    std::ofstream save(SRC_PATH "/.save/save.dat");
+                    std::ofstream save("/debugger.dat");
                     json fstWindowJSON = fstWindow.save();
                     //std::cout << std::setw(4) << fstWindowJSON << std::endl;
                     save << std::setw(4) << fstWindowJSON << std::endl;
@@ -353,14 +301,15 @@ void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& alg
 
 //-------------------------------------------------------
 
-void MainWindow::ZoomMouseWheel(TextEditor& editor) {
+void MainWindow::ZoomMouseWheel(TextEditor& editor) 
+{
     if (ImGui::GetIO().KeysDown[LIBSL_KEY_CTRL] && (p_open_editor || editor.p_open_editor)) {
         if (ImGui::GetIO().MouseWheel > 0 || ImGui::GetIO().KeysDown[LIBSL_KEY_UP]) {
             if (ImGui::GetFontSize() < 28) {
                 editor.ScaleFont(true);
             }
         } else if (ImGui::GetIO().MouseWheel < 0 || ImGui::GetIO().KeysDown[LIBSL_KEY_DOWN]) {
-            if (ImGui::GetFontSize() > 13) {
+            if (ImGui::GetFontSize() > 8) {
                 editor.ScaleFont(false);
             }
         }
