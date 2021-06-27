@@ -198,7 +198,8 @@ void clean() {
 FSTReader::FSTReader(const char *file, LogParser& logparser) {
     clean();
     if (!LibSL::System::File::exists(file)) {
-        std::cerr << "Could not open fst wave file " << file << std::endl;
+        std::cerr << Console::red << "Fatal error: Could not open fst wave file " << file << Console::gray << std::endl;
+        exit(-1);
     }
     g_Wave = fstReaderOpen(file);
     initMaps();

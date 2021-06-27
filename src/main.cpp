@@ -65,7 +65,7 @@ int main() {
     if (!LibSL::System::File::exists(workspacePath)) {
         std::cerr << "Could not open workspace file " << workspacePath << std::endl;
     }
-    //ImGui::LoadIniSettingsFromDisk(workspacePath);
+    //ImGui::LoadIniSettingsFromDisk(workspacePath); // NOTE: should this be commented?
 
     ImGui::CreateContext();
     ImPlot::CreateContext();
