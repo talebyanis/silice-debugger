@@ -16,8 +16,7 @@ void LogParser::parseAlgo(const std::string& algo_filename)
     this->algo_lines.clear();
     std::fstream file;
     file.open(algo_filename, std::ios::in);
-    if (!file)
-    {
+    if (!file) {
         std::cout << "Algo Log file was not found";
         exit(1);
     }

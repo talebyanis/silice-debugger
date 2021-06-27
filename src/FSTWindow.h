@@ -52,8 +52,8 @@ private:
     fstHandle hoverHighLight = 0;
     fstHandle hoverRightClickMenu = 0;
 
-    std::map<std::string, std::vector<std::pair<int, int>>> qindexValues;
-    std::map<std::string, std::vector<std::pair<int, int>>> qindexValues_save;
+    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> qindexValues;
+    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> qindexValues_save;
 
     double markerX = 0;
 
