@@ -28,10 +28,13 @@ typedef struct {
     int maxY;
 } Plot;
 
-class FSTWindow {
+class FSTWindow 
+{
+
 public:
-    std::string fstFilePath;
-    FSTReader *g_Reader = nullptr;
+
+    std::string m_FstFilePath;
+    FSTReader *m_Reader = nullptr;
 
     FSTWindow() = default;
 
@@ -43,26 +46,29 @@ public:
     json save();
 
 private:
-    std::vector<Plot> g_Plots;
-    std::map<std::string, ImVec4> g_ScopeColors;
 
-    ImPlotRange range = ImPlotRange(-1, -1);
-    ImPlotRange *plotXLimits = nullptr;
+    std::vector<Plot> m_Plots;
+    std::map<std::string, ImVec4> m_ScopeColors;
 
-    fstHandle hoverHighLight = 0;
-    fstHandle hoverRightClickMenu = 0;
+    ImPlotRange m_Range = ImPlotRange(-1, -1);
+    ImPlotRange *m_PlotXLimits = nullptr;
 
-    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> qindexValues;
-    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> qindexValues_save;
+    fstHandle m_HoverHighLight = 0;
+    fstHandle m_HoverRightClickMenu = 0;
 
-    double markerX = 0;
+    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> m_qindexValues;
+    std::map<std::string, std::vector<std::pair<ImU64, ImU64>>> m_qindexValues_save;
 
-    char filterBuffer[256] = {};
-    char customFilterBuffer[256] = {};
-    int bit_left_custom = 16;
+    bool   m_ResetPlotLimits = false;
 
-    std::map<std::string, std::pair<TextEditor, std::list<std::string>>>* editors;
-    std::list<std::string> algos_to_colorize;
+    double m_MarkerX = 0;
+
+    char m_FilterBuffer[256] = {};
+    char m_CustomFilterBuffer[256] = {};
+    int m_BitLeftCustom = 16;
+
+    std::map<std::string, std::pair<TextEditor, std::list<std::string>>>* m_Editors;
+    std::list<std::string> m_AlgosToColorize;
 
     void clean();
 

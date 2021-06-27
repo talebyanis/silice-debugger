@@ -188,8 +188,8 @@ void MainWindow::ShowDockSpace()
                     error = true;
                 }
             }
-            if (ImGui::MenuItem("Save debug", nullptr, false, fstWindow.g_Reader)) {
-                if (fstWindow.g_Reader) {
+            if (ImGui::MenuItem("Save debug", nullptr, false, fstWindow.m_Reader)) {
+                if (fstWindow.m_Reader) {
                     if (!exists(SRC_PATH "/.save")) {
                         createDirectory(SRC_PATH "/.save");
                     }
