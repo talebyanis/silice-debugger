@@ -371,7 +371,8 @@ std::pair<std::string, int> FSTWindow::parseCustomExp(const std::string &express
 //-------------------------------------------------------
 
 //Shows plots on the right of the window
-void FSTWindow::showPlots() {
+void FSTWindow::showPlots() 
+{
     //reset hoverHighLight to not change the color of a name if no plot is hovered
     hoverHighLight = 0;
     for (int i = 0; i < g_Plots.size(); i++) {
@@ -452,6 +453,7 @@ void FSTWindow::showPlots() {
                 rightIndex = std::min(item->x_data.size() - 1, rightIndex + 1);
             }
 
+            bool reset_limits = false;
             if (ImPlot::BeginPlot(item->name.c_str(), NULL, NULL, ImVec2(-1, 100),
                                   ImPlotFlags_NoLegend | ImPlotFlags_NoChild | ImPlotFlags_NoMousePos |
                                   ImPlotFlags_NoMenus | ImPlotFlags_NoTitle,
@@ -498,7 +500,7 @@ void FSTWindow::showPlots() {
                     plotXLimits->Max = limits.X.Max;
 
                     //Arrows to move to values change
-                    this->listenArrows(item);
+                    reset_limits = this->listenArrows(item);
 
                     //Double click to move marker
                     if (ImGui::IsMouseDoubleClicked(0)) {
@@ -508,6 +510,10 @@ void FSTWindow::showPlots() {
                 ImPlot::PopStyleColor(1);
                 ImPlot::PopStyleVar();
                 ImPlot::EndPlot();
+
+                if (reset_limits) {
+                  ImPlot::SetNextPlotLimitsX(plotXLimits->Min, plotXLimits->Max, ImGuiCond_Always);
+                }
             }
         }
         ImGui::EndGroup();
@@ -550,14 +556,14 @@ inline void FSTWindow::drawErrors(Plot *item) {
             }
         }
         ImPlot::PushPlotClipRect();
-        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0 - item->maxY));
-        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2 * item->maxY));
+        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0.0 - item->maxY));
+        ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2.0 * item->maxY));
         ImPlot::GetPlotDrawList()->AddRectFilled(min, max, IM_COL32(255, 0, 0, 100));
         ImPlot::PopPlotClipRect();
     }
 }
 
-inline void FSTWindow::listenArrows(Plot* item) {
+inline bool FSTWindow::listenArrows(Plot* item) {
     ImGui::SetKeyboardFocusHere();
     if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow), true)) { // TODO: std::binary_search
       for (ImU64 x : item->x_data) {
@@ -565,10 +571,11 @@ inline void FSTWindow::listenArrows(Plot* item) {
                 markerX = x;
                 if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
                     double distance = plotXLimits->Max - plotXLimits->Min;
-                    plotXLimits->Min = markerX - (distance / 2);
-                    plotXLimits->Max = markerX + (distance / 2);
+                    std::cerr << distance << std::endl;
+                    plotXLimits->Min = markerX - (distance / 2.0);
+                    plotXLimits->Max = markerX + (distance / 2.0);
                 }
-                break;
+                return true;
             }
         }
     }
@@ -579,19 +586,21 @@ inline void FSTWindow::listenArrows(Plot* item) {
                 markerX = x;
                 if (markerX > plotXLimits->Max || markerX < plotXLimits->Min) {
                     double distance = plotXLimits->Max - plotXLimits->Min;
-                    plotXLimits->Min = markerX - (distance / 2);
-                    plotXLimits->Max = markerX + (distance / 2);
+                    plotXLimits->Min = markerX - (distance / 2.0);
+                    plotXLimits->Max = markerX + (distance / 2.0);
                 }
-                break;
+                return true;
             }
         }
     }
     if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow),true)) {
         double min = plotXLimits->Min;
         double max = plotXLimits->Max;
-        plotXLimits->Min = markerX - (max - min) / 2;
-        plotXLimits->Max = markerX + (max - min) / 2;
+        plotXLimits->Min = markerX - (max - min) / 2.0;
+        plotXLimits->Max = markerX + (max - min) / 2.0;
+        return true;
     }
+    return false;
 }
 
 inline void FSTWindow::drawValues(Plot *item, size_t leftIndex, size_t rightIndex, size_t ratio) {
