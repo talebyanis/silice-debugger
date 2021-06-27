@@ -34,7 +34,6 @@ class FSTWindow
 public:
 
     std::string m_FstFilePath;
-    FSTReader *m_Reader = nullptr;
 
     FSTWindow() = default;
 
@@ -45,7 +44,11 @@ public:
     void render();
     json save();
 
+    const FSTReader *reader() const { return m_Reader; }
+
 private:
+
+    FSTReader *m_Reader = nullptr;
 
     std::vector<Plot> m_Plots;
     std::map<std::string, ImVec4> m_ScopeColors;
