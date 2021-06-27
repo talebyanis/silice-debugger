@@ -9,7 +9,7 @@
 
 
 typedef std::vector<std::array<ImU64, 2>> valuesList;
-typedef std::vector<int> errorsList;
+typedef std::vector<ImU64> unknownList;
 
 class Signal {
 private:
@@ -19,13 +19,10 @@ public:
     std::string name;
     std::string scopeName;
     valuesList values;
-    errorsList errors;
+    unknownList unknown;
     std::string type;
 
     Signal() = default;
     Signal(std::string name, fstHandle id, std::string scopeName, std::string usage);
     Signal(fstHier hier, std::string scopeName);
 };
-
-
-

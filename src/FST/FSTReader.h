@@ -29,6 +29,6 @@ public:
 
     ImU64 getMaxTime();
     valuesList getValues(fstHandle signal);
-    errorsList getErrors(fstHandle signal);
+    unknownList getUnkowns(fstHandle signal);
     std::list<int> get_q_index_values();
 };

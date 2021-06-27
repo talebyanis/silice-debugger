@@ -130,27 +130,31 @@ Signal *FSTReader::getSignal(fstHandle signal) {
 
 valuesList FSTReader::getValues(fstHandle signal) {
     currentSignal = this->getSignal(signal);
-    if(currentSignal->errors.empty() && currentSignal->values.empty()) this->loadData();
+    if (currentSignal->unknown.empty() && currentSignal->values.empty()) {
+      this->loadData();
+    }
     return currentSignal->values;
 }
 
-std::vector<int> FSTReader::getErrors(fstHandle signal) {
+unknownList FSTReader::getUnkowns(fstHandle signal) {
     currentSignal = this->getSignal(signal);
-    if(currentSignal->errors.empty() && currentSignal->values.empty()) this->loadData();
-    return currentSignal->errors;
+    if (currentSignal->unknown.empty() && currentSignal->values.empty()) {
+      this->loadData();
+    }
+    return currentSignal->unknown;
 }
 
 // ---------------------------------------------------------------------
 
 void FSTReader::loadData() {
-    if (currentSignal->errors.empty() && currentSignal->values.empty()) {
+    if (currentSignal->unknown.empty() && currentSignal->values.empty()) {
         fstReaderSetFacProcessMask(g_Wave, currentSignal->id);
         auto callback = [](void* user_callback_data_pointer, uint64_t time, fstHandle facidx, const unsigned char* value) {
             int dvalue = decodeValue(reinterpret_cast<const char*>(value));
             if (dvalue != -1) { //value
                 currentSignal->values.push_back({ (ImU64)time, (ImU64)dvalue });
-            } else {  //error
-                currentSignal->errors.push_back(time);
+            } else {  //unknown
+                currentSignal->unknown.push_back(time);
             }
         };
         fstReaderIterBlocks(g_Wave, callback, NULL, NULL);

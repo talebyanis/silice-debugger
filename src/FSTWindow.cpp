@@ -381,7 +381,8 @@ void FSTWindow::showPlots()
   //reset hoverHighLight to not change the color of a name if no plot is hovered
   m_HoverHighLight = 0;
     for (int i = 0; i < m_Plots.size(); i++) {
-        Plot *item = &m_Plots[i];
+        Plot *item = &m_Plots[i];    
+
         ImGui::PushID(i);
         ImGui::BeginGroup();
 
@@ -475,31 +476,32 @@ void FSTWindow::showPlots()
                 //Marker
                 ImPlot::DragLineX("Marker", &m_MarkerX, true, ImVec4(1, 0.5, 0.5, 1), 1);
 
-                //If there is too much data to display (more samples than pixels)
-                //we remove some data that won't be display anyway
-                size_t pixels = ImPlot::GetPlotSize().x;
-                size_t dataSize = rightIndex - leftIndex + 1;
-                if (dataSize > pixels) {
+                if (!item->x_data.empty()) {
+                  //If there is too much data to display (more samples than pixels)
+                  //we remove some data that won't be display anyway
+                  size_t pixels = ImPlot::GetPlotSize().x;
+                  size_t dataSize = rightIndex - leftIndex + 1;
+                  if (dataSize > pixels) {
                     std::vector<int> x_data;
                     std::vector<int> y_data;
                     for (size_t i = 0; i < pixels; i++) {
-                        //there is (x = dataSize/pixels) times more data than pixels
-                        //so we take one sample out of x 
-                        size_t index = leftIndex + i * (dataSize / pixels);  
-                        x_data.push_back(item->x_data[index]);
-                        y_data.push_back(item->y_data[index]);
+                      //there is (x = dataSize/pixels) times more data than pixels
+                      //so we take one sample out of x 
+                      size_t index = leftIndex + i * (dataSize / pixels);
+                      x_data.push_back(item->x_data[index]);
+                      y_data.push_back(item->y_data[index]);
                     }
                     ImPlot::PlotStairs(item->name.c_str(), &x_data[0], &y_data[0],
-                        pixels);
-                    this->drawValues(item, leftIndex, rightIndex, (dataSize/pixels) * 15);
-                }
-                else {
+                      pixels);
+                    this->drawValues(item, leftIndex, rightIndex, (dataSize / pixels) * 15);
+                  } else {
                     ImPlot::PlotStairs(item->name.c_str(), &item->x_data[leftIndex], &item->y_data[leftIndex],
-                        dataSize);
-                    this->drawValues(item, leftIndex, rightIndex,1);
-                }
+                      dataSize);
+                    this->drawValues(item, leftIndex, rightIndex, 1);
+                  }
 
-                this->drawErrors(item);
+                  this->drawUnknowns(item);
+                }
 
                 if (ImPlot::IsPlotHovered()) {
 
@@ -557,18 +559,18 @@ void FSTWindow::showPlots()
     this->showRightClickPlotSettings(m_HoverRightClickMenu);
 }
 
-inline void FSTWindow::drawErrors(Plot *item) {
-    std::vector<int> errors = m_Reader->getErrors(item->signalId);
-    for (const auto &error : errors) {
+inline void FSTWindow::drawUnknowns(Plot *item) {
+    auto unknowns = m_Reader->getUnkowns(item->signalId);
+    for (const auto &ukn : unknowns) {
         int next = -1;
         for (const auto &x : item->x_data) {
-            if (error < x) {
+            if (ukn < x) {
                 next = x;
                 break;
             }
         }
         ImPlot::PushPlotClipRect();
-        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(error, 0.0 - item->maxY));
+        ImVec2 min = ImPlot::PlotToPixels(ImPlotPoint(ukn, 0.0 - item->maxY));
         ImVec2 max = ImPlot::PlotToPixels(ImPlotPoint(next, 2.0 * item->maxY));
         ImPlot::GetPlotDrawList()->AddRectFilled(min, max, IM_COL32(255, 0, 0, 100));
         ImPlot::PopPlotClipRect();

@@ -79,7 +79,7 @@ private:
     bool isDisplayed(std::vector<fstHandle> &signals);
 
     void showPlots();
-    inline void drawErrors(Plot* item);
+    inline void drawUnknowns(Plot* item);
     inline bool listenArrows(Plot* item);
     inline void drawValues(Plot* item, size_t leftIndex, size_t rightIndex, size_t ratio);
     std::pair<std::string, int> parseCustomExp(const std::string& expression, int value);
