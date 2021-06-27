@@ -71,9 +71,9 @@ void MainWindow::ShowDockSpace()
 
 
 // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
-    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-        window_flags |= ImGuiWindowFlags_NoBackground;
-
+    if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) {
+      window_flags |= ImGuiWindowFlags_NoBackground;
+    }
 // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
 // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
 // all active windows docked into it will lose their parent and become undocked.
@@ -103,7 +103,7 @@ void MainWindow::ShowDockSpace()
             // split the dockspace into 2 nodes -- DockBuilderSplitNode takes in the following args in the following order
             //   window ID to split, direction, fraction (between 0 and 1), the final two setting let's us choose which id we want (which ever one we DON'T set as NULL, will be returned by the function)
             //                                                              out_id_at_dir is the id of the node in the direction we specified earlier, out_id_at_opposite_dir is in the opposite direction
-            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.5f, nullptr, &dockspace_id);
+            auto dock_id_left = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.7f, nullptr, &dockspace_id);
 
             // we now dock our windows into the docking node we made above
             ImGui::DockBuilderDockWindow("PlotWindow", dock_id_left);
@@ -186,7 +186,8 @@ void MainWindow::ShowDockSpace()
 
 bool test_ptr = true;
 
-void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) {
+void MainWindow::ShowCodeEditors(TextEditor& editor, std::list<std::string>& algo_list) 
+{
     auto cpos = editor.GetCursorPosition();
     ImGui::Begin(fs::path(editor.file_path).filename().string().c_str(), nullptr, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_MenuBar);
     if (ImGui::BeginMenuBar()) {
@@ -428,7 +429,8 @@ void MainWindow::Init() {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
 }
 
-void MainWindow::Render() {
+void MainWindow::Render() 
+{
     ImGui::PushFont(font_general);
     this->ShowDockSpace();
     for (auto &[filename, editor] : this->editors)
