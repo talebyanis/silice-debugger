@@ -2,6 +2,8 @@
 
 *This is the debugger developed for Silice*
 
+> This project is a work in progress
+
 # Usage
 
 ![App](img.png)
